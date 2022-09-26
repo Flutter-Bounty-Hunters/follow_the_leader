@@ -8,14 +8,14 @@ import 'package:golden_toolkit/golden_toolkit.dart';
 void main() {
   group('iOS Toolbar', () {
     group('pointing up', () {
-      testGoldens('without focal point', (tester) async {
+      testGoldens('with center focal point', (tester) async {
         await loadAppFonts();
 
         await _pumpToolbarScaffold(
           tester,
-          child: IosToolbar(
-            arrowDirection: ArrowDirection.up,
-            children: const [
+          child: const IosToolbar(
+            globalFocalPoint: Offset(250, 0),
+            children: [
               IosMenuItem(label: 'Style'),
               IosMenuItem(label: 'Duplicate'),
               IosMenuItem(label: 'Cut'),
@@ -25,7 +25,7 @@ void main() {
           ),
         );
 
-        await screenMatchesGolden(tester, 'ios-toolbar/pointing-up');
+        await screenMatchesGolden(tester, 'ios-toolbar/pointing-up-center-focal-point');
       });
 
       testGoldens('with left focal point', (tester) async {
@@ -33,10 +33,9 @@ void main() {
 
         await _pumpToolbarScaffold(
           tester,
-          child: IosToolbar(
-            arrowDirection: ArrowDirection.up,
-            arrowFocalPoint: 70,
-            children: const [
+          child: const IosToolbar(
+            globalFocalPoint: Offset(200, 0),
+            children: [
               IosMenuItem(label: 'Style'),
               IosMenuItem(label: 'Duplicate'),
               IosMenuItem(label: 'Cut'),
@@ -54,10 +53,9 @@ void main() {
 
         await _pumpToolbarScaffold(
           tester,
-          child: IosToolbar(
-            arrowDirection: ArrowDirection.up,
-            arrowFocalPoint: 0,
-            children: const [
+          child: const IosToolbar(
+            globalFocalPoint: Offset(0, 0),
+            children: [
               IosMenuItem(label: 'Style'),
               IosMenuItem(label: 'Duplicate'),
               IosMenuItem(label: 'Cut'),
@@ -75,10 +73,9 @@ void main() {
 
         await _pumpToolbarScaffold(
           tester,
-          child: IosToolbar(
-            arrowDirection: ArrowDirection.up,
-            arrowFocalPoint: 200,
-            children: const [
+          child: const IosToolbar(
+            globalFocalPoint: Offset(300, 0),
+            children: [
               IosMenuItem(label: 'Style'),
               IosMenuItem(label: 'Duplicate'),
               IosMenuItem(label: 'Cut'),
@@ -96,10 +93,9 @@ void main() {
 
         await _pumpToolbarScaffold(
           tester,
-          child: IosToolbar(
-            arrowDirection: ArrowDirection.up,
-            arrowFocalPoint: 2000,
-            children: const [
+          child: const IosToolbar(
+            globalFocalPoint: Offset(600, 0),
+            children: [
               IosMenuItem(label: 'Style'),
               IosMenuItem(label: 'Duplicate'),
               IosMenuItem(label: 'Cut'),
@@ -114,14 +110,14 @@ void main() {
     });
 
     group('pointing down', () {
-      testGoldens('without focal point', (tester) async {
+      testGoldens('with center focal point', (tester) async {
         await loadAppFonts();
 
         await _pumpToolbarScaffold(
           tester,
-          child: IosToolbar(
-            arrowDirection: ArrowDirection.down,
-            children: const [
+          child: const IosToolbar(
+            globalFocalPoint: Offset(250, 1000),
+            children: [
               IosMenuItem(label: 'Style'),
               IosMenuItem(label: 'Duplicate'),
               IosMenuItem(label: 'Cut'),
@@ -131,7 +127,7 @@ void main() {
           ),
         );
 
-        await screenMatchesGolden(tester, 'ios-toolbar/pointing-down');
+        await screenMatchesGolden(tester, 'ios-toolbar/pointing-down-center-focal-point');
       });
 
       testGoldens('with left focal point', (tester) async {
@@ -139,10 +135,9 @@ void main() {
 
         await _pumpToolbarScaffold(
           tester,
-          child: IosToolbar(
-            arrowDirection: ArrowDirection.down,
-            arrowFocalPoint: 70,
-            children: const [
+          child: const IosToolbar(
+            globalFocalPoint: Offset(150, 1000),
+            children: [
               IosMenuItem(label: 'Style'),
               IosMenuItem(label: 'Duplicate'),
               IosMenuItem(label: 'Cut'),
@@ -160,10 +155,9 @@ void main() {
 
         await _pumpToolbarScaffold(
           tester,
-          child: IosToolbar(
-            arrowDirection: ArrowDirection.down,
-            arrowFocalPoint: 0,
-            children: const [
+          child: const IosToolbar(
+            globalFocalPoint: Offset(0, 1000),
+            children: [
               IosMenuItem(label: 'Style'),
               IosMenuItem(label: 'Duplicate'),
               IosMenuItem(label: 'Cut'),
@@ -181,10 +175,9 @@ void main() {
 
         await _pumpToolbarScaffold(
           tester,
-          child: IosToolbar(
-            arrowDirection: ArrowDirection.down,
-            arrowFocalPoint: 200,
-            children: const [
+          child: const IosToolbar(
+            globalFocalPoint: Offset(350, 1000),
+            children: [
               IosMenuItem(label: 'Style'),
               IosMenuItem(label: 'Duplicate'),
               IosMenuItem(label: 'Cut'),
@@ -202,10 +195,9 @@ void main() {
 
         await _pumpToolbarScaffold(
           tester,
-          child: IosToolbar(
-            arrowDirection: ArrowDirection.down,
-            arrowFocalPoint: 2000,
-            children: const [
+          child: const IosToolbar(
+            globalFocalPoint: Offset(1000, 1000),
+            children: [
               IosMenuItem(label: 'Style'),
               IosMenuItem(label: 'Duplicate'),
               IosMenuItem(label: 'Cut'),
@@ -227,9 +219,9 @@ void main() {
           tester,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 300),
-            child: IosToolbar(
-              arrowDirection: ArrowDirection.down,
-              children: const [
+            child: const IosToolbar(
+              globalFocalPoint: Offset(250, 0),
+              children: [
                 IosMenuItem(label: 'Style'),
                 IosMenuItem(label: 'Duplicate'),
                 IosMenuItem(label: 'Cut'),
@@ -272,7 +264,7 @@ void main() {
         await _pumpToolbarScaffold(
           tester,
           child: IosToolbar.paginated(
-            arrowDirection: ArrowDirection.down,
+            globalFocalPoint: const Offset(250, 0),
             pages: [
               MenuPage(
                 items: const [
@@ -306,20 +298,19 @@ void main() {
 
   group('iOS Popover Menu', () {
     group('pointing up', () {
-      testGoldens('without focal point', (tester) async {
+      testGoldens('with center focal point', (tester) async {
         await _pumpPopoverMenuTestApp(
           tester,
-          arrowDirection: ArrowDirection.up,
+          arrowFocalPoint: const Offset(250, 0),
         );
 
-        await screenMatchesGolden(tester, 'ios-popover-menu/pointing-up');
+        await screenMatchesGolden(tester, 'ios-popover-menu/pointing-up-center-focal-point');
       });
 
       testGoldens('with left focal point', (tester) async {
         await _pumpPopoverMenuTestApp(
           tester,
-          arrowDirection: ArrowDirection.up,
-          arrowFocalPoint: 40,
+          arrowFocalPoint: const Offset(200, 0),
         );
 
         await screenMatchesGolden(tester, 'ios-popover-menu/pointing-up-left-focal-point');
@@ -328,8 +319,7 @@ void main() {
       testGoldens('with left focal point too low', (tester) async {
         await _pumpPopoverMenuTestApp(
           tester,
-          arrowDirection: ArrowDirection.up,
-          arrowFocalPoint: 0,
+          arrowFocalPoint: const Offset(118, 0),
         );
 
         await screenMatchesGolden(tester, 'ios-popover-menu/pointing-up-left-focal-point-too-low');
@@ -338,8 +328,7 @@ void main() {
       testGoldens('with right focal point', (tester) async {
         await _pumpPopoverMenuTestApp(
           tester,
-          arrowDirection: ArrowDirection.up,
-          arrowFocalPoint: 200,
+          arrowFocalPoint: const Offset(280, 0),
         );
 
         await screenMatchesGolden(tester, 'ios-popover-menu/pointing-up-right-focal-point');
@@ -348,8 +337,7 @@ void main() {
       testGoldens('with right focal point too big', (tester) async {
         await _pumpPopoverMenuTestApp(
           tester,
-          arrowDirection: ArrowDirection.up,
-          arrowFocalPoint: 2000,
+          arrowFocalPoint: const Offset(358, 0),
         );
 
         await screenMatchesGolden(tester, 'ios-popover-menu/pointing-up-right-focal-point-too-big');
@@ -357,20 +345,19 @@ void main() {
     });
 
     group('pointing down', () {
-      testGoldens('without focal point', (tester) async {
+      testGoldens('with center focal point', (tester) async {
         await _pumpPopoverMenuTestApp(
           tester,
-          arrowDirection: ArrowDirection.down,
+          arrowFocalPoint: const Offset(250, 1000),
         );
 
-        await screenMatchesGolden(tester, 'ios-popover-menu/pointing-down');
+        await screenMatchesGolden(tester, 'ios-popover-menu/pointing-down-center-focal-point');
       });
 
       testGoldens('with left focal point', (tester) async {
         await _pumpPopoverMenuTestApp(
           tester,
-          arrowDirection: ArrowDirection.down,
-          arrowFocalPoint: 40,
+          arrowFocalPoint: const Offset(210, 1000),
         );
 
         await screenMatchesGolden(tester, 'ios-popover-menu/pointing-down-left-focal-point');
@@ -379,8 +366,7 @@ void main() {
       testGoldens('with left focal point too low', (tester) async {
         await _pumpPopoverMenuTestApp(
           tester,
-          arrowDirection: ArrowDirection.down,
-          arrowFocalPoint: 0,
+          arrowFocalPoint: const Offset(118, 1000),
         );
 
         await screenMatchesGolden(tester, 'ios-popover-menu/pointing-down-left-focal-point-too-low');
@@ -389,8 +375,7 @@ void main() {
       testGoldens('with right focal point', (tester) async {
         await _pumpPopoverMenuTestApp(
           tester,
-          arrowDirection: ArrowDirection.down,
-          arrowFocalPoint: 200,
+          arrowFocalPoint: const Offset(280, 1000),
         );
 
         await screenMatchesGolden(tester, 'ios-popover-menu/pointing-down-right-focal-point');
@@ -399,8 +384,7 @@ void main() {
       testGoldens('with right focal point too big', (tester) async {
         await _pumpPopoverMenuTestApp(
           tester,
-          arrowDirection: ArrowDirection.down,
-          arrowFocalPoint: 2000,
+          arrowFocalPoint: const Offset(358, 1000),
         );
 
         await screenMatchesGolden(tester, 'ios-popover-menu/pointing-down-right-focal-point-too-big');
@@ -408,20 +392,19 @@ void main() {
     });
 
     group('pointing left', () {
-      testGoldens('without focal point', (tester) async {
+      testGoldens('with center focal point', (tester) async {
         await _pumpPopoverMenuTestApp(
           tester,
-          arrowDirection: ArrowDirection.left,
+          arrowFocalPoint: const Offset(0, 242)
         );
 
-        await screenMatchesGolden(tester, 'ios-popover-menu/pointing-left');
+        await screenMatchesGolden(tester, 'ios-popover-menu/pointing-left-center-focal-point');
       });
 
       testGoldens('with top focal point', (tester) async {
         await _pumpPopoverMenuTestApp(
           tester,
-          arrowDirection: ArrowDirection.left,
-          arrowFocalPoint: 40,
+          arrowFocalPoint: const Offset(0, 200),
         );
 
         await screenMatchesGolden(tester, 'ios-popover-menu/pointing-left-top-focal-point');
@@ -430,8 +413,7 @@ void main() {
       testGoldens('with top focal point too low', (tester) async {
         await _pumpPopoverMenuTestApp(
           tester,
-          arrowDirection: ArrowDirection.left,
-          arrowFocalPoint: 0,
+          arrowFocalPoint: const Offset(0, 0),
         );
 
         await screenMatchesGolden(tester, 'ios-popover-menu/pointing-left-top-focal-point-too-low');
@@ -440,8 +422,7 @@ void main() {
       testGoldens('with bottom focal point', (tester) async {
         await _pumpPopoverMenuTestApp(
           tester,
-          arrowDirection: ArrowDirection.left,
-          arrowFocalPoint: 100,
+          arrowFocalPoint: const Offset(0, 260),
         );
 
         await screenMatchesGolden(tester, 'ios-popover-menu/pointing-left-bottom-focal-point');
@@ -450,8 +431,7 @@ void main() {
       testGoldens('with bottom focal point too big', (tester) async {
         await _pumpPopoverMenuTestApp(
           tester,
-          arrowDirection: ArrowDirection.left,
-          arrowFocalPoint: 2000,
+          arrowFocalPoint: const Offset(0, 1000),
         );
 
         await screenMatchesGolden(tester, 'ios-popover-menu/pointing-left-bottom-focal-point-too-big');
@@ -459,20 +439,19 @@ void main() {
     });
 
     group('pointing right', () {
-      testGoldens('without focal point', (tester) async {
+      testGoldens('without center focal point', (tester) async {
         await _pumpPopoverMenuTestApp(
           tester,
-          arrowDirection: ArrowDirection.right,
+           arrowFocalPoint: const Offset(1000, 242)
         );
 
-        await screenMatchesGolden(tester, 'ios-popover-menu/pointing-right');
+        await screenMatchesGolden(tester, 'ios-popover-menu/pointing-right-center-focal-point');
       });
 
       testGoldens('with top focal point', (tester) async {
         await _pumpPopoverMenuTestApp(
           tester,
-          arrowDirection: ArrowDirection.right,
-          arrowFocalPoint: 40,
+          arrowFocalPoint: const Offset(1000, 200),
         );
 
         await screenMatchesGolden(tester, 'ios-popover-menu/pointing-right-top-focal-point');
@@ -481,8 +460,7 @@ void main() {
       testGoldens('with top focal point too low', (tester) async {
         await _pumpPopoverMenuTestApp(
           tester,
-          arrowDirection: ArrowDirection.right,
-          arrowFocalPoint: 0,
+          arrowFocalPoint: const Offset(1000, 0),
         );
 
         await screenMatchesGolden(tester, 'ios-popover-menu/pointing-right-top-focal-point-too-low');
@@ -491,8 +469,7 @@ void main() {
       testGoldens('with bottom focal point', (tester) async {
         await _pumpPopoverMenuTestApp(
           tester,
-          arrowDirection: ArrowDirection.right,
-          arrowFocalPoint: 100,
+          arrowFocalPoint: const Offset(1000, 260),
         );
 
         await screenMatchesGolden(tester, 'ios-popover-menu/pointing-right-bottom-focal-point');
@@ -501,8 +478,7 @@ void main() {
       testGoldens('with bottom focal point too big', (tester) async {
         await _pumpPopoverMenuTestApp(
           tester,
-          arrowDirection: ArrowDirection.right,
-          arrowFocalPoint: 2000,
+          arrowFocalPoint: const Offset(1000, 1000),
         );
 
         await screenMatchesGolden(tester, 'ios-popover-menu/pointing-right-bottom-focal-point-too-big');
@@ -512,6 +488,12 @@ void main() {
 }
 
 Future<void> _pumpToolbarScaffold(WidgetTester tester, {required Widget child}) async {
+  tester.binding.window
+    ..physicalSizeTestValue = const Size(500, 500)
+    ..platformDispatcher.textScaleFactorTestValue = 1.0
+    ..devicePixelRatioTestValue = 1.0;
+  addTearDown(() => tester.binding.window.clearAllTestValues());
+
   await tester.pumpWidget(
     MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -523,18 +505,22 @@ Future<void> _pumpToolbarScaffold(WidgetTester tester, {required Widget child}) 
 }
 
 Future<void> _pumpPopoverMenuTestApp(
-  WidgetTester tester, {
-  required ArrowDirection arrowDirection,
-  double? arrowFocalPoint,
+  WidgetTester tester, {  
+  required Offset arrowFocalPoint,
 }) async {
+  tester.binding.window
+    ..physicalSizeTestValue = const Size(500, 500)
+    ..platformDispatcher.textScaleFactorTestValue = 1.0
+    ..devicePixelRatioTestValue = 1.0;
+  addTearDown(() => tester.binding.window.clearAllTestValues());
+
   await tester.pumpWidget(
     MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         body: Center(
           child: IosPopoverMenu(
-            arrowDirection: arrowDirection,
-            arrowFocalPoint: arrowFocalPoint,
+            globalFocalPoint: arrowFocalPoint,
             child: const SizedBox(
               width: 254,
               height: 159,

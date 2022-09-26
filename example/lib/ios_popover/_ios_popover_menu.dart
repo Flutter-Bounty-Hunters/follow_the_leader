@@ -1,156 +1,244 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
-class IosPopoverMenu extends StatelessWidget {
+/// A menu container which simulates an iOS popover.
+///
+/// Given a [globalFocalPoint], this widget draws an arrow which
+/// points to the direction between this widget and the [globalFocalPoint].
+class IosPopoverMenu extends SingleChildRenderObjectWidget {
   const IosPopoverMenu({
     super.key,
+    required this.globalFocalPoint,
     this.radius = const Radius.circular(12),
-    this.arrowWidth = 18.0,
+    this.arrowBaseWidth = 18.0,
     this.arrowLength = 12.0,
-    required this.arrowDirection,
+    this.allowHorizontalArrow = true,
     this.backgroundColor = const Color(0xFF474747),
-    this.padding = EdgeInsets.zero,
-    this.arrowFocalPoint,
-    required this.child,
+    this.padding,
+    super.child,
   });
 
-  /// Radius of the decoration corners.
+  /// Radius of the corners.
   final Radius radius;
 
-  /// Extent of the arrow.
+  /// Base of the arrow in pixels.
+  ///
+  /// If the arrow points up or down, [arrowBaseWidth] represents the number of
+  /// pixels in the x-axis. Otherwise, it represents the number of pixels
+  /// in the y-axis.
+  final double arrowBaseWidth;
+
+  /// Extent of the arrow in pixels.
+  ///
+  /// If the arrow points up or down, [arrowLength] represents the number of
+  /// pixels in the y-axis. Otherwise, it represents the number of pixels
+  /// in the x-axis.
   final double arrowLength;
-
-  /// Width of the arrow.
-  final double arrowWidth;
-
-  /// Direction where the arrow points to.
-  final ArrowDirection arrowDirection;
 
   /// Padding around the popover content.
-  final EdgeInsets padding;
+  final EdgeInsets? padding;
 
-  /// Color of the decoration.
+  /// Color of the menu background.
   final Color backgroundColor;
 
-  /// Center point of the arrow.
+  /// Global offset which the arrow should point to.
   ///
-  /// Defaults to the center of the axis.
-  final double? arrowFocalPoint;
+  /// If the arrow can't point to [globalFocalPoint], e.g.,
+  /// the arrow points up and `globalFocalPoint.dx` is outside
+  /// the menu bounds, then the the arrow will point towards
+  /// [globalFocalPoint] as much as possible.
+  final Offset globalFocalPoint;
 
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: ShapeDecoration(
-        color: backgroundColor,
-        shape: _IosMenuShapeBorder(
-          arrowDirection: arrowDirection,
-          arrowFocalPoint: arrowFocalPoint,
-          arrowLength: arrowLength,
-          arrowWidth: arrowWidth,
-          padding: padding,
-          radius: radius,
-        ),
-      ),
-      child: Padding(
-        padding: _getArrowPadding(),
-        child: Padding(
-          padding: padding,
-          child: child,
-        ),
-      ),
-    );
-  }
-
-  /// Returns the padding needed to leave space for the arrow.
-  EdgeInsets _getArrowPadding() {
-    return EdgeInsets.fromLTRB(
-      arrowDirection == ArrowDirection.left ? arrowLength : 0,
-      arrowDirection == ArrowDirection.up ? arrowLength : 0,
-      arrowDirection == ArrowDirection.right ? arrowLength : 0,
-      arrowDirection == ArrowDirection.down ? arrowLength : 0,
-    );
-  }
-}
-
-class _IosMenuShapeBorder extends ShapeBorder {
-  const _IosMenuShapeBorder({
-    required this.radius,
-    required this.arrowWidth,
-    required this.arrowLength,
-    required this.arrowDirection,
-    required this.padding,
-    this.arrowFocalPoint,
-  });
-
-  final Radius radius;
-  final double arrowWidth;
-  final double arrowLength;
-  final ArrowDirection arrowDirection;
-  final EdgeInsets padding;
-  final double? arrowFocalPoint;
+  /// Indicates wether or not the arrow can point to a horizontal direction.
+  ///
+  /// When `false`, the arrow only points up or down.
+  final bool allowHorizontalArrow;
 
   @override
-  EdgeInsetsGeometry get dimensions => EdgeInsets.zero;
-
-  @override
-  Path getInnerPath(Rect rect, {TextDirection? textDirection}) => Path();
-
-  @override
-  Path getOuterPath(Rect rect, {TextDirection? textDirection}) {
-    return _IosDecorationPathBuilder(
-      size: rect.size,
-      arrowDirection: arrowDirection,
-      arrowLength: arrowLength,
-      arrowWidth: arrowWidth,
+  RenderObject createRenderObject(BuildContext context) {
+    return RenderPopover(
       radius: radius,
-      arrowFocalPoint: arrowFocalPoint,
-    ).build().shift(Offset(rect.left, rect.top));
+      arrowWidth: arrowBaseWidth,
+      arrowLength: arrowLength,
+      padding: padding,
+      backgroundColor: backgroundColor,
+      focalPoint: globalFocalPoint,
+      allowHorizontalArrow: allowHorizontalArrow,
+    );
   }
 
   @override
-  void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {}
-
-  @override
-  ShapeBorder scale(double t) => this;
+  void updateRenderObject(BuildContext context, covariant RenderPopover renderObject) {
+    super.updateRenderObject(context, renderObject);
+    renderObject
+      ..radius = radius
+      ..arrowBaseWidth = arrowBaseWidth
+      ..arrowLength = arrowLength
+      ..padding = padding
+      ..focalPoint = globalFocalPoint
+      ..backgroundColor = backgroundColor
+      ..allowHorizontalArrow = allowHorizontalArrow;
+  }
 }
 
-/// Builds a path used to paint an iOS popup menu decoration.
-class _IosDecorationPathBuilder {
-  _IosDecorationPathBuilder({
-    required this.size,
-    required this.arrowLength,
-    required this.arrowWidth,
-    required this.arrowDirection,
-    required this.radius,
-    this.arrowFocalPoint,
-  });
+class RenderPopover extends RenderShiftedBox {
+  RenderPopover({
+    required Radius radius,
+    required double arrowWidth,
+    required double arrowLength,
+    required Color backgroundColor,
+    required Offset focalPoint,
+    bool allowHorizontalArrow = true,
+    EdgeInsets? padding,
+    RenderBox? child,
+  })  : _radius = radius,
+        _arrowBaseWidth = arrowWidth,
+        _arrowLength = arrowLength,
+        _padding = padding,
+        _backgroundColor = backgroundColor,
+        _backgroundPaint = Paint()..color = backgroundColor,
+        _focalPoint = focalPoint,
+        _allowHorizontalArrow = allowHorizontalArrow,
+        super(child);
 
-  final Size size;
-  final double arrowLength;
-  final double arrowWidth;
-  final ArrowDirection arrowDirection;
-  final Radius radius;
-  final double? arrowFocalPoint;
+  Radius _radius;
+  Radius get radius => _radius;
+  set radius(Radius value) {
+    if (_radius != value) {
+      _radius = value;
+      markNeedsLayout();
+    }
+  }
 
-  Path build() {
-    // Width of each side of the arrow.
-    final arrowStep = arrowWidth / 2;
+  double _arrowBaseWidth;
+  double get arrowBaseWidth => _arrowBaseWidth;
+  set arrowBaseWidth(double value) {
+    if (_arrowBaseWidth != value) {
+      _arrowBaseWidth = value;
+      markNeedsLayout();
+    }
+  }
 
-    // If a focal point is given, constrain it to ensure
-    // it won't exceed the width of the menu.
-    final effectiveFocalPoint = arrowFocalPoint != null //
-        ? _constrainFocalPoint(arrowFocalPoint!)
-        : _defaultArrowFocalPoint;
+  double _arrowLength;
+  double get arrowLength => _arrowLength;
+  set arrowLength(double value) {
+    if (_arrowLength != value) {
+      _arrowLength = value;
+      markNeedsLayout();
+    }
+  }
+
+  Offset _focalPoint;
+  Offset get focalPoint => _focalPoint;
+  set focalPoint(Offset value) {
+    if (_focalPoint != value) {
+      _focalPoint = value;
+      markNeedsLayout();
+    }
+  }
+
+  EdgeInsets? _padding;
+  EdgeInsets? get padding => _padding;
+  set padding(EdgeInsets? value) {
+    if (_padding != value) {
+      _padding = value;
+      markNeedsLayout();
+    }
+  }
+
+  Color _backgroundColor;
+  Color get backgroundColor => _backgroundColor;
+  set backgroundColor(Color value) {
+    if (value != _backgroundColor) {
+      _backgroundColor = value;
+      _backgroundPaint = Paint()..color = _backgroundColor;
+      markNeedsPaint();
+    }
+  }
+
+  bool _allowHorizontalArrow;
+  bool get allowHorizontalArrow => _allowHorizontalArrow;
+  set allowHorizontalArrow(bool value) {
+    if (value != _allowHorizontalArrow) {
+      _allowHorizontalArrow = value;
+      markNeedsLayout();
+    }
+  }
+
+  late Paint _backgroundPaint;
+
+  @override
+  void performLayout() {
+    // We need to know our offset in order to calculate the arrow direction
+    // and we only know our offset at paint phase.
+    // Therefore, we need to reserve space for the arrow in both axes.
+    final reservedSize = Size(
+      (padding?.horizontal ?? 0) + arrowLength,
+      (padding?.vertical ?? 0) + arrowLength,
+    );
+
+    // The child cannot take the size reserved for padding or
+    // for displaying the arrow.
+    final innerConstraints = constraints.enforce(
+      BoxConstraints(
+        maxHeight: constraints.maxHeight - reservedSize.height,
+        maxWidth: constraints.maxWidth - reservedSize.width,
+      ),
+    );
+
+    child!.layout(innerConstraints, parentUsesSize: true);
+
+    size = constraints.constrain(Size(
+      reservedSize.width + child!.size.width,
+      reservedSize.height + child!.size.height,
+    ));
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final localFocalPoint = globalToLocal(focalPoint);
+
+    final direction = _computeArrowDirection(offset & size, focalPoint);
+    final arrowCenter = _computeArrowCenter(direction, localFocalPoint);
+    final contentOffset = _computeContentOffset(direction, arrowLength);
+
+    final path = _buildPath(direction, arrowCenter);
+
+    context.canvas.drawPath(path.shift(offset), _backgroundPaint);
+
+    if (child != null) {
+      context.paintChild(child!, offset + contentOffset);
+    }
+  }
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    final direction = _computeArrowDirection(Offset.zero & size, focalPoint);
+    final contentOffset = _computeContentOffset(direction, arrowLength);
+
+    return result.addWithPaintOffset(
+      offset: contentOffset,
+      position: position,
+      hitTest: (BoxHitTestResult result, Offset transformed) {
+        assert(transformed == position - contentOffset);
+        return child?.hitTest(result, position: transformed) ?? false;
+      },
+    );
+  }
+
+  /// Builds the path used to paint the menu.
+  Path _buildPath(ArrowDirection arrowDirection, double arrowCenter) {
+    final halfOfBase = arrowBaseWidth / 2;
 
     // Adjust the rect to leave space for the arrow.
-    final contentRect = Rect.fromLTRB(
+    // During layout, we reserve space for the arrow in both x and y axis.
+    final contentRect = Rect.fromLTWH(
       arrowDirection == ArrowDirection.left ? arrowLength : 0,
       arrowDirection == ArrowDirection.up ? arrowLength : 0,
-      size.width - (arrowDirection == ArrowDirection.right ? arrowLength : 0),
-      size.height - (arrowDirection == ArrowDirection.down ? arrowLength : 0),
+      size.width - arrowLength,
+      size.height - arrowLength,
     );
 
     Path path = Path()..addRRect(RRect.fromRectAndRadius(contentRect, radius));
@@ -158,24 +246,24 @@ class _IosDecorationPathBuilder {
     // Add the arrow points.
     if (arrowDirection == ArrowDirection.left) {
       path
-        ..moveTo(contentRect.centerLeft.dx, effectiveFocalPoint - arrowStep)
-        ..relativeLineTo(-arrowLength, arrowStep)
-        ..relativeLineTo(arrowLength, arrowStep);
+        ..moveTo(contentRect.centerLeft.dx, arrowCenter - halfOfBase)
+        ..relativeLineTo(-arrowLength, halfOfBase)
+        ..relativeLineTo(arrowLength, halfOfBase);
     } else if (arrowDirection == ArrowDirection.right) {
       path
-        ..moveTo(contentRect.centerRight.dx, effectiveFocalPoint - arrowStep)
-        ..relativeLineTo(arrowLength, arrowStep)
-        ..relativeLineTo(-arrowLength, arrowStep);
+        ..moveTo(contentRect.centerRight.dx, arrowCenter - halfOfBase)
+        ..relativeLineTo(arrowLength, halfOfBase)
+        ..relativeLineTo(-arrowLength, halfOfBase);
     } else if (arrowDirection == ArrowDirection.up) {
       path
-        ..moveTo(effectiveFocalPoint - arrowStep, contentRect.topCenter.dy)
-        ..relativeLineTo(arrowStep, -arrowLength)
-        ..relativeLineTo(arrowStep, arrowLength);
+        ..moveTo(arrowCenter - halfOfBase, contentRect.topCenter.dy)
+        ..relativeLineTo(halfOfBase, -arrowLength)
+        ..relativeLineTo(halfOfBase, arrowLength);
     } else {
       path
-        ..moveTo(effectiveFocalPoint - arrowStep, contentRect.bottomCenter.dy)
-        ..relativeLineTo(arrowStep, arrowLength)
-        ..relativeLineTo(arrowStep, -arrowLength);
+        ..moveTo(arrowCenter - halfOfBase, contentRect.bottomCenter.dy)
+        ..relativeLineTo(halfOfBase, arrowLength)
+        ..relativeLineTo(halfOfBase, -arrowLength);
     }
 
     path.close();
@@ -183,33 +271,75 @@ class _IosDecorationPathBuilder {
     return path;
   }
 
+  /// Computes the direction where the arrow should point to.
+  ArrowDirection _computeArrowDirection(Rect menuRect, Offset globalFocalPoint) {
+    if ((globalFocalPoint.dx >= menuRect.left && globalFocalPoint.dx <= menuRect.right) || !allowHorizontalArrow) {
+      // The focal point is within our horizontal bounds or we don't allow the arrow to point left or right.
+      if (globalFocalPoint.dy < menuRect.top) {
+        return ArrowDirection.up;
+      }
+      return ArrowDirection.down;
+    } else {
+      if (globalFocalPoint.dx < menuRect.left) {
+        return ArrowDirection.left;
+      }
+      return ArrowDirection.right;
+    }
+  }
+
+  /// Computes the point where the arrow should be centered around.
+  ///
+  /// This point can be on the x or y axis, depending on the [direction].
+  double _computeArrowCenter(ArrowDirection direction, Offset focalPoint) {
+    final desiredFocalPoint = _arrowIsVertical(direction) //
+        ? focalPoint.dx
+        : focalPoint.dy;
+
+    return _constrainFocalPoint(desiredFocalPoint, direction);
+  }
+
+  /// Computes the (x, y) offset of the menu content.
+  ///
+  /// When [direction] is up or left, the content needs to be shifted
+  /// to leave space for the arrow.
+  Offset _computeContentOffset(ArrowDirection direction, double arrowLength) {
+    return Offset(
+      (padding?.left ?? 0) + (direction == ArrowDirection.left ? arrowLength : 0.0),
+      (padding?.top ?? 0) + (direction == ArrowDirection.up ? arrowLength : 0.0),
+    );
+  }
+
   /// Indicates whether or not the arrow points to a vertical direction.
-  bool get _arrowIsVertical => arrowDirection == ArrowDirection.up || arrowDirection == ArrowDirection.down;
+  bool _arrowIsVertical(ArrowDirection arrowDirection) =>
+      arrowDirection == ArrowDirection.up || arrowDirection == ArrowDirection.down;
 
-  /// Default focal point according the arrow direction.
-  double get _defaultArrowFocalPoint => _arrowIsVertical ? size.width / 2.0 : size.height / 2.0;
+  /// Minimum focal point for the given [arrowDirection].
+  double _minArrowFocalPoint(ArrowDirection arrowDirection) => _arrowIsVertical(arrowDirection)
+      ? _minArrowHorizontalCenter(arrowDirection)
+      : _minArrowVerticalCenter(arrowDirection);
 
-  /// Minimum focal point according the arrow direction.
-  double get _minArrowFocalPoint => _arrowIsVertical ? _minArrowHorizontalCenter : _minArrowVerticalCenter;
-
-  /// Maximum focal point according the arrow direction.
-  double get _maxArrowFocalPoint => _arrowIsVertical ? _maxArrowHorizontalCenter : _maxArrowVerticalCenter;
+  /// Maximum focal point for the given [arrowDirection].
+  double _maxArrowFocalPoint(ArrowDirection arrowDirection) => _arrowIsVertical(arrowDirection)
+      ? _maxArrowHorizontalCenter(arrowDirection)
+      : _maxArrowVerticalCenter(arrowDirection);
 
   /// Minimum distance on the x-axis which the arrow can be displayed.
-  double get _minArrowHorizontalCenter => (radius.x + arrowWidth / 2);
+  double _minArrowHorizontalCenter(ArrowDirection arrowDirection) => (radius.x + arrowBaseWidth / 2);
 
   /// Maximum distance on the x-axis which the arrow can be displayed.
-  double get _maxArrowHorizontalCenter => (size.width - radius.x - arrowWidth / 2);
+  double _maxArrowHorizontalCenter(ArrowDirection arrowDirection) =>
+      (size.width - radius.x - arrowBaseWidth - arrowLength / 2);
 
   /// Minimum distance on the y-axis which the arrow can be displayed.
-  double get _minArrowVerticalCenter => (radius.y + arrowWidth / 2);
+  double _minArrowVerticalCenter(ArrowDirection arrowDirection) => (radius.y + arrowBaseWidth / 2);
 
   /// Maximum distance on the y-axis which the arrow can be displayed.
-  double get _maxArrowVerticalCenter => (size.height - radius.y - arrowWidth / 2);
+  double _maxArrowVerticalCenter(ArrowDirection arrowDirection) =>
+      (size.height - radius.y - arrowLength - (arrowBaseWidth / 2));
 
-  /// Constrain the focal point to be inside the decoration bounds.
-  double _constrainFocalPoint(double desiredFocalPoint) {
-    return min(max(desiredFocalPoint, _minArrowFocalPoint), _maxArrowFocalPoint);
+  /// Constrain the focal point to be inside the menu bounds.
+  double _constrainFocalPoint(double desiredFocalPoint, ArrowDirection arrowDirection) {
+    return min(max(desiredFocalPoint, _minArrowFocalPoint(arrowDirection)), _maxArrowFocalPoint(arrowDirection));
   }
 }
 

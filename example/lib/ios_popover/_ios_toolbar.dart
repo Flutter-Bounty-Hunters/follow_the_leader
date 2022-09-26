@@ -5,50 +5,64 @@ import 'package:flutter/rendering.dart';
 
 import '_ios_popover_menu.dart';
 
+/// An iOS like popover toolbar.
+///
+/// Given a list of [children], the toolbar expands its width to fit all desired buttons,
+/// until the toolbar becomes as wide as possible. If there isn't
+/// enough room to display all the buttons, the toolbar switches to
+/// a left/right arrow system, to allow the user to explore all the options.
+///  
+/// Use [IosToolbar.paginated] to configure a fixed list of pages.
 class IosToolbar extends StatelessWidget {
   /// Creates a toolbar which auto paginates its children.
   const IosToolbar({
     Key? key,
+    required this.globalFocalPoint,
     this.radius = const Radius.circular(12),
-    this.arrowWidth = 18.0,
+    this.arrowBaseWidth = 18.0,
     this.arrowLength = 12.0,
-    required this.arrowDirection,
     this.padding,
     this.backgroundColor = const Color(0xFF333333),
-    this.arrowFocalPoint,
     required this.children,
   })  : pages = null,
-        assert(arrowDirection == ArrowDirection.up || arrowDirection == ArrowDirection.down),
         super(key: key);
 
   /// Creates a toolbar which is paginated using [pages].
   const IosToolbar.paginated({
-    Key? key,
+    super.key,
+    required this.globalFocalPoint,
     this.radius = const Radius.circular(12),
-    this.arrowWidth = 18.0,
+    this.arrowBaseWidth = 18.0,
     this.arrowLength = 12.0,
-    required this.arrowDirection,
     this.padding,
     this.backgroundColor = const Color(0xFF333333),
-    this.arrowFocalPoint,
     required this.pages,
-  })  : children = null,
-        super(key: key);
+  }) : children = null;
 
-  /// Radius of the menu decoration.
+  /// Radius of the corners.
   final Radius radius;
 
-  /// Width of the arrow.
-  final double arrowWidth;
+  /// Base of the arrow in pixels.
+  ///
+  /// If the arrow points up or down, [arrowBaseWidth] represents the number of
+  /// pixels in the x-axis. Otherwise, it represents the number of pixels
+  /// in the y-axis.
+  final double arrowBaseWidth;
 
-  /// Distance from the base to the end of the arrow.
+  // Extent of the arrow in pixels.
+  ///
+  /// If the arrow points up or down, [arrowLength] represents the number of
+  /// pixels in the y-axis. Otherwise, it represents the number of pixels
+  /// in the x-axis.
   final double arrowLength;
 
-  /// Direction where the arrow points to.
-  final ArrowDirection arrowDirection;
-
-  /// Center point of the arrow.
-  final double? arrowFocalPoint;
+  /// Global offset which the arrow should point to.
+  ///
+  /// If the arrow can't point to [globalFocalPoint], e.g.,
+  /// the arrow points up and `globalFocalPoint.dx` is outside
+  /// the menu bounds, then the the arrow will point towards
+  /// [globalFocalPoint] as much as possible.
+  final Offset globalFocalPoint;
 
   /// Padding around the menu content.
   final EdgeInsets? padding;
@@ -68,11 +82,11 @@ class IosToolbar extends StatelessWidget {
   Widget build(BuildContext context) {
     return IosPopoverMenu(
       radius: radius,
-      arrowWidth: arrowWidth,
+      arrowBaseWidth: arrowBaseWidth,
       arrowLength: arrowLength,
-      arrowDirection: arrowDirection,
       backgroundColor: backgroundColor,
-      arrowFocalPoint: arrowFocalPoint,
+      globalFocalPoint: globalFocalPoint,
+      allowHorizontalArrow: false,
       child: _IosToolbarContent(
         pages: pages,
         children: children,

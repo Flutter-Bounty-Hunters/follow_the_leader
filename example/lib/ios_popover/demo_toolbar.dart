@@ -1,7 +1,6 @@
 import 'package:example/ios_popover/_ios_toolbar.dart';
 import 'package:flutter/material.dart';
 
-import '_ios_popover_menu.dart';
 import '_toolbar_example.dart';
 
 class ToolbarDemo extends StatefulWidget {
@@ -45,29 +44,21 @@ class _ToolbarDemoState extends State<ToolbarDemo> {
       ToolbarDemoItem(
         label: 'Pointing Up',
         builder: (context) => ToolbarExample(
-          arrowDirection: ArrowDirection.up,
+          focalPoint: const Offset(600, 0),
           children: smallList,
         ),
       ),
       ToolbarDemoItem(
         label: 'Pointing Down',
         builder: (context) => ToolbarExample(
-          arrowDirection: ArrowDirection.down,
-          children: smallList,
-        ),
-      ),
-      ToolbarDemoItem(
-        label: 'Focal Point',
-        builder: (context) => ToolbarExample(
-          arrowDirection: ArrowDirection.down,
-          focalPoint: 50,
+          focalPoint: const Offset(600, 1000),
           children: smallList,
         ),
       ),
       ToolbarDemoItem(
         label: 'Auto Paginated',
         builder: (context) => ToolbarExample(
-          arrowDirection: ArrowDirection.down,
+          focalPoint: const Offset(600, 1000),
           constraints: const BoxConstraints(maxWidth: 300),
           children: longList,
         ),
@@ -75,7 +66,7 @@ class _ToolbarDemoState extends State<ToolbarDemo> {
       ToolbarDemoItem(
         label: 'Manually Paginated',
         builder: (context) => ToolbarExample(
-          arrowDirection: ArrowDirection.down,
+          focalPoint: const Offset(600, 1000),
           pages: [
             MenuPage(
               items: const [
