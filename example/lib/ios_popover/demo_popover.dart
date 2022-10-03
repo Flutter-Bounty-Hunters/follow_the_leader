@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '_ios_popover_menu.dart';
 import '_popover_example.dart';
 
 class PopoverDemo extends StatefulWidget {
@@ -39,6 +40,12 @@ class _PopoverDemoState extends State<PopoverDemo> {
         label: 'Pointing Right',
         builder: (context) => const PopoverExample(
           focalPoint: Offset(1000, 334),
+        ),
+      ),
+      PopoverDemoItem(
+        label: 'Draggable',
+        builder: (context) => const DraggableDemo(
+          focalPoint: Offset(500, 334),
         ),
       ),
     ];
@@ -101,4 +108,70 @@ class PopoverDemoItem {
     required this.label,
     required this.builder,
   });
+}
+
+class DraggableDemo extends StatefulWidget {
+  const DraggableDemo({
+    super.key,
+    required this.focalPoint,
+  });
+
+  final Offset focalPoint;
+
+  @override
+  State<DraggableDemo> createState() => _DraggableDemoState();
+}
+
+class _DraggableDemoState extends State<DraggableDemo> {
+  Offset _offset = const Offset(50, 50); 
+
+  void _onPanUpdate(DragUpdateDetails details) {
+    setState(() {
+      _offset += details.delta;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Positioned(
+          left: widget.focalPoint.dx,
+          top: widget.focalPoint.dy,
+          child: Container(
+            color: Colors.red,
+            height: 10,
+            width: 10,
+          ),
+        ),
+        Positioned(
+          left: _offset.dx,
+          top: _offset.dy,
+          child: GestureDetector(
+            onPanUpdate: _onPanUpdate,
+            child: IosPopoverMenu(
+              globalFocalPoint: widget.focalPoint,
+              padding: const EdgeInsets.all(12.0),
+              arrowBaseWidth: 21,
+              arrowLength: 20,
+              backgroundColor: const Color(0xFF474747),
+              child: const SizedBox(
+                width: 254,
+                height: 159,
+                child: Center(
+                  child: Text(
+                    'Popover Content',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }

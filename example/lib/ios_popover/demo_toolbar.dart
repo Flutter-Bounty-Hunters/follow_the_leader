@@ -92,6 +92,13 @@ class _ToolbarDemoState extends State<ToolbarDemo> {
           ],
         ),
       ),
+      ToolbarDemoItem(
+        label: 'Draggable',
+        builder: (context) => DraggableDemo(
+          focalPoint: const Offset(500, 334),
+          children: smallList,
+        ),
+      ),
     ];
     _selectedItem = itens.first;
   }
@@ -152,4 +159,60 @@ class ToolbarDemoItem {
     required this.label,
     required this.builder,
   });
+}
+
+class DraggableDemo extends StatefulWidget {
+  const DraggableDemo({
+    super.key,
+    required this.focalPoint,
+    required this.children,
+  });
+
+  final Offset focalPoint;
+  final List<Widget> children;
+
+  @override
+  State<DraggableDemo> createState() => _DraggableDemoState();
+}
+
+class _DraggableDemoState extends State<DraggableDemo> {
+  Offset _offset = const Offset(50, 50);
+
+  void _onPanUpdate(DragUpdateDetails details) {
+    setState(() {
+      _offset += details.delta;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Positioned(
+          left: widget.focalPoint.dx,
+          top: widget.focalPoint.dy,
+          child: Container(
+            color: Colors.red,
+            height: 10,
+            width: 10,
+          ),
+        ),
+        Positioned(
+          left: _offset.dx,
+          top: _offset.dy,
+          child: GestureDetector(
+            onPanUpdate: _onPanUpdate,
+            child: IosToolbar(
+              globalFocalPoint: widget.focalPoint,
+              padding: const EdgeInsets.all(12.0),
+              arrowBaseWidth: 21,
+              arrowLength: 20,
+              backgroundColor: const Color(0xFF474747),
+              children: widget.children,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }

@@ -87,6 +87,7 @@ class IosToolbar extends StatelessWidget {
       backgroundColor: backgroundColor,
       globalFocalPoint: globalFocalPoint,
       allowHorizontalArrow: false,
+      padding: padding,
       child: _IosToolbarContent(
         pages: pages,
         children: children,

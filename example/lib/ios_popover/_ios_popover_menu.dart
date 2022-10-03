@@ -214,6 +214,17 @@ class RenderPopover extends RenderShiftedBox {
   }
 
   @override
+  bool hitTest(BoxHitTestResult result, {required Offset position}) {
+    if (hitTestChildren(result, position: position)) {
+      return true;
+    }
+    // Allow hit-testing around the content, e.g, we might have padding and
+    // the user is trying to drag using the padding area.
+    final rect = Offset.zero & size;
+    return rect.contains(position);
+  }
+
+  @override
   bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
     final direction = _computeArrowDirection(Offset.zero & size, focalPoint);
     final contentOffset = _computeContentOffset(direction, arrowLength);
