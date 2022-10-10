@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 import '_ios_popover_menu.dart';
 
+/// An example of an [IosPopoverMenu] usage.
+///
+/// This example includes an [IosPopoverMenu] with fixed content.
 class PopoverExample extends StatelessWidget {
   const PopoverExample({
     super.key,

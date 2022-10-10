@@ -3,6 +3,12 @@ import 'package:flutter/material.dart';
 import '_ios_popover_menu.dart';
 import '_popover_example.dart';
 
+/// Demo which shows the capabilities of the [IosPopoverMenu].
+///
+/// This demo includes examples of the popover pointing up, down, left and right.
+///
+/// It also includes a draggable example, where the user can drag the popover around the screen
+/// and the popover updates the arrow direction to always point to the focal point.
 class PopoverDemo extends StatefulWidget {
   const PopoverDemo({Key? key}) : super(key: key);
 
@@ -11,13 +17,13 @@ class PopoverDemo extends StatefulWidget {
 }
 
 class _PopoverDemoState extends State<PopoverDemo> {
-  late List<PopoverDemoItem> itens;
+  late List<PopoverDemoItem> items;
   late PopoverDemoItem _selectedItem;
 
   @override
   void initState() {
     super.initState();
-    itens = [
+    items = [
       PopoverDemoItem(
         label: 'Pointing Up',
         builder: (context) => const PopoverExample(
@@ -49,7 +55,7 @@ class _PopoverDemoState extends State<PopoverDemo> {
         ),
       ),
     ];
-    _selectedItem = itens.first;
+    _selectedItem = items.first;
   }
 
   @override
@@ -70,7 +76,7 @@ class _PopoverDemoState extends State<PopoverDemo> {
                 child: Column(
                   children: [
                     const SizedBox(height: 48),
-                    for (final item in itens) ...[
+                    for (final item in items) ...[
                       _buildDemoButton(item),
                       const SizedBox(height: 24),
                     ]
@@ -123,7 +129,7 @@ class DraggableDemo extends StatefulWidget {
 }
 
 class _DraggableDemoState extends State<DraggableDemo> {
-  Offset _offset = const Offset(50, 50); 
+  Offset _offset = const Offset(50, 50);
 
   void _onPanUpdate(DragUpdateDetails details) {
     setState(() {

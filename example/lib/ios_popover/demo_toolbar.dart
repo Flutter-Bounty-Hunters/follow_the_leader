@@ -3,6 +3,13 @@ import 'package:flutter/material.dart';
 
 import '_toolbar_example.dart';
 
+/// Demo which shows the capabilities of the [IosToolbar].
+///
+/// This demo includes examples of the toolbar pointing up and down,
+/// menus with many pages, including an auto-paginated and a manually paginated menu.
+///
+/// It also includes a draggable example, where the user can drag the toolbar around the screen
+/// and the toolbar updates the arrow direction to always point to the focal point.
 class ToolbarDemo extends StatefulWidget {
   const ToolbarDemo({Key? key}) : super(key: key);
 
@@ -11,7 +18,7 @@ class ToolbarDemo extends StatefulWidget {
 }
 
 class _ToolbarDemoState extends State<ToolbarDemo> {
-  late List<ToolbarDemoItem> itens;
+  late List<ToolbarDemoItem> items;
   late ToolbarDemoItem _selectedItem;
 
   final smallList = const [
@@ -40,7 +47,7 @@ class _ToolbarDemoState extends State<ToolbarDemo> {
   void initState() {
     super.initState();
 
-    itens = [
+    items = [
       ToolbarDemoItem(
         label: 'Pointing Up',
         builder: (context) => ToolbarExample(
@@ -100,7 +107,7 @@ class _ToolbarDemoState extends State<ToolbarDemo> {
         ),
       ),
     ];
-    _selectedItem = itens.first;
+    _selectedItem = items.first;
   }
 
   @override
@@ -121,7 +128,7 @@ class _ToolbarDemoState extends State<ToolbarDemo> {
                 child: Column(
                   children: [
                     const SizedBox(height: 48),
-                    for (final item in itens) ...[
+                    for (final item in items) ...[
                       _buildDemoButton(item),
                       const SizedBox(height: 24),
                     ]

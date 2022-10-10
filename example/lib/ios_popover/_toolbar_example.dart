@@ -1,6 +1,13 @@
 import 'package:example/ios_popover/_ios_toolbar.dart';
 import 'package:flutter/material.dart';
 
+/// An example of an [IosToolbar] usage.
+///
+/// When [constraints] are provided, the toolbar is displayed inside a [ConstrainedBox].
+///
+/// Use [pages] to manually configure the menu pages.
+///
+/// Use [children] to let the toolbar compute the pages based on the available width.
 class ToolbarExample extends StatelessWidget {
   const ToolbarExample({
     super.key,

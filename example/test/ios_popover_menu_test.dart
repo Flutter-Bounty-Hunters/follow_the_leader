@@ -11,19 +11,7 @@ void main() {
       testGoldens('with center focal point', (tester) async {
         await loadAppFonts();
 
-        await _pumpToolbarScaffold(
-          tester,
-          child: const IosToolbar(
-            globalFocalPoint: Offset(250, 0),
-            children: [
-              IosMenuItem(label: 'Style'),
-              IosMenuItem(label: 'Duplicate'),
-              IosMenuItem(label: 'Cut'),
-              IosMenuItem(label: 'Copy'),
-              IosMenuItem(label: 'Paste')
-            ],
-          ),
-        );
+        await _pumpIosToolbar(tester, arrowFocalPoint: const Offset(250, 0));
 
         await screenMatchesGolden(tester, 'ios-toolbar/pointing-up-center-focal-point');
       });
@@ -31,19 +19,7 @@ void main() {
       testGoldens('with left focal point', (tester) async {
         await loadAppFonts();
 
-        await _pumpToolbarScaffold(
-          tester,
-          child: const IosToolbar(
-            globalFocalPoint: Offset(200, 0),
-            children: [
-              IosMenuItem(label: 'Style'),
-              IosMenuItem(label: 'Duplicate'),
-              IosMenuItem(label: 'Cut'),
-              IosMenuItem(label: 'Copy'),
-              IosMenuItem(label: 'Paste')
-            ],
-          ),
-        );
+        await _pumpIosToolbar(tester, arrowFocalPoint: const Offset(200, 0));
 
         await screenMatchesGolden(tester, 'ios-toolbar/pointing-up-left-focal-point');
       });
@@ -51,19 +27,7 @@ void main() {
       testGoldens('with left focal point too low', (tester) async {
         await loadAppFonts();
 
-        await _pumpToolbarScaffold(
-          tester,
-          child: const IosToolbar(
-            globalFocalPoint: Offset(0, 0),
-            children: [
-              IosMenuItem(label: 'Style'),
-              IosMenuItem(label: 'Duplicate'),
-              IosMenuItem(label: 'Cut'),
-              IosMenuItem(label: 'Copy'),
-              IosMenuItem(label: 'Paste')
-            ],
-          ),
-        );
+        await _pumpIosToolbar(tester, arrowFocalPoint: const Offset(0, 0));
 
         await screenMatchesGolden(tester, 'ios-toolbar/pointing-up-left-focal-point-too-low');
       });
@@ -71,19 +35,7 @@ void main() {
       testGoldens('with right focal point', (tester) async {
         await loadAppFonts();
 
-        await _pumpToolbarScaffold(
-          tester,
-          child: const IosToolbar(
-            globalFocalPoint: Offset(300, 0),
-            children: [
-              IosMenuItem(label: 'Style'),
-              IosMenuItem(label: 'Duplicate'),
-              IosMenuItem(label: 'Cut'),
-              IosMenuItem(label: 'Copy'),
-              IosMenuItem(label: 'Paste')
-            ],
-          ),
-        );
+        await _pumpIosToolbar(tester, arrowFocalPoint: const Offset(300, 0));
 
         await screenMatchesGolden(tester, 'ios-toolbar/pointing-up-right-focal-point');
       });
@@ -91,19 +43,7 @@ void main() {
       testGoldens('with right focal point too big', (tester) async {
         await loadAppFonts();
 
-        await _pumpToolbarScaffold(
-          tester,
-          child: const IosToolbar(
-            globalFocalPoint: Offset(600, 0),
-            children: [
-              IosMenuItem(label: 'Style'),
-              IosMenuItem(label: 'Duplicate'),
-              IosMenuItem(label: 'Cut'),
-              IosMenuItem(label: 'Copy'),
-              IosMenuItem(label: 'Paste')
-            ],
-          ),
-        );
+        await _pumpIosToolbar(tester, arrowFocalPoint: const Offset(600, 0));
 
         await screenMatchesGolden(tester, 'ios-toolbar/pointing-up-right-focal-point-too-big');
       });
@@ -113,19 +53,7 @@ void main() {
       testGoldens('with center focal point', (tester) async {
         await loadAppFonts();
 
-        await _pumpToolbarScaffold(
-          tester,
-          child: const IosToolbar(
-            globalFocalPoint: Offset(250, 1000),
-            children: [
-              IosMenuItem(label: 'Style'),
-              IosMenuItem(label: 'Duplicate'),
-              IosMenuItem(label: 'Cut'),
-              IosMenuItem(label: 'Copy'),
-              IosMenuItem(label: 'Paste')
-            ],
-          ),
-        );
+        await _pumpIosToolbar(tester, arrowFocalPoint: const Offset(250, 1000));
 
         await screenMatchesGolden(tester, 'ios-toolbar/pointing-down-center-focal-point');
       });
@@ -133,19 +61,7 @@ void main() {
       testGoldens('with left focal point', (tester) async {
         await loadAppFonts();
 
-        await _pumpToolbarScaffold(
-          tester,
-          child: const IosToolbar(
-            globalFocalPoint: Offset(150, 1000),
-            children: [
-              IosMenuItem(label: 'Style'),
-              IosMenuItem(label: 'Duplicate'),
-              IosMenuItem(label: 'Cut'),
-              IosMenuItem(label: 'Copy'),
-              IosMenuItem(label: 'Paste')
-            ],
-          ),
-        );
+        await _pumpIosToolbar(tester, arrowFocalPoint: const Offset(150, 1000));
 
         await screenMatchesGolden(tester, 'ios-toolbar/pointing-down-left-focal-point');
       });
@@ -153,19 +69,7 @@ void main() {
       testGoldens('with left focal point too low', (tester) async {
         await loadAppFonts();
 
-        await _pumpToolbarScaffold(
-          tester,
-          child: const IosToolbar(
-            globalFocalPoint: Offset(0, 1000),
-            children: [
-              IosMenuItem(label: 'Style'),
-              IosMenuItem(label: 'Duplicate'),
-              IosMenuItem(label: 'Cut'),
-              IosMenuItem(label: 'Copy'),
-              IosMenuItem(label: 'Paste')
-            ],
-          ),
-        );
+        await _pumpIosToolbar(tester, arrowFocalPoint: const Offset(0, 1000));
 
         await screenMatchesGolden(tester, 'ios-toolbar/pointing-down-left-focal-point-too-low');
       });
@@ -173,19 +77,7 @@ void main() {
       testGoldens('with right focal point', (tester) async {
         await loadAppFonts();
 
-        await _pumpToolbarScaffold(
-          tester,
-          child: const IosToolbar(
-            globalFocalPoint: Offset(350, 1000),
-            children: [
-              IosMenuItem(label: 'Style'),
-              IosMenuItem(label: 'Duplicate'),
-              IosMenuItem(label: 'Cut'),
-              IosMenuItem(label: 'Copy'),
-              IosMenuItem(label: 'Paste')
-            ],
-          ),
-        );
+        await _pumpIosToolbar(tester, arrowFocalPoint: const Offset(350, 1000));
 
         await screenMatchesGolden(tester, 'ios-toolbar/pointing-down-right-focal-point');
       });
@@ -193,19 +85,7 @@ void main() {
       testGoldens('with right focal point too big', (tester) async {
         await loadAppFonts();
 
-        await _pumpToolbarScaffold(
-          tester,
-          child: const IosToolbar(
-            globalFocalPoint: Offset(1000, 1000),
-            children: [
-              IosMenuItem(label: 'Style'),
-              IosMenuItem(label: 'Duplicate'),
-              IosMenuItem(label: 'Cut'),
-              IosMenuItem(label: 'Copy'),
-              IosMenuItem(label: 'Paste')
-            ],
-          ),
-        );
+        await _pumpIosToolbar(tester, arrowFocalPoint: const Offset(1000, 1000));
 
         await screenMatchesGolden(tester, 'ios-toolbar/pointing-down-right-focal-point-too-big');
       });
@@ -393,10 +273,7 @@ void main() {
 
     group('pointing left', () {
       testGoldens('with center focal point', (tester) async {
-        await _pumpPopoverMenuTestApp(
-          tester,
-          arrowFocalPoint: const Offset(0, 242)
-        );
+        await _pumpPopoverMenuTestApp(tester, arrowFocalPoint: const Offset(0, 242));
 
         await screenMatchesGolden(tester, 'ios-popover-menu/pointing-left-center-focal-point');
       });
@@ -440,10 +317,7 @@ void main() {
 
     group('pointing right', () {
       testGoldens('without center focal point', (tester) async {
-        await _pumpPopoverMenuTestApp(
-          tester,
-           arrowFocalPoint: const Offset(1000, 242)
-        );
+        await _pumpPopoverMenuTestApp(tester, arrowFocalPoint: const Offset(1000, 242));
 
         await screenMatchesGolden(tester, 'ios-popover-menu/pointing-right-center-focal-point');
       });
@@ -487,6 +361,25 @@ void main() {
   });
 }
 
+Future<void> _pumpIosToolbar(
+  WidgetTester tester, {
+  required Offset arrowFocalPoint,
+}) async {
+  await _pumpToolbarScaffold(
+    tester,
+    child: IosToolbar(
+      globalFocalPoint: arrowFocalPoint,
+      children: const [
+        IosMenuItem(label: 'Style'),
+        IosMenuItem(label: 'Duplicate'),
+        IosMenuItem(label: 'Cut'),
+        IosMenuItem(label: 'Copy'),
+        IosMenuItem(label: 'Paste')
+      ],
+    ),
+  );
+}
+
 Future<void> _pumpToolbarScaffold(WidgetTester tester, {required Widget child}) async {
   tester.binding.window
     ..physicalSizeTestValue = const Size(500, 500)
@@ -505,7 +398,7 @@ Future<void> _pumpToolbarScaffold(WidgetTester tester, {required Widget child}) 
 }
 
 Future<void> _pumpPopoverMenuTestApp(
-  WidgetTester tester, {  
+  WidgetTester tester, {
   required Offset arrowFocalPoint,
 }) async {
   tester.binding.window

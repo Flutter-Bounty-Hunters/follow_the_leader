@@ -11,7 +11,7 @@ class IosPopoverMenu extends SingleChildRenderObjectWidget {
   const IosPopoverMenu({
     super.key,
     required this.globalFocalPoint,
-    this.radius = const Radius.circular(12),
+    this.borderRadius = 12.0,
     this.arrowBaseWidth = 18.0,
     this.arrowLength = 12.0,
     this.allowHorizontalArrow = true,
@@ -21,7 +21,7 @@ class IosPopoverMenu extends SingleChildRenderObjectWidget {
   });
 
   /// Radius of the corners.
-  final Radius radius;
+  final double borderRadius;
 
   /// Base of the arrow in pixels.
   ///
@@ -59,7 +59,7 @@ class IosPopoverMenu extends SingleChildRenderObjectWidget {
   @override
   RenderObject createRenderObject(BuildContext context) {
     return RenderPopover(
-      radius: radius,
+      borderRadius: borderRadius,
       arrowWidth: arrowBaseWidth,
       arrowLength: arrowLength,
       padding: padding,
@@ -73,7 +73,7 @@ class IosPopoverMenu extends SingleChildRenderObjectWidget {
   void updateRenderObject(BuildContext context, covariant RenderPopover renderObject) {
     super.updateRenderObject(context, renderObject);
     renderObject
-      ..radius = radius
+      ..borderRadius = borderRadius
       ..arrowBaseWidth = arrowBaseWidth
       ..arrowLength = arrowLength
       ..padding = padding
@@ -85,7 +85,7 @@ class IosPopoverMenu extends SingleChildRenderObjectWidget {
 
 class RenderPopover extends RenderShiftedBox {
   RenderPopover({
-    required Radius radius,
+    required double borderRadius,
     required double arrowWidth,
     required double arrowLength,
     required Color backgroundColor,
@@ -93,7 +93,7 @@ class RenderPopover extends RenderShiftedBox {
     bool allowHorizontalArrow = true,
     EdgeInsets? padding,
     RenderBox? child,
-  })  : _radius = radius,
+  })  : _borderRadius = borderRadius,
         _arrowBaseWidth = arrowWidth,
         _arrowLength = arrowLength,
         _padding = padding,
@@ -103,11 +103,11 @@ class RenderPopover extends RenderShiftedBox {
         _allowHorizontalArrow = allowHorizontalArrow,
         super(child);
 
-  Radius _radius;
-  Radius get radius => _radius;
-  set radius(Radius value) {
-    if (_radius != value) {
-      _radius = value;
+  double _borderRadius;
+  double get borderRadius => _borderRadius;
+  set borderRadius(double value) {
+    if (_borderRadius != value) {
+      _borderRadius = value;
       markNeedsLayout();
     }
   }
@@ -172,15 +172,14 @@ class RenderPopover extends RenderShiftedBox {
   @override
   void performLayout() {
     // We need to know our offset in order to calculate the arrow direction
-    // and we only know our offset at paint phase.
+    // and we don't know our offset until the paint phase.
     // Therefore, we need to reserve space for the arrow in both axes.
     final reservedSize = Size(
-      (padding?.horizontal ?? 0) + arrowLength,
-      (padding?.vertical ?? 0) + arrowLength,
+      (padding?.horizontal ?? 0) + arrowLength * 2,
+      (padding?.vertical ?? 0) + arrowLength * 2,
     );
 
-    // The child cannot take the size reserved for padding or
-    // for displaying the arrow.
+    // Compute the child constraints to leave space for the arrow.
     final innerConstraints = constraints.enforce(
       BoxConstraints(
         maxHeight: constraints.maxHeight - reservedSize.height,
@@ -204,9 +203,9 @@ class RenderPopover extends RenderShiftedBox {
     final arrowCenter = _computeArrowCenter(direction, localFocalPoint);
     final contentOffset = _computeContentOffset(direction, arrowLength);
 
-    final path = _buildPath(direction, arrowCenter);
+    final borderPath = _buildBorderPath(direction, arrowCenter);
 
-    context.canvas.drawPath(path.shift(offset), _backgroundPaint);
+    context.canvas.drawPath(borderPath.shift(offset), _backgroundPaint);
 
     if (child != null) {
       context.paintChild(child!, offset + contentOffset);
@@ -240,21 +239,23 @@ class RenderPopover extends RenderShiftedBox {
   }
 
   /// Builds the path used to paint the menu.
-  Path _buildPath(ArrowDirection arrowDirection, double arrowCenter) {
+  ///
+  /// The path includes a rounded rectangle and a arrow pointing to [arrowDirection], centered at [arrowCenter].
+  Path _buildBorderPath(ArrowDirection arrowDirection, double arrowCenter) {
     final halfOfBase = arrowBaseWidth / 2;
 
     // Adjust the rect to leave space for the arrow.
     // During layout, we reserve space for the arrow in both x and y axis.
     final contentRect = Rect.fromLTWH(
-      arrowDirection == ArrowDirection.left ? arrowLength : 0,
-      arrowDirection == ArrowDirection.up ? arrowLength : 0,
-      size.width - arrowLength,
-      size.height - arrowLength,
+      arrowLength,
+      arrowLength,
+      size.width - arrowLength * 2,
+      size.height - arrowLength * 2,
     );
 
-    Path path = Path()..addRRect(RRect.fromRectAndRadius(contentRect, radius));
+    Path path = Path()..addRRect(RRect.fromRectAndRadius(contentRect, Radius.circular(borderRadius)));
 
-    // Add the arrow points.
+    // Add the arrow.
     if (arrowDirection == ArrowDirection.left) {
       path
         ..moveTo(contentRect.centerLeft.dx, arrowCenter - halfOfBase)
@@ -283,9 +284,15 @@ class RenderPopover extends RenderShiftedBox {
   }
 
   /// Computes the direction where the arrow should point to.
+  ///
+  /// If [globalFocalPoint] is inside the [menuRect] horizontal bounds, the arrow points up or right. Otherwise,
+  /// the arrow points left or right.
+  ///
+  /// If [allowHorizontalArrow] is `false`, the arrow only points up or down.
   ArrowDirection _computeArrowDirection(Rect menuRect, Offset globalFocalPoint) {
-    if ((globalFocalPoint.dx >= menuRect.left && globalFocalPoint.dx <= menuRect.right) || !allowHorizontalArrow) {
-      // The focal point is within our horizontal bounds or we don't allow the arrow to point left or right.
+    final isFocalPointInsideHorizontalBounds =
+        globalFocalPoint.dx >= menuRect.left && globalFocalPoint.dx <= menuRect.right;
+    if (isFocalPointInsideHorizontalBounds || !allowHorizontalArrow) {
       if (globalFocalPoint.dy < menuRect.top) {
         return ArrowDirection.up;
       }
@@ -298,57 +305,57 @@ class RenderPopover extends RenderShiftedBox {
     }
   }
 
-  /// Computes the point where the arrow should be centered around.
+  /// Computes the center point of the arrow.
   ///
   /// This point can be on the x or y axis, depending on the [direction].
   double _computeArrowCenter(ArrowDirection direction, Offset focalPoint) {
-    final desiredFocalPoint = _arrowIsVertical(direction) //
+    final desiredFocalPoint = _isArrowVertical(direction) //
         ? focalPoint.dx
         : focalPoint.dy;
 
     return _constrainFocalPoint(desiredFocalPoint, direction);
   }
 
-  /// Computes the (x, y) offset of the menu content.
+  /// Computes the (x, y) offset used to paint the menu content inside the popover.
   ///
   /// When [direction] is up or left, the content needs to be shifted
   /// to leave space for the arrow.
   Offset _computeContentOffset(ArrowDirection direction, double arrowLength) {
     return Offset(
-      (padding?.left ?? 0) + (direction == ArrowDirection.left ? arrowLength : 0.0),
-      (padding?.top ?? 0) + (direction == ArrowDirection.up ? arrowLength : 0.0),
+      (padding?.left ?? 0) + arrowLength,
+      (padding?.top ?? 0) + arrowLength,
     );
   }
 
   /// Indicates whether or not the arrow points to a vertical direction.
-  bool _arrowIsVertical(ArrowDirection arrowDirection) =>
+  bool _isArrowVertical(ArrowDirection arrowDirection) =>
       arrowDirection == ArrowDirection.up || arrowDirection == ArrowDirection.down;
 
-  /// Minimum focal point for the given [arrowDirection].
-  double _minArrowFocalPoint(ArrowDirection arrowDirection) => _arrowIsVertical(arrowDirection)
+  /// Minimum focal point for the given [arrowDirection] in which the arrow can be displayed inside the popover bounds.
+  double _minArrowFocalPoint(ArrowDirection arrowDirection) => _isArrowVertical(arrowDirection)
       ? _minArrowHorizontalCenter(arrowDirection)
       : _minArrowVerticalCenter(arrowDirection);
 
-  /// Maximum focal point for the given [arrowDirection].
-  double _maxArrowFocalPoint(ArrowDirection arrowDirection) => _arrowIsVertical(arrowDirection)
+  /// Maximum focal point for the given [arrowDirection] in which the arrow can be displayed inside the popover bounds.
+  double _maxArrowFocalPoint(ArrowDirection arrowDirection) => _isArrowVertical(arrowDirection)
       ? _maxArrowHorizontalCenter(arrowDirection)
       : _maxArrowVerticalCenter(arrowDirection);
 
-  /// Minimum distance on the x-axis which the arrow can be displayed.
-  double _minArrowHorizontalCenter(ArrowDirection arrowDirection) => (radius.x + arrowBaseWidth / 2);
+  /// Minimum distance on the x-axis in which the arrow can be displayed without being above the corner.
+  double _minArrowHorizontalCenter(ArrowDirection arrowDirection) => (borderRadius + arrowBaseWidth / 2) + arrowLength;
 
-  /// Maximum distance on the x-axis which the arrow can be displayed.
+  /// Maximum distance on the x-axis in which the arrow can be displayed without being above the corner.
   double _maxArrowHorizontalCenter(ArrowDirection arrowDirection) =>
-      (size.width - radius.x - arrowBaseWidth - arrowLength / 2);
+      (size.width - borderRadius - arrowBaseWidth - arrowLength / 2);
 
-  /// Minimum distance on the y-axis which the arrow can be displayed.
-  double _minArrowVerticalCenter(ArrowDirection arrowDirection) => (radius.y + arrowBaseWidth / 2);
+  /// Minimum distance on the y-axis which the arrow can be displayed without being above the corner.
+  double _minArrowVerticalCenter(ArrowDirection arrowDirection) => (borderRadius + arrowBaseWidth / 2) + arrowLength;
 
-  /// Maximum distance on the y-axis which the arrow can be displayed.
+  /// Maximum distance on the y-axis which the arrow can be displayed without being above the corner.
   double _maxArrowVerticalCenter(ArrowDirection arrowDirection) =>
-      (size.height - radius.y - arrowLength - (arrowBaseWidth / 2));
+      (size.height - borderRadius - arrowLength - (arrowBaseWidth / 2));
 
-  /// Constrain the focal point to be inside the menu bounds.
+  /// Constrain the focal point to be inside the menu bounds, respecting the minimum and maximum focal points.
   double _constrainFocalPoint(double desiredFocalPoint, ArrowDirection arrowDirection) {
     return min(max(desiredFocalPoint, _minArrowFocalPoint(arrowDirection)), _maxArrowFocalPoint(arrowDirection));
   }

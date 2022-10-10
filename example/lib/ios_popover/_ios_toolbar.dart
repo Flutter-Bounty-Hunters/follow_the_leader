@@ -1,26 +1,26 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
 import '_ios_popover_menu.dart';
 
-/// An iOS like popover toolbar.
+/// An iOS-style popover toolbar.
 ///
-/// Given a list of [children], the toolbar expands its width to fit all desired buttons,
-/// until the toolbar becomes as wide as possible. If there isn't
-/// enough room to display all the buttons, the toolbar switches to
-/// a left/right arrow system, to allow the user to explore all the options.
-///  
+/// An [IosToolbar] displays a row of buttons. The toolbar expands to fit all buttons, unless that width exceeds
+/// the available space. When the total width of the buttons exceed the available width, the toolbar displays
+/// an arrow button on the left and the right of the toolbar, which scroll the buttons to the left/right, respectively.
+///
 /// Use [IosToolbar.paginated] to configure a fixed list of pages.
-class IosToolbar extends StatelessWidget {
-  /// Creates a toolbar which auto paginates its children.
+class IosToolbar extends StatefulWidget {
+  /// Creates a toolbar which automatically computes pages of menu items based on the available width.
+  ///
+  /// If all the items fit inside the available width, next page and previous page buttons aren't displayed.
   const IosToolbar({
     Key? key,
     required this.globalFocalPoint,
-    this.radius = const Radius.circular(12),
+    this.borderRadius = 12.0,
     this.arrowBaseWidth = 18.0,
     this.arrowLength = 12.0,
+    this.height = 39.0,
     this.padding,
     this.backgroundColor = const Color(0xFF333333),
     required this.children,
@@ -31,16 +31,17 @@ class IosToolbar extends StatelessWidget {
   const IosToolbar.paginated({
     super.key,
     required this.globalFocalPoint,
-    this.radius = const Radius.circular(12),
+    this.borderRadius = 12.0,
     this.arrowBaseWidth = 18.0,
     this.arrowLength = 12.0,
+    this.height = 39.0,
     this.padding,
     this.backgroundColor = const Color(0xFF333333),
     required this.pages,
   }) : children = null;
 
   /// Radius of the corners.
-  final Radius radius;
+  final double borderRadius;
 
   /// Base of the arrow in pixels.
   ///
@@ -71,64 +72,65 @@ class IosToolbar extends StatelessWidget {
   final Color backgroundColor;
 
   /// Pages of menu items.
+  ///
+  /// Can't be provided if [children] are provided.
+  ///
+  /// Use [children] to let the toolbar automatically compute the pages.
   final List<MenuPage>? pages;
 
   /// List of menu items.
   ///
   /// The pages are automatically computed.
+  ///
+  /// Can't be provided if [pages] are provided.
+  ///
+  /// Use [pages] to mannually configure the list of pages.
   final List<Widget>? children;
+
+  /// Height of the toolbar.
+  ///
+  /// All of the items will have this exact height.
+  final double height;
+
+  @override
+  State<IosToolbar> createState() => _IosToolbarState();
+}
+
+class _IosToolbarState extends State<IosToolbar> {
+  final _MenuPageController _controller = _MenuPageController();
 
   @override
   Widget build(BuildContext context) {
     return IosPopoverMenu(
-      radius: radius,
-      arrowBaseWidth: arrowBaseWidth,
-      arrowLength: arrowLength,
-      backgroundColor: backgroundColor,
-      globalFocalPoint: globalFocalPoint,
+      borderRadius: widget.borderRadius,
+      arrowBaseWidth: widget.arrowBaseWidth,
+      arrowLength: widget.arrowLength,
+      backgroundColor: widget.backgroundColor,
+      globalFocalPoint: widget.globalFocalPoint,
       allowHorizontalArrow: false,
-      padding: padding,
-      child: _IosToolbarContent(
-        pages: pages,
-        children: children,
-      ),
+      padding: widget.padding,
+      child: _buildContent(),
     );
   }
-}
 
-/// A page of menu items.
-class MenuPage {
-  MenuPage({required this.items});
-  final List<Widget> items;
-}
-
-/// A popover menu which displays [pages] of items or automatically
-/// paginates its [children] based on the available size.
-///
-/// Buttons to access the next/previous page are included by default.
-///
-/// Either [pages] of [children] must be non-null.
-class _IosToolbarContent extends StatefulWidget {
-  const _IosToolbarContent({
-    Key? key,
-    this.pages,
-    this.children,
-  })  : assert(pages != null || children != null),
-        assert(pages == null || children == null),
-        super(key: key);
-
-  /// List of items to be auto-paginated.
-  final List<Widget>? children;
-
-  /// List of pages containing the menu items.
-  final List<MenuPage>? pages;
-
-  @override
-  State<_IosToolbarContent> createState() => _IosToolbarContentState();
-}
-
-class _IosToolbarContentState extends State<_IosToolbarContent> {
-  final _MenuPageController _controller = _MenuPageController();
+  Widget _buildContent() {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 39, maxHeight: 39),
+          child: _IosToolbarMenuContent(
+            controller: _controller,
+            height: widget.height,
+            previousButton: _buildPreviousPageButton(),
+            nextButton: _buildNextPageButton(),
+            pages: widget.pages,
+            children: widget.children,
+          ),
+        );
+      },
+    );
+  }
 
   /// Creates the button which points to the previous page.
   Widget _buildPreviousPageButton() {
@@ -137,7 +139,7 @@ class _IosToolbarContentState extends State<_IosToolbarContent> {
         padding: const EdgeInsets.all(0),
         minimumSize: const Size(30, 0),
       ),
-      onPressed: _controller.goToPrevious,
+      onPressed: _controller.previous,
       child: Icon(
         Icons.arrow_left,
         color: _controller.isFirstPage ? Colors.grey : Colors.white,
@@ -152,32 +154,22 @@ class _IosToolbarContentState extends State<_IosToolbarContent> {
         padding: const EdgeInsets.all(0),
         minimumSize: const Size(30, 0),
       ),
-      onPressed: _controller.goToNext,
+      onPressed: _controller.next,
       child: Icon(
         Icons.arrow_right,
         color: _controller.isLastPage ? Colors.grey : Colors.white,
       ),
     );
   }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return _IosPaginatedMenu(
-          controller: _controller,
-          previousButton: _buildPreviousPageButton(),
-          nextButton: _buildNextPageButton(),
-          pages: widget.pages,
-          children: widget.children,
-        );
-      },
-    );
-  }
 }
 
-/// Controls a paginated menu.
+/// A page of menu items.
+class MenuPage {
+  MenuPage({required this.items});
+  final List<Widget> items;
+}
+
+/// Controls a menu which can contain many pages of items.
 class _MenuPageController extends ChangeNotifier {
   int _currentPage = 1;
   int _maxPages = 1;
@@ -207,28 +199,29 @@ class _MenuPageController extends ChangeNotifier {
   }
 
   /// Advances to the next page, notifying listeners.
-  void goToNext() {
+  void next() {
     if (currentPage < pageCount) {
-      currentPage++;
+      currentPage += 1;
     }
   }
 
   /// Goes back to the previous page, notifying listeners.
-  void goToPrevious() {
+  void previous() {
     if (currentPage > 1) {
-      currentPage--;
+      currentPage -= 1;
     }
   }
 }
 
-/// Displays a list of menu itens.
+/// Displays a list of menu items.
 ///
 /// Use [pages] to manually control the items in each page.
 ///
 /// Use [children] to let this widget auto-paginate based on the available space.
-class _IosPaginatedMenu extends MultiChildRenderObjectWidget {
-  _IosPaginatedMenu({
+class _IosToolbarMenuContent extends MultiChildRenderObjectWidget {
+  _IosToolbarMenuContent({
     required this.controller,
+    required this.height,
     required Widget previousButton,
     required Widget nextButton,
     List<Widget>? children,
@@ -250,10 +243,13 @@ class _IosPaginatedMenu extends MultiChildRenderObjectWidget {
 
   final _MenuPageController controller;
 
+  final double height;
+
   @override
   RenderObject createRenderObject(BuildContext context) {
     return _RenderIosPagedMenu(
       controller: controller,
+      height: height,
       autoPaginated: _autoPaginated,
       pages: _menuPagesToPageInfo(),
     );
@@ -263,6 +259,7 @@ class _IosPaginatedMenu extends MultiChildRenderObjectWidget {
   void updateRenderObject(BuildContext context, covariant _RenderIosPagedMenu renderObject) {
     renderObject
       ..controller = controller
+      ..height = height
       ..autoPaginated = _autoPaginated
       ..pages = _menuPagesToPageInfo();
   }
@@ -300,9 +297,11 @@ class _RenderIosPagedMenu extends RenderBox
         RenderBoxContainerDefaultsMixin<RenderBox, _IosPagerParentData> {
   _RenderIosPagedMenu({
     required _MenuPageController controller,
+    required double height,
     List<_MenuPageInfo>? pages,
     bool autoPaginated = true,
   })  : _controller = controller,
+        _height = height,
         _pages = pages,
         _autoPaginated = autoPaginated;
 
@@ -323,6 +322,15 @@ class _RenderIosPagedMenu extends RenderBox
   set autoPaginated(bool value) {
     if (_autoPaginated != value) {
       _autoPaginated = value;
+      markNeedsLayout();
+    }
+  }
+
+  double _height;
+  double get height => _height;
+  set height(double value) {
+    if (_height != value) {
+      _height = value;
       markNeedsLayout();
     }
   }
@@ -367,18 +375,24 @@ class _RenderIosPagedMenu extends RenderBox
     // Children include the navigation buttons.
     final children = getChildrenAsList();
 
-    double height = 0;
-    double width = 0;
+    // Force the children to use a fixed height.
+    final innerConstraints = constraints.enforce(
+      BoxConstraints(
+        minHeight: height,
+        maxHeight: height,
+      ),
+    );
 
-    // Layout all the children and get the maxHeight.
+    // Layout all the children.
     for (int i = 0; i < children.length; i++) {
       final child = children[i];
-      child.layout(constraints, parentUsesSize: true);
-      height = max(height, child.size.height);
+      child.layout(innerConstraints, parentUsesSize: true);
     }
 
     // Page to be displayed.
     final currentPage = _pages![_controller.currentPage - 1];
+
+    double width = 0;
 
     if (hasMultiplePages) {
       // Computes previous button position.
@@ -509,7 +523,11 @@ class _RenderIosPagedMenu extends RenderBox
     );
   }
 
-  /// Computes all the pages.
+  /// Computes the list of pages.
+  ///
+  /// This is used when the toolbar is configured to automatically compute the pages.
+  ///
+  /// Each page will contain as many items as possible, respecting the available width.
   void _computePages() {
     final pages = <_MenuPageInfo>[];
     int currentPageStartingIndex = 1;
@@ -579,7 +597,7 @@ class _RenderIosPagedMenu extends RenderBox
   }
 }
 
-/// Represent the start and end indexes of a page.
+/// Represent the start and end indices of a page.
 class _MenuPageInfo {
   _MenuPageInfo({
     required this.startingIndex,
