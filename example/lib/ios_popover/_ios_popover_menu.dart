@@ -171,15 +171,12 @@ class RenderPopover extends RenderShiftedBox {
 
   @override
   void performLayout() {
-    // We need to know our offset in order to calculate the arrow direction
-    // and we don't know our offset until the paint phase.
-    // Therefore, we need to reserve space for the arrow in both axes.
     final reservedSize = Size(
       (padding?.horizontal ?? 0) + arrowLength * 2,
       (padding?.vertical ?? 0) + arrowLength * 2,
     );
 
-    // Compute the child constraints to leave space for the arrow.
+    // Compute the child constraints to leave space for the arrow and padding.
     final innerConstraints = constraints.enforce(
       BoxConstraints(
         maxHeight: constraints.maxHeight - reservedSize.height,
@@ -201,7 +198,7 @@ class RenderPopover extends RenderShiftedBox {
 
     final direction = _computeArrowDirection(offset & size, focalPoint);
     final arrowCenter = _computeArrowCenter(direction, localFocalPoint);
-    final contentOffset = _computeContentOffset(direction, arrowLength);
+    final contentOffset = _computeContentOffset(arrowLength);
 
     final borderPath = _buildBorderPath(direction, arrowCenter);
 
@@ -225,8 +222,7 @@ class RenderPopover extends RenderShiftedBox {
 
   @override
   bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
-    final direction = _computeArrowDirection(Offset.zero & size, focalPoint);
-    final contentOffset = _computeContentOffset(direction, arrowLength);
+    final contentOffset = _computeContentOffset(arrowLength);
 
     return result.addWithPaintOffset(
       offset: contentOffset,
@@ -317,10 +313,7 @@ class RenderPopover extends RenderShiftedBox {
   }
 
   /// Computes the (x, y) offset used to paint the menu content inside the popover.
-  ///
-  /// When [direction] is up or left, the content needs to be shifted
-  /// to leave space for the arrow.
-  Offset _computeContentOffset(ArrowDirection direction, double arrowLength) {
+  Offset _computeContentOffset(double arrowLength) {
     return Offset(
       (padding?.left ?? 0) + arrowLength,
       (padding?.top ?? 0) + arrowLength,
