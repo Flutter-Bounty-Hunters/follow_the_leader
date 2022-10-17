@@ -63,6 +63,7 @@ class IosPopoverMenu extends SingleChildRenderObjectWidget {
       arrowWidth: arrowBaseWidth,
       arrowLength: arrowLength,
       padding: padding,
+      screenSize: MediaQuery.of(context).size,
       backgroundColor: backgroundColor,
       focalPoint: globalFocalPoint,
       allowHorizontalArrow: allowHorizontalArrow,
@@ -77,6 +78,7 @@ class IosPopoverMenu extends SingleChildRenderObjectWidget {
       ..arrowBaseWidth = arrowBaseWidth
       ..arrowLength = arrowLength
       ..padding = padding
+      ..screenSize = MediaQuery.of(context).size
       ..focalPoint = globalFocalPoint
       ..backgroundColor = backgroundColor
       ..allowHorizontalArrow = allowHorizontalArrow;
@@ -90,6 +92,7 @@ class RenderPopover extends RenderShiftedBox {
     required double arrowLength,
     required Color backgroundColor,
     required Offset focalPoint,
+    required Size screenSize,
     bool allowHorizontalArrow = true,
     EdgeInsets? padding,
     RenderBox? child,
@@ -97,6 +100,7 @@ class RenderPopover extends RenderShiftedBox {
         _arrowBaseWidth = arrowWidth,
         _arrowLength = arrowLength,
         _padding = padding,
+        _screenSize = screenSize,
         _backgroundColor = backgroundColor,
         _backgroundPaint = Paint()..color = backgroundColor,
         _focalPoint = focalPoint,
@@ -148,6 +152,15 @@ class RenderPopover extends RenderShiftedBox {
     }
   }
 
+  Size _screenSize;
+  Size get screenSize => _screenSize;
+  set screenSize(Size value) {
+    if (value != _screenSize) {
+      _screenSize = value;
+      markNeedsLayout();
+    }
+  }
+
   Color _backgroundColor;
   Color get backgroundColor => _backgroundColor;
   set backgroundColor(Color value) {
@@ -179,8 +192,8 @@ class RenderPopover extends RenderShiftedBox {
     // Compute the child constraints to leave space for the arrow and padding.
     final innerConstraints = constraints.enforce(
       BoxConstraints(
-        maxHeight: constraints.maxHeight - reservedSize.height,
-        maxWidth: constraints.maxWidth - reservedSize.width,
+        maxHeight: min(_screenSize.height, constraints.maxHeight) - reservedSize.height,
+        maxWidth: min(_screenSize.width, constraints.maxWidth) - reservedSize.width,
       ),
     );
 
