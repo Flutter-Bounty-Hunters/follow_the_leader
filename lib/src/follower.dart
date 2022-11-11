@@ -1,6 +1,5 @@
 import 'dart:ui' as ui;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:follow_the_leader/follow_the_leader.dart';
@@ -242,8 +241,11 @@ class RenderFollowerLayer extends RenderProxyBox {
 
   @override
   bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    final followerOffset = _previousFollowerOffset ?? Offset.zero;
+    final transform = layer?.getLastTransform()?..translate(followerOffset.dx, followerOffset.dy);
+
     return result.addWithPaintTransform(
-      transform: getCurrentTransform(),
+      transform: transform,
       position: position,
       hitTest: (BoxHitTestResult result, Offset position) {
         return super.hitTestChildren(result, position: position);
@@ -260,6 +262,13 @@ class RenderFollowerLayer extends RenderProxyBox {
 
     if (!link.leaderConnected && _previousFollowerOffset == null) {
       followerLog.fine("The leader isn't connected and there's no cached offset. Not painting anything.");
+      // In the first frame we are not connected to the leader.
+      // Check again in the next frame.
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        if (link.leaderConnected) {
+          markNeedsPaint();
+        }
+      });
       return;
     }
 
