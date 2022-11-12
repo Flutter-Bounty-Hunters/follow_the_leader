@@ -133,6 +133,7 @@ class RenderFollowerLayer extends RenderProxyBox {
     if (_link == value) return;
     followerLog.fine("Setting new link");
     _link = value;
+    _firstPaintOfCurrentLink = true;
     markNeedsPaint();
   }
 
@@ -256,19 +257,31 @@ class RenderFollowerLayer extends RenderProxyBox {
   Offset? _previousFollowerOffset;
   Offset? get previousFollowerOffset => _previousFollowerOffset;
 
+  /// Indicates whether or not we are in the first paint of the current [CustomLayerLink].
+  bool _firstPaintOfCurrentLink = true;
+
   @override
   void paint(PaintingContext context, Offset offset) {
     followerLog.fine("Painting composited follower: $offset");
 
     if (!link.leaderConnected && _previousFollowerOffset == null) {
       followerLog.fine("The leader isn't connected and there's no cached offset. Not painting anything.");
+      if (!_firstPaintOfCurrentLink) {
+        // We already painted and we still don't have a leader connected.
+        // Avoid subsequent paint requests.
+        return;
+      }
+      _firstPaintOfCurrentLink = false;
+
       // In the first frame we are not connected to the leader.
-      // Check again in the next frame.
+      // Check again in the next frame only if it's the first paint of the current link.
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         if (link.leaderConnected) {
           markNeedsPaint();
         }
       });
+
+      // Wait until the next frame to check if we have a leader connected.
       return;
     }
 
