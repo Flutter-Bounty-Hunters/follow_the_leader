@@ -251,6 +251,7 @@ class RenderFollowerLayer extends RenderProxyBox {
   }
 
   Offset? _previousFollowerOffset;
+  Offset? get previousFollowerOffset => _previousFollowerOffset;
 
   @override
   void paint(PaintingContext context, Offset offset) {

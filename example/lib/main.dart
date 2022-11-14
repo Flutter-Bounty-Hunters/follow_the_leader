@@ -1,3 +1,4 @@
+import 'package:example/demo_boucing_ball.dart';
 import 'package:example/ios_popover/demo_toolbar.dart';
 import 'package:flutter/material.dart';
 
@@ -97,6 +98,10 @@ final _items = [
   _MenuItem(
     title: 'iOS Toolbar',
     pageBuilder: (context) => const ToolbarDemo(),
+  ),
+  _MenuItem(
+    title: 'Bouncing Ball',
+    pageBuilder: (context) => const BoucingBallDemo(),
   ),
 ];
 
