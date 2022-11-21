@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
+import 'package:follow_the_leader/follow_the_leader.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 import 'layer_link.dart';
@@ -131,7 +132,7 @@ class RenderFollowerLayer extends RenderProxyBox {
   CustomLayerLink _link;
   set link(CustomLayerLink value) {
     if (_link == value) return;
-    print("Setting new link");
+    followerLog.fine("Setting new link");
     _link = value;
     markNeedsPaint();
   }
@@ -142,7 +143,7 @@ class RenderFollowerLayer extends RenderProxyBox {
     if (newKey == _boundaryKey) {
       return;
     }
-    print("Setting new boundaryKey");
+    followerLog.fine("Setting new boundaryKey");
     _boundaryKey = newKey;
     markNeedsPaint();
   }
@@ -170,7 +171,7 @@ class RenderFollowerLayer extends RenderProxyBox {
   Offset _offset;
   set offset(Offset value) {
     if (_offset == value) return;
-    print("Setting new follower offset");
+    followerLog.fine("Setting new follower offset");
     _offset = value;
     markNeedsPaint();
   }
@@ -255,15 +256,15 @@ class RenderFollowerLayer extends RenderProxyBox {
 
   @override
   void paint(PaintingContext context, Offset offset) {
-    print("Painting composited follower: $offset");
+    followerLog.fine("Painting composited follower: $offset");
 
     if (!link.leaderConnected && _previousFollowerOffset == null) {
-      print("The leader isn't connected and there's no cached offset. Not painting anything.");
+      followerLog.fine("The leader isn't connected and there's no cached offset. Not painting anything.");
       return;
     }
 
     if (link.leaderConnected) {
-      print("The leader isn't connect. Using previous offset.");
+      followerLog.fine("The leader isn't connect. Using previous offset.");
       _calculateFollowerOffset();
     }
 
@@ -285,7 +286,7 @@ class RenderFollowerLayer extends RenderProxyBox {
     context.pushLayer(
       layer!,
       (context, offset) {
-        print("Painting follower content. Incoming offset: $offset");
+        followerLog.fine("Painting follower content. Incoming offset: $offset");
         super.paint(context, offset);
       },
       Offset.zero,
@@ -310,10 +311,10 @@ class RenderFollowerLayer extends RenderProxyBox {
 
     final Offset effectiveLinkedOffset =
         leaderSize == null ? offset : leaderAnchor.alongSize(leaderSize) - followerAnchor.alongSize(size) + offset;
-    print("Leader layer offset: ${link.leader!.offset}");
+    followerLog.fine("Leader layer offset: ${link.leader!.offset}");
     final boundaryBox = boundaryKey!.currentContext!.findRenderObject() as RenderBox;
-    print("Boundary box size: ${boundaryBox.size}");
-    print("Follower box size: $size");
+    followerLog.fine("Boundary box size: ${boundaryBox.size}");
+    followerLog.fine("Follower box size: $size");
     // final boundaryOffset = boundaryBox.globalToLocal(localToGlobal(Offset.zero));
     final boundaryOffset = link.leader!.offset + effectiveLinkedOffset;
     final xAdjustment = boundaryOffset.dx < 0
@@ -327,7 +328,7 @@ class RenderFollowerLayer extends RenderProxyBox {
             ? (boundaryBox.size.height - size.height) - boundaryOffset.dy
             : 0.0;
     final adjustment = Offset(xAdjustment, yAdjustment);
-    print("Adjustment: $adjustment");
+    followerLog.fine("Adjustment: $adjustment");
 
     _previousFollowerOffset = effectiveLinkedOffset + adjustment;
   }

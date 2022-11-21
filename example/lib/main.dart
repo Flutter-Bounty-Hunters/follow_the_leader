@@ -1,11 +1,18 @@
 import 'package:example/demo_boucing_ball.dart';
 import 'package:example/ios_popover/demo_toolbar.dart';
+import 'package:example/logging.dart';
 import 'package:flutter/material.dart';
+import 'package:follow_the_leader/follow_the_leader.dart';
+import 'package:logging/logging.dart';
 
 import 'demo_orbiting_circles.dart';
 import 'ios_popover/demo_popover.dart';
 
 void main() {
+  FollowTheLeaderLogs.initLoggers(Level.FINEST, {
+    followerLog,
+    appLog,
+  });
   runApp(const MyApp());
 }
 

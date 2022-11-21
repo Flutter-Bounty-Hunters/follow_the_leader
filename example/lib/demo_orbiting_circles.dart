@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:follow_the_leader/follow_the_leader.dart';
 
+import 'logging.dart';
+
 class OrbitingCirclesDemo extends StatefulWidget {
   const OrbitingCirclesDemo({Key? key}) : super(key: key);
 
@@ -29,7 +31,7 @@ class _OrbitingCirclesDemoState extends State<OrbitingCirclesDemo> {
 
   @override
   Widget build(BuildContext context) {
-    print("Rebuilding entire demo");
+    appLog.fine("Rebuilding entire demo");
     return SizedBox(
       key: _screenBoundKey,
       child: Stack(
