@@ -1,6 +1,5 @@
 import 'dart:ui' as ui;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:follow_the_leader/follow_the_leader.dart';
@@ -134,6 +133,7 @@ class RenderFollowerLayer extends RenderProxyBox {
     if (_link == value) return;
     followerLog.fine("Setting new link");
     _link = value;
+    _firstPaintOfCurrentLink = true;
     markNeedsPaint();
   }
 
@@ -242,8 +242,11 @@ class RenderFollowerLayer extends RenderProxyBox {
 
   @override
   bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    final followerOffset = _previousFollowerOffset ?? Offset.zero;
+    final transform = layer?.getLastTransform()?..translate(followerOffset.dx, followerOffset.dy);
+
     return result.addWithPaintTransform(
-      transform: getCurrentTransform(),
+      transform: transform,
       position: position,
       hitTest: (BoxHitTestResult result, Offset position) {
         return super.hitTestChildren(result, position: position);
@@ -254,12 +257,31 @@ class RenderFollowerLayer extends RenderProxyBox {
   Offset? _previousFollowerOffset;
   Offset? get previousFollowerOffset => _previousFollowerOffset;
 
+  /// Indicates whether or not we are in the first paint of the current [CustomLayerLink].
+  bool _firstPaintOfCurrentLink = true;
+
   @override
   void paint(PaintingContext context, Offset offset) {
     followerLog.fine("Painting composited follower: $offset");
 
     if (!link.leaderConnected && _previousFollowerOffset == null) {
       followerLog.fine("The leader isn't connected and there's no cached offset. Not painting anything.");
+      if (!_firstPaintOfCurrentLink) {
+        // We already painted and we still don't have a leader connected.
+        // Avoid subsequent paint requests.
+        return;
+      }
+      _firstPaintOfCurrentLink = false;
+
+      // In the first frame we are not connected to the leader.
+      // Check again in the next frame only if it's the first paint of the current link.
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        if (link.leaderConnected) {
+          markNeedsPaint();
+        }
+      });
+
+      // Wait until the next frame to check if we have a leader connected.
       return;
     }
 
