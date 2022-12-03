@@ -2,18 +2,19 @@
 
 import 'package:logging/logging.dart' as logging;
 
-final _activeLoggers = <logging.Logger>{};
-
-/// Defines the names used for the loggers.
+/// Follow the Leader logger names.
 class LogNames {
   static const leader = 'leader';
   static const follower = 'follower';
 }
 
-final leaderLog = logging.Logger(LogNames.leader);
-final followerLog = logging.Logger(LogNames.follower);
+/// Follow the Leader logging.
+class FtlLogs {
+  static final leader = logging.Logger(LogNames.leader);
+  static final follower = logging.Logger(LogNames.follower);
 
-class FollowTheLeaderLogs {
+  static final _activeLoggers = <logging.Logger>{};
+
   /// Initialize the given [loggers] using the minimum [level].
   ///
   /// To enable all the loggers, use [FollowTheLeaderLogs.initAllLogs].

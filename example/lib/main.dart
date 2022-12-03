@@ -9,8 +9,8 @@ import 'demo_orbiting_circles.dart';
 import 'ios_popover/demo_popover.dart';
 
 void main() {
-  FollowTheLeaderLogs.initLoggers(Level.FINEST, {
-    followerLog,
+  FtlLogs.initLoggers(Level.FINEST, {
+    FtlLogs.follower,
     appLog,
   });
   runApp(const MyApp());
