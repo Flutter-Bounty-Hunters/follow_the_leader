@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:follow_the_leader/follow_the_leader.dart';
 
-/// Displays a blob with an associated follower.
+/// Displays a ball with an associated follower.
 ///
-/// The blob can be given any offset.
+/// The ball can be given any offset, and the ball can be decorated
+/// with another widget, such as a `GestureDetector`.
 class BallSandbox extends StatefulWidget {
   const BallSandbox({
     super.key,
     required this.boundsKey,
     required this.leaderKey,
     required this.followerKey,
-    required this.blobOffset,
-    this.blobDecorator,
+    required this.ballOffset,
+    this.ballDecorator,
     required this.followerAligner,
     required this.follower,
   });
@@ -19,8 +20,8 @@ class BallSandbox extends StatefulWidget {
   final GlobalKey boundsKey;
   final GlobalKey leaderKey;
   final GlobalKey followerKey;
-  final Offset blobOffset;
-  final Widget Function(Widget blob)? blobDecorator;
+  final Offset ballOffset;
+  final Widget Function(Widget ball)? ballDecorator;
   final FollowerAligner followerAligner;
   final Widget follower;
 
@@ -29,7 +30,7 @@ class BallSandbox extends StatefulWidget {
 }
 
 class _BallSandboxState extends State<BallSandbox> {
-  static const double _blobRadius = 50.0;
+  static const double _ballRadius = 50.0;
 
   /// Links the [Leader] and the [Follower].
   late LeaderLink _leaderLink;
@@ -53,22 +54,22 @@ class _BallSandboxState extends State<BallSandbox> {
 
   Widget _buildLeader() {
     return Positioned(
-      left: widget.blobOffset.dx,
-      top: widget.blobOffset.dy,
+      left: widget.ballOffset.dx,
+      top: widget.ballOffset.dy,
       child: Leader(
         key: widget.leaderKey,
         link: _leaderLink,
-        child: widget.blobDecorator != null //
-            ? widget.blobDecorator!.call(_buildBlob()) //
-            : _buildBlob(),
+        child: widget.ballDecorator != null //
+            ? widget.ballDecorator!.call(_buildBall()) //
+            : _buildBall(),
       ),
     );
   }
 
-  Widget _buildBlob() {
+  Widget _buildBall() {
     return Container(
-      height: _blobRadius * 2,
-      width: _blobRadius * 2,
+      height: _ballRadius * 2,
+      width: _ballRadius * 2,
       decoration: const BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.black,

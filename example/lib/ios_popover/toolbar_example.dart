@@ -1,4 +1,4 @@
-import 'package:example/ios_popover/_ios_toolbar.dart';
+import 'package:example/ios_popover/ios_toolbar.dart';
 import 'package:flutter/material.dart';
 
 /// An example of an [IosToolbar] usage.

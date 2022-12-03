@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '_ios_popover_menu.dart';
-import '_popover_example.dart';
+import 'ios_popover_menu.dart';
+import 'popover_example.dart';
 
 /// Demo which shows the capabilities of the [IosPopoverMenu].
 ///

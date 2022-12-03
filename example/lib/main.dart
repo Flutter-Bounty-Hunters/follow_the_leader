@@ -1,4 +1,4 @@
-import 'package:example/demo_boucing_ball.dart';
+import 'package:example/demo_bouncing_ball.dart';
 import 'package:example/demo_draggable_ball.dart';
 import 'package:example/ios_popover/demo_toolbar.dart';
 import 'package:flutter/material.dart';

@@ -1,6 +1,6 @@
-import 'package:example/ios_popover/_ios_popover_menu.dart';
-import 'package:example/ios_popover/_ios_toolbar.dart';
-import 'package:example/ios_popover/_toolbar_example.dart';
+import 'package:example/ios_popover/ios_popover_menu.dart';
+import 'package:example/ios_popover/ios_toolbar.dart';
+import 'package:example/ios_popover/toolbar_example.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';

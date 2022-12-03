@@ -1,8 +1,42 @@
 import 'dart:math';
-import 'dart:ui';
 
+import 'package:example/logging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:follow_the_leader/follow_the_leader.dart';
+
+/// Aligns the menu `Follower` with a `Leader` widget.
+///
+/// We use this method in a `Follower.withDynamics` so that we can flip the menu
+/// from one side of the `Leader` to the other when we get close to the screen boundary.
+FollowerAlignment popoverMenuAligner(
+    Rect globalLeaderRect, Size followerSize, Size bounds, FollowerAlignment previousFollowerAlignment) {
+  late FollowerAlignment alignment;
+  if (globalLeaderRect.right + followerSize.width + _minimumDistanceFromEdge >= bounds.width) {
+    appLog.info(" - follower is too far to the right, switching to left");
+    // The follower hit the minimum distance. Invert the follower position.
+    alignment = const FollowerAlignment(
+      leaderAnchor: Alignment.centerLeft,
+      followerAnchor: Alignment.centerRight,
+      followerOffset: Offset(-20, 0),
+    );
+  } else if (globalLeaderRect.left - followerSize.width - _minimumDistanceFromEdge < 0) {
+    appLog.info(" - follower is too far to the left, switching to right");
+    // The follower hit the minimum distance. Invert the follower position.
+    alignment = const FollowerAlignment(
+      leaderAnchor: Alignment.centerRight,
+      followerAnchor: Alignment.centerLeft,
+      followerOffset: Offset(20, 0),
+    );
+  } else {
+    // We're not too far to the left or the right. Keep us wherever we were before.
+    alignment = previousFollowerAlignment;
+  }
+
+  return alignment;
+}
+
+const double _minimumDistanceFromEdge = 16;
 
 /// A menu container which simulates an iOS popover.
 ///
@@ -232,9 +266,6 @@ class RenderPopover extends RenderShiftedBox {
 
     // print("Global focal point: $focalPoint, local focal point: $localFocalPoint");
     context.canvas.drawCircle(localFocalPoint, 10, Paint()..color = Colors.blue);
-
-    final globalZero = localToGlobal(Offset.zero);
-    context.canvas.drawCircle(globalZero, 10, Paint()..color = Colors.deepPurple);
   }
 
   @override

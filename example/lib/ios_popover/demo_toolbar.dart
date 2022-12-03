@@ -1,7 +1,7 @@
-import 'package:example/ios_popover/_ios_toolbar.dart';
+import 'package:example/ios_popover/ios_toolbar.dart';
 import 'package:flutter/material.dart';
 
-import '_toolbar_example.dart';
+import 'toolbar_example.dart';
 
 /// Demo which shows the capabilities of the [IosToolbar].
 ///
