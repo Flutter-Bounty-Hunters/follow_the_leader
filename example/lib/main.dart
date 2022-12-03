@@ -1,5 +1,5 @@
-import 'package:example/demo_bouncing_ball.dart';
-import 'package:example/demo_draggable_ball.dart';
+import 'package:example/demo_popover_menu_bouncing_ball.dart';
+import 'package:example/demo_popover_menu_draggable_ball.dart';
 import 'package:example/ios_popover/demo_toolbar.dart';
 import 'package:flutter/material.dart';
 import 'package:follow_the_leader/follow_the_leader.dart';
@@ -108,7 +108,7 @@ final _items = [
   ),
   _MenuItem(
     title: 'Bouncing Ball',
-    pageBuilder: (context) => const BouncingBallDemo(),
+    pageBuilder: (context) => const PopoverMenuBouncingBallDemo(),
   ),
   _MenuItem(
     title: 'Draggable Ball',

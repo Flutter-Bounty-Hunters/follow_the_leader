@@ -1,5 +1,196 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:follow_the_leader/follow_the_leader.dart';
+
+/// A [BallSandbox], with a ball that bounces around the screen
+/// with a given [follower].
+class BouncingBallSandbox extends StatefulWidget {
+  const BouncingBallSandbox({
+    super.key,
+    required this.boundsKey,
+    required this.leaderKey,
+    required this.followerKey,
+    required this.followerAligner,
+    required this.follower,
+    this.initialBallOffset = Offset.zero,
+    this.onBallMove,
+  });
+
+  final GlobalKey boundsKey;
+  final GlobalKey leaderKey;
+  final GlobalKey followerKey;
+  final FollowerAligner followerAligner;
+  final Widget follower;
+  final Offset initialBallOffset;
+  final void Function(Offset)? onBallMove;
+
+  @override
+  State<BouncingBallSandbox> createState() => _BouncingBallSandboxState();
+}
+
+class _BouncingBallSandboxState extends State<BouncingBallSandbox> with SingleTickerProviderStateMixin {
+  /// Initial velocity of the leader.
+  final Offset _initialVelocity = const Offset(300, 300);
+
+  /// Current velocity of the leader.
+  ///
+  /// The velocity is updated whenever the leader hits an edge of the screen.
+  late Offset _velocity;
+
+  /// Last [Duration] given by the ticker.
+  Duration? _lastElapsed;
+
+  /// Current offset of the leader.
+  ///
+  /// The offset changes at every tick.
+  late Offset _ballOffset;
+
+  late Ticker ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    ticker = createTicker(_onTick)..start();
+    _velocity = _initialVelocity;
+    _ballOffset = widget.initialBallOffset;
+  }
+
+  @override
+  void dispose() {
+    ticker.dispose();
+    super.dispose();
+  }
+
+  void _onTick(Duration elapsed) {
+    if (_lastElapsed == null) {
+      _lastElapsed = elapsed;
+      return;
+    }
+
+    final dt = elapsed.inMilliseconds - _lastElapsed!.inMilliseconds;
+    _lastElapsed = elapsed;
+
+    final bounds = (widget.boundsKey.currentContext?.findRenderObject() as RenderBox?)?.size ?? Size.zero;
+
+    // Offset where the leader hits the right edge.
+    final maximumLeaderHorizontalOffset = bounds.width - _ballRadius * 2;
+
+    // Offset where the leader hits the bottom edge.
+    final maximumLeaderVerticalOffset = bounds.height - _ballRadius * 2;
+
+    // Travelled distance between the last tick and the current.
+    final distance = _velocity * (dt / 1000.0);
+
+    Offset newOffset = _ballOffset + distance;
+
+    // Check for hits.
+
+    if (newOffset.dx > maximumLeaderHorizontalOffset) {
+      // The ball hit the right edge.
+      _velocity = Offset(-_velocity.dx, _velocity.dy);
+      newOffset = Offset(maximumLeaderHorizontalOffset, newOffset.dy);
+    }
+
+    if (newOffset.dx <= 0) {
+      // The ball hit the left edge.
+      _velocity = Offset(-_velocity.dx, _velocity.dy);
+      newOffset = Offset(0, newOffset.dy);
+    }
+
+    if (newOffset.dy > maximumLeaderVerticalOffset) {
+      // The ball hit the bottom.
+      _velocity = Offset(_velocity.dx, -_velocity.dy);
+      newOffset = Offset(newOffset.dx, maximumLeaderVerticalOffset);
+    }
+
+    if (newOffset.dy <= 0) {
+      // The ball hit the top.
+      _velocity = Offset(_velocity.dx, -_velocity.dy);
+      newOffset = Offset(newOffset.dx, 0);
+    }
+
+    setState(() {
+      // Update the ball offset before updating the menu focal point.
+      _ballOffset = newOffset;
+      widget.onBallMove?.call(_ballOffset);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BallSandbox(
+      boundsKey: widget.boundsKey,
+      leaderKey: widget.leaderKey,
+      followerKey: widget.followerKey,
+      ballOffset: _ballOffset,
+      followerAligner: widget.followerAligner,
+      follower: widget.follower,
+    );
+  }
+}
+
+/// A [BallSandbox], which lets the user drag the ball around the
+/// screen with a given [follower].
+class DraggableBallSandbox extends StatefulWidget {
+  const DraggableBallSandbox({
+    super.key,
+    required this.boundsKey,
+    required this.leaderKey,
+    required this.followerKey,
+    required this.followerAligner,
+    required this.follower,
+    this.initialBallOffset = Offset.zero,
+    this.onBallMove,
+  });
+
+  final GlobalKey boundsKey;
+  final GlobalKey leaderKey;
+  final GlobalKey followerKey;
+  final FollowerAligner followerAligner;
+  final Widget follower;
+  final Offset initialBallOffset;
+  final void Function(Offset)? onBallMove;
+
+  @override
+  State<DraggableBallSandbox> createState() => _DraggableBallSandboxState();
+}
+
+class _DraggableBallSandboxState extends State<DraggableBallSandbox> {
+  /// The (x,y) position of the draggable object, which is also our `Leader`.
+  late Offset _ballOffset;
+
+  @override
+  void initState() {
+    super.initState();
+    _ballOffset = widget.initialBallOffset;
+  }
+
+  void _onPanUpdate(DragUpdateDetails details) {
+    setState(() {
+      // Update _draggableOffset before updating the menu focal point
+      _ballOffset += details.delta;
+      widget.onBallMove?.call(_ballOffset);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BallSandbox(
+      boundsKey: widget.boundsKey,
+      leaderKey: widget.leaderKey,
+      followerKey: widget.followerKey,
+      ballOffset: _ballOffset,
+      ballDecorator: (ball) {
+        return GestureDetector(
+          onPanUpdate: _onPanUpdate,
+          child: ball,
+        );
+      },
+      followerAligner: widget.followerAligner,
+      follower: widget.follower,
+    );
+  }
+}
 
 /// Displays a ball with an associated follower.
 ///
@@ -30,8 +221,6 @@ class BallSandbox extends StatefulWidget {
 }
 
 class _BallSandboxState extends State<BallSandbox> {
-  static const double _ballRadius = 50.0;
-
   /// Links the [Leader] and the [Follower].
   late LeaderLink _leaderLink;
 
@@ -91,3 +280,5 @@ class _BallSandboxState extends State<BallSandbox> {
     );
   }
 }
+
+const double _ballRadius = 50.0;

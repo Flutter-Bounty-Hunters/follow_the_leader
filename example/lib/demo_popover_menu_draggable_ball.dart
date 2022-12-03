@@ -4,8 +4,7 @@ import 'package:follow_the_leader/follow_the_leader.dart';
 
 import 'ios_popover/ios_popover_menu.dart';
 
-/// Displays a ball that the user can drag, followed by a menu with an arrow
-/// that points in the direction of the ball.
+/// Displays an [IosPopoverMenu] near a draggable ball.
 class DraggableBallDemo extends StatefulWidget {
   const DraggableBallDemo({super.key});
 
@@ -35,10 +34,10 @@ class _DraggableBallDemoState extends State<DraggableBallDemo> {
     followerOffset: Offset(20, 0),
   );
 
-  void _onPanUpdate(DragUpdateDetails details) {
+  void _onBallMove(Offset offset) {
     setState(() {
       // Update _draggableOffset before updating the menu focal point
-      _draggableOffset += details.delta;
+      _draggableOffset = offset;
       _updateMenuFocalPoint();
     });
   }
@@ -69,19 +68,13 @@ class _DraggableBallDemoState extends State<DraggableBallDemo> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        BallSandbox(
+        DraggableBallSandbox(
           boundsKey: _screenBoundsKey,
           leaderKey: _leaderKey,
           followerKey: _followerKey,
-          ballOffset: _draggableOffset,
-          ballDecorator: (ball) {
-            return GestureDetector(
-              onPanUpdate: _onPanUpdate,
-              child: ball,
-            );
-          },
           followerAligner: _alignMenu,
           follower: _buildMenu(),
+          onBallMove: _onBallMove,
         ),
         _buildDebugFocalPoint(),
       ],
