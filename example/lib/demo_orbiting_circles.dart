@@ -77,10 +77,10 @@ class _OrbitingCirclesDemoState extends State<OrbitingCirclesDemo> {
     return Positioned(
       left: 0,
       top: 0,
-      child: Follower(
+      child: Follower.withOffset(
         link: _link,
         boundaryKey: _screenBoundKey,
-        targetAnchor: Alignment.center,
+        leaderAnchor: Alignment.center,
         followerAnchor: Alignment.center,
         offset: Offset(
           radius * cos(radians),

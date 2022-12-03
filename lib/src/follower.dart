@@ -6,23 +6,37 @@ import 'package:follow_the_leader/follow_the_leader.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 class Follower extends SingleChildRenderObjectWidget {
-  /// Creates a composited transform target widget.
-  ///
-  /// The [link] property must not be null. If it was also provided to a
-  /// [CompositedTransformTarget], that widget must come earlier in the paint
-  /// order.
-  ///
-  /// The [showWhenUnlinked] and [offset] properties must also not be null.
-  const Follower({
+  // Follower.withOffset()
+  //
+  // Follower.withinBoundingRect()
+  //
+  // Follower.withinBoundingWidget()
+  //
+  // Follower.withDynamics()
+
+  const Follower.withOffset({
     Key? key,
     required this.link,
     required this.boundaryKey,
     this.showWhenUnlinked = true,
     this.offset = Offset.zero,
-    this.targetAnchor = Alignment.topLeft,
+    this.leaderAnchor = Alignment.topLeft,
     this.followerAnchor = Alignment.topLeft,
     Widget? child,
-  }) : super(key: key, child: child);
+  })  : aligner = null,
+        super(key: key, child: child);
+
+  const Follower.withDynamics({
+    Key? key,
+    required this.link,
+    required this.boundaryKey,
+    required this.aligner,
+    this.showWhenUnlinked = false,
+    Widget? child,
+  })  : leaderAnchor = null,
+        followerAnchor = null,
+        offset = null,
+        super(key: key, child: child);
 
   /// The link object that connects this [CompositedTransformFollower] with a
   /// [CompositedTransformTarget].
@@ -31,6 +45,37 @@ class Follower extends SingleChildRenderObjectWidget {
   final LeaderLink link;
 
   final GlobalKey boundaryKey;
+
+  final FollowerAligner? aligner;
+
+  /// The anchor point on the linked [CompositedTransformTarget] that
+  /// [followerAnchor] will line up with.
+  ///
+  /// {@template flutter.widgets.CompositedTransformFollower.targetAnchor}
+  /// For example, when [leaderAnchor] and [followerAnchor] are both
+  /// [Alignment.topLeft], this widget will be top left aligned with the linked
+  /// [CompositedTransformTarget]. When [leaderAnchor] is
+  /// [Alignment.bottomLeft] and [followerAnchor] is [Alignment.topLeft], this
+  /// widget will be left aligned with the linked [CompositedTransformTarget],
+  /// and its top edge will line up with the [CompositedTransformTarget]'s
+  /// bottom edge.
+  /// {@endtemplate}
+  ///
+  /// Defaults to [Alignment.topLeft].
+  final Alignment? leaderAnchor;
+
+  /// The anchor point on this widget that will line up with [followerAnchor] on
+  /// the linked [CompositedTransformTarget].
+  ///
+  /// {@macro flutter.widgets.CompositedTransformFollower.targetAnchor}
+  ///
+  /// Defaults to [Alignment.topLeft].
+  final Alignment? followerAnchor;
+
+  /// The additional offset to apply to the [leaderAnchor] of the linked
+  /// [CompositedTransformTarget] to obtain this widget's [followerAnchor]
+  /// position.
+  final Offset? offset;
 
   /// Whether to show the widget's contents when there is no corresponding
   /// [CompositedTransformTarget] with the same [link].
@@ -43,43 +88,15 @@ class Follower extends SingleChildRenderObjectWidget {
   /// hidden.
   final bool showWhenUnlinked;
 
-  /// The anchor point on the linked [CompositedTransformTarget] that
-  /// [followerAnchor] will line up with.
-  ///
-  /// {@template flutter.widgets.CompositedTransformFollower.targetAnchor}
-  /// For example, when [targetAnchor] and [followerAnchor] are both
-  /// [Alignment.topLeft], this widget will be top left aligned with the linked
-  /// [CompositedTransformTarget]. When [targetAnchor] is
-  /// [Alignment.bottomLeft] and [followerAnchor] is [Alignment.topLeft], this
-  /// widget will be left aligned with the linked [CompositedTransformTarget],
-  /// and its top edge will line up with the [CompositedTransformTarget]'s
-  /// bottom edge.
-  /// {@endtemplate}
-  ///
-  /// Defaults to [Alignment.topLeft].
-  final Alignment targetAnchor;
-
-  /// The anchor point on this widget that will line up with [followerAnchor] on
-  /// the linked [CompositedTransformTarget].
-  ///
-  /// {@macro flutter.widgets.CompositedTransformFollower.targetAnchor}
-  ///
-  /// Defaults to [Alignment.topLeft].
-  final Alignment followerAnchor;
-
-  /// The additional offset to apply to the [targetAnchor] of the linked
-  /// [CompositedTransformTarget] to obtain this widget's [followerAnchor]
-  /// position.
-  final Offset offset;
-
   @override
   RenderFollowerLayer createRenderObject(BuildContext context) {
     return RenderFollowerLayer(
       link: link,
       boundaryKey: boundaryKey,
+      aligner: aligner,
       showWhenUnlinked: showWhenUnlinked,
       offset: offset,
-      leaderAnchor: targetAnchor,
+      leaderAnchor: leaderAnchor,
       followerAnchor: followerAnchor,
     );
   }
@@ -89,27 +106,52 @@ class Follower extends SingleChildRenderObjectWidget {
     renderObject
       ..link = link
       ..boundaryKey = boundaryKey
+      ..aligner = aligner
       ..showWhenUnlinked = showWhenUnlinked
       ..offset = offset
-      ..leaderAnchor = targetAnchor
+      ..leaderAnchor = leaderAnchor
       ..followerAnchor = followerAnchor;
   }
 }
 
+typedef FollowerAligner = FollowerAlignment Function(Rect globalLeaderRect, Size followerSize);
+
+class FollowerAlignment {
+  const FollowerAlignment({
+    required this.leaderAnchor,
+    required this.followerAnchor,
+    this.followerOffset = Offset.zero,
+  });
+
+  final Alignment leaderAnchor;
+  final Alignment followerAnchor;
+  final Offset followerOffset;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FollowerAlignment &&
+          runtimeType == other.runtimeType &&
+          leaderAnchor == other.leaderAnchor &&
+          followerAnchor == other.followerAnchor;
+
+  @override
+  int get hashCode => leaderAnchor.hashCode ^ followerAnchor.hashCode;
+}
+
 class RenderFollowerLayer extends RenderProxyBox {
-  /// Creates a render object that uses a [FollowerLayer].
-  ///
-  /// The [link] and [offset] arguments must not be null.
   RenderFollowerLayer({
     required LeaderLink link,
     GlobalKey? boundaryKey,
+    FollowerAligner? aligner,
+    Alignment? leaderAnchor = Alignment.topLeft,
+    Alignment? followerAnchor = Alignment.topLeft,
+    Offset? offset = Offset.zero,
     bool showWhenUnlinked = true,
-    Offset offset = Offset.zero,
-    Alignment leaderAnchor = Alignment.topLeft,
-    Alignment followerAnchor = Alignment.topLeft,
     RenderBox? child,
   })  : _link = link,
         _boundaryKey = boundaryKey,
+        _aligner = aligner,
         _showWhenUnlinked = showWhenUnlinked,
         _offset = offset,
         _leaderAnchor = leaderAnchor,
@@ -145,6 +187,17 @@ class RenderFollowerLayer extends RenderProxyBox {
     markNeedsPaint();
   }
 
+  FollowerAligner? get aligner => _aligner;
+  FollowerAligner? _aligner;
+  set aligner(FollowerAligner? newAligner) {
+    if (newAligner == _aligner) {
+      return;
+    }
+
+    _aligner = newAligner;
+    markNeedsPaint();
+  }
+
   /// Whether to show the render object's contents when there is no
   /// corresponding [RenderLeaderLayer] with the same [link].
   ///
@@ -164,9 +217,9 @@ class RenderFollowerLayer extends RenderProxyBox {
 
   /// The offset to apply to the origin of the linked [RenderLeaderLayer] to
   /// obtain this render object's origin.
-  Offset get offset => _offset;
-  Offset _offset;
-  set offset(Offset value) {
+  Offset? get offset => _offset;
+  Offset? _offset;
+  set offset(Offset? value) {
     if (_offset == value) return;
     FtlLogs.follower.fine("Setting new follower offset");
     _offset = value;
@@ -187,9 +240,9 @@ class RenderFollowerLayer extends RenderProxyBox {
   /// {@endtemplate}
   ///
   /// Defaults to [Alignment.topLeft].
-  Alignment get leaderAnchor => _leaderAnchor;
-  Alignment _leaderAnchor;
-  set leaderAnchor(Alignment value) {
+  Alignment? get leaderAnchor => _leaderAnchor;
+  Alignment? _leaderAnchor;
+  set leaderAnchor(Alignment? value) {
     if (_leaderAnchor == value) return;
     _leaderAnchor = value;
     markNeedsPaint();
@@ -201,9 +254,9 @@ class RenderFollowerLayer extends RenderProxyBox {
   /// {@macro flutter.rendering.RenderFollowerLayer.leaderAnchor}
   ///
   /// Defaults to [Alignment.topLeft].
-  Alignment get followerAnchor => _followerAnchor;
-  Alignment _followerAnchor;
-  set followerAnchor(Alignment value) {
+  Alignment? get followerAnchor => _followerAnchor;
+  Alignment? _followerAnchor;
+  set followerAnchor(Alignment? value) {
     if (_followerAnchor == value) return;
     _followerAnchor = value;
     markNeedsPaint();
@@ -215,16 +268,6 @@ class RenderFollowerLayer extends RenderProxyBox {
   /// The layer we created when we were last painted.
   @override
   FollowerLayer? get layer => super.layer as FollowerLayer?;
-
-  /// Return the transform that was used in the last composition phase, if any.
-  ///
-  /// If the [FollowerLayer] has not yet been created, was never composited, or
-  /// was unable to determine the transform (see
-  /// [FollowerLayer.getLastTransform]), this returns the identity matrix (see
-  /// [Matrix4.identity].
-  Matrix4 getCurrentTransform() {
-    return layer?.getLastTransform() ?? Matrix4.identity();
-  }
 
   @override
   bool hitTest(BoxHitTestResult result, {required Offset position}) {
@@ -283,7 +326,6 @@ class RenderFollowerLayer extends RenderProxyBox {
     }
 
     if (link.leaderConnected) {
-      FtlLogs.follower.fine("The leader isn't connect. Using previous offset.");
       _calculateFollowerOffset();
     }
 
@@ -320,6 +362,20 @@ class RenderFollowerLayer extends RenderProxyBox {
   }
 
   void _calculateFollowerOffset() {
+    if (aligner != null) {
+      _calculateFollowerOffsetWithAligner();
+    } else {
+      _calculateFollowerOffsetWithStaticValue();
+    }
+  }
+
+  void _calculateFollowerOffsetWithAligner() {
+    final globalLeaderRect = link.leader!.offset & link.leaderSize!;
+    print("Global leader rect: $globalLeaderRect");
+    final followerAlignment = aligner!.call(globalLeaderRect, size);
+    final leaderAnchor = followerAlignment.leaderAnchor;
+    final followerAnchor = followerAlignment.followerAnchor;
+
     final Size? leaderSize = link.leaderSize;
     assert(
       link.leaderSize != null || (!link.leaderConnected || leaderAnchor == Alignment.topLeft),
@@ -328,14 +384,58 @@ class RenderFollowerLayer extends RenderProxyBox {
       '(current value is $leaderAnchor).',
     );
 
+    print("Leader alignment: $leaderAnchor, follower alignment: $followerAnchor");
     final Offset effectiveLinkedOffset =
-        leaderSize == null ? offset : leaderAnchor.alongSize(leaderSize) - followerAnchor.alongSize(size) + offset;
+        (leaderSize == null ? Offset.zero : leaderAnchor.alongSize(leaderSize) - followerAnchor.alongSize(size)) +
+            followerAlignment.followerOffset;
     FtlLogs.follower.fine("Leader layer offset: ${link.leader!.offset}");
     final boundaryBox = boundaryKey!.currentContext!.findRenderObject() as RenderBox;
     FtlLogs.follower.fine("Boundary box size: ${boundaryBox.size}");
     FtlLogs.follower.fine("Follower box size: $size");
     // final boundaryOffset = boundaryBox.globalToLocal(localToGlobal(Offset.zero));
     final boundaryOffset = link.leader!.offset + effectiveLinkedOffset;
+    print(
+        "Boundary offset: $boundaryOffset, leader offset: ${link.leader!.offset}, effective offset: $effectiveLinkedOffset, offset: $offset, leader size: ${leaderAnchor.alongSize(leaderSize!)}, follower size: ${followerAnchor.alongSize(size)}");
+    final xAdjustment = boundaryOffset.dx < 0
+        ? -boundaryOffset.dx
+        : boundaryOffset.dx > (boundaryBox.size.width - size.width)
+            ? (boundaryBox.size.width - size.width) - boundaryOffset.dx
+            : 0.0;
+    final yAdjustment = boundaryOffset.dy < 0
+        ? -boundaryOffset.dy
+        : boundaryOffset.dy > (boundaryBox.size.height - size.height)
+            ? (boundaryBox.size.height - size.height) - boundaryOffset.dy
+            : 0.0;
+    final adjustment = Offset(xAdjustment, yAdjustment);
+    FtlLogs.follower.fine("Adjustment: $adjustment");
+
+    _previousFollowerOffset = effectiveLinkedOffset + adjustment;
+  }
+
+  void _calculateFollowerOffsetWithStaticValue() {
+    final globalLeaderRect = link.leader!.offset & link.leaderSize!;
+    print("Global leader rect: $globalLeaderRect");
+
+    final Size? leaderSize = link.leaderSize;
+    assert(
+      link.leaderSize != null || (!link.leaderConnected || leaderAnchor == Alignment.topLeft),
+      '$link: layer is linked to ${link.leader} but a valid leaderSize is not set. '
+      'leaderSize is required when leaderAnchor is not Alignment.topLeft '
+      '(current value is $leaderAnchor).',
+    );
+
+    print("Leader alignment: $leaderAnchor, follower alignment: $followerAnchor, layer offset: $offset");
+    final Offset effectiveLinkedOffset = (leaderSize == null
+        ? offset!
+        : leaderAnchor!.alongSize(leaderSize) - followerAnchor!.alongSize(size) + offset!);
+    FtlLogs.follower.fine("Leader layer offset: ${link.leader!.offset}");
+    final boundaryBox = boundaryKey!.currentContext!.findRenderObject() as RenderBox;
+    FtlLogs.follower.fine("Boundary box size: ${boundaryBox.size}");
+    FtlLogs.follower.fine("Follower box size: $size");
+    // final boundaryOffset = boundaryBox.globalToLocal(localToGlobal(Offset.zero));
+    final boundaryOffset = link.leader!.offset + effectiveLinkedOffset;
+    print(
+        "Boundary offset: $boundaryOffset, leader offset: ${link.leader!.offset}, effective offset: $effectiveLinkedOffset, offset: $offset, leader size: ${leaderAnchor!.alongSize(leaderSize!)}, follower size: ${followerAnchor!.alongSize(size)}");
     final xAdjustment = boundaryOffset.dx < 0
         ? -boundaryOffset.dx
         : boundaryOffset.dx > (boundaryBox.size.width - size.width)
@@ -355,6 +455,22 @@ class RenderFollowerLayer extends RenderProxyBox {
   @override
   void applyPaintTransform(RenderBox child, Matrix4 transform) {
     transform.multiply(getCurrentTransform());
+  }
+
+  /// Return the transform that was used in the last composition phase, if any.
+  ///
+  /// If the [FollowerLayer] has not yet been created, was never composited, or
+  /// was unable to determine the transform (see
+  /// [FollowerLayer.getLastTransform]), this returns the identity matrix (see
+  /// [Matrix4.identity].
+  Matrix4 getCurrentTransform() {
+    // return layer?.getLastTransform() ?? Matrix4.identity();
+
+    final transform = layer?.getLastTransform() ?? Matrix4.identity();
+    if (_previousFollowerOffset != null) {
+      transform.translate(_previousFollowerOffset!.dx, _previousFollowerOffset!.dy);
+    }
+    return transform;
   }
 
   @override

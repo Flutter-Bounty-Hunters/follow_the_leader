@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -185,8 +186,8 @@ class RenderPopover extends RenderShiftedBox {
   @override
   void performLayout() {
     final reservedSize = Size(
-      (padding?.horizontal ?? 0) + arrowLength * 2,
-      (padding?.vertical ?? 0) + arrowLength * 2,
+      ((padding?.horizontal ?? 0) + arrowLength) * 2,
+      ((padding?.vertical ?? 0) + arrowLength) * 2,
     );
 
     // Compute the child constraints to leave space for the arrow and padding.
@@ -209,9 +210,9 @@ class RenderPopover extends RenderShiftedBox {
   void paint(PaintingContext context, Offset offset) {
     final localFocalPoint = globalToLocal(focalPoint);
 
-    final direction = _computeArrowDirection(offset & size, focalPoint);
-    final arrowCenter = _computeArrowCenter(direction, localFocalPoint);
     final contentOffset = _computeContentOffset(arrowLength);
+    final direction = _computeArrowDirection(Offset.zero & size, localFocalPoint);
+    final arrowCenter = _computeArrowCenter(direction, localFocalPoint);
 
     final borderPath = _buildBorderPath(direction, arrowCenter);
 
@@ -220,6 +221,20 @@ class RenderPopover extends RenderShiftedBox {
     if (child != null) {
       context.paintChild(child!, offset + contentOffset);
     }
+
+    context.canvas.drawRect(
+      Offset.zero & size,
+      Paint()
+        ..color = Colors.blue
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 5,
+    );
+
+    // print("Global focal point: $focalPoint, local focal point: $localFocalPoint");
+    context.canvas.drawCircle(localFocalPoint, 10, Paint()..color = Colors.blue);
+
+    final globalZero = localToGlobal(Offset.zero);
+    context.canvas.drawCircle(globalZero, 10, Paint()..color = Colors.deepPurple);
   }
 
   @override
@@ -301,6 +316,7 @@ class RenderPopover extends RenderShiftedBox {
   ArrowDirection _computeArrowDirection(Rect menuRect, Offset globalFocalPoint) {
     final isFocalPointInsideHorizontalBounds =
         globalFocalPoint.dx >= menuRect.left && globalFocalPoint.dx <= menuRect.right;
+
     if (isFocalPointInsideHorizontalBounds || !allowHorizontalArrow) {
       if (globalFocalPoint.dy < menuRect.top) {
         return ArrowDirection.up;

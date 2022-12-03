@@ -32,10 +32,10 @@ void main() {
                   Positioned(
                     top: 0,
                     left: 0,
-                    child: Follower(
+                    child: Follower.withOffset(
                       link: _link,
                       boundaryKey: _screenBoundKey,
-                      targetAnchor: Alignment.bottomRight,
+                      leaderAnchor: Alignment.bottomRight,
                       followerAnchor: Alignment.topLeft,
                       offset: const Offset(50, 50),
                       child: GestureDetector(

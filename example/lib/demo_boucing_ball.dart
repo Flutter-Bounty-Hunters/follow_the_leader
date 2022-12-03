@@ -4,15 +4,16 @@ import 'package:follow_the_leader/follow_the_leader.dart';
 
 import 'ios_popover/_ios_popover_menu.dart';
 
-class BoucingBallDemo extends StatefulWidget {
-  const BoucingBallDemo({super.key});
+class BouncingBallDemo extends StatefulWidget {
+  const BouncingBallDemo({super.key});
 
   @override
-  State<BoucingBallDemo> createState() => _BoucingBallDemoState();
+  State<BouncingBallDemo> createState() => _BouncingBallDemoState();
 }
 
-class _BoucingBallDemoState extends State<BoucingBallDemo> with SingleTickerProviderStateMixin {
+class _BouncingBallDemoState extends State<BouncingBallDemo> with SingleTickerProviderStateMixin {
   final GlobalKey _screenBoundKey = GlobalKey();
+  final GlobalKey _leaderKey = GlobalKey();
   final GlobalKey _followerKey = GlobalKey();
   late Ticker ticker;
   late LeaderLink _link;
@@ -62,6 +63,7 @@ class _BoucingBallDemoState extends State<BoucingBallDemo> with SingleTickerProv
   ///
   /// The offset changes at every tick.
   Offset _currentFocalPoint = Offset.zero;
+  Offset _currentFocalPointInLeader = Offset.zero;
 
   @override
   void initState() {
@@ -126,11 +128,12 @@ class _BoucingBallDemoState extends State<BoucingBallDemo> with SingleTickerProv
       newOffset = Offset(newOffset.dx, 0);
     }
 
-    _updateMenuFocalPoint();
-    _updateFollowerAnchorAndOffset();
-
     setState(() {
+      // Update the leader offset before updating the offsets that are
+      // downstream from the leader.
       _leaderOffset = newOffset;
+      _updateMenuFocalPoint();
+      _updateFollowerAnchorAndOffset();
     });
   }
 
@@ -139,10 +142,20 @@ class _BoucingBallDemoState extends State<BoucingBallDemo> with SingleTickerProv
   }
 
   void _updateMenuFocalPoint() {
-    final renderBox = _screenBoundKey.currentContext?.findRenderObject() as RenderBox?;
-    _currentFocalPoint = renderBox != null //
-        ? renderBox.localToGlobal(_leaderOffset + Offset(_leaderRadius, _leaderRadius))
-        : Offset.zero;
+    final screenBoundsBox = _screenBoundKey.currentContext?.findRenderObject() as RenderBox?;
+    if (screenBoundsBox == null) {
+      _currentFocalPoint = Offset.zero;
+      _currentFocalPointInLeader = Offset.zero;
+      return;
+    }
+
+    final focalPointInScreenBounds = _leaderOffset + Offset(_leaderRadius, _leaderRadius);
+    final globalLeaderOffset = screenBoundsBox.localToGlobal(focalPointInScreenBounds);
+
+    _currentFocalPoint = globalLeaderOffset;
+
+    final leaderBox = _leaderKey.currentContext?.findRenderObject() as RenderBox;
+    _currentFocalPointInLeader = leaderBox.globalToLocal(globalLeaderOffset);
   }
 
   void _updateFollowerAnchorAndOffset() {
@@ -155,8 +168,7 @@ class _BoucingBallDemoState extends State<BoucingBallDemo> with SingleTickerProv
     final bounds = _getScreenBounds();
 
     // Find the follower offset and size.
-    final effectiveFollowerOffset = renderFollower.previousFollowerOffset ?? Offset.zero;
-    final transform = renderFollower.getCurrentTransform()..translate(effectiveFollowerOffset.dx);
+    final transform = renderFollower.getCurrentTransform();
     final translation = transform.getTranslation();
     final followerXOffset = translation.storage[0];
     final followerSize = renderFollower.size;
@@ -181,6 +193,21 @@ class _BoucingBallDemoState extends State<BoucingBallDemo> with SingleTickerProv
       children: [
         _buildLeader(),
         _buildFollower(),
+        Positioned(
+          left: _currentFocalPoint.dx,
+          top: _currentFocalPoint.dy,
+          child: FractionalTranslation(
+            translation: const Offset(-0.5, -0.5),
+            child: Container(
+              width: 10,
+              height: 10,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.red,
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -190,6 +217,7 @@ class _BoucingBallDemoState extends State<BoucingBallDemo> with SingleTickerProv
       left: _leaderOffset.dx,
       top: _leaderOffset.dy,
       child: Leader(
+        key: _leaderKey,
         link: _link,
         child: Container(
           height: _leaderRadius * 2,
@@ -207,15 +235,16 @@ class _BoucingBallDemoState extends State<BoucingBallDemo> with SingleTickerProv
     return Positioned(
       left: 0,
       top: 0,
-      child: Follower(
+      child: Follower.withOffset(
         key: _followerKey,
         link: _link,
         boundaryKey: _screenBoundKey,
-        targetAnchor: _targetAnchor,
+        leaderAnchor: _targetAnchor,
         followerAnchor: _followerAnchor,
         offset: _followerOffset,
         child: IosPopoverMenu(
           globalFocalPoint: _currentFocalPoint,
+          // globalFocalPoint: _currentFocalPointInLeader,
           padding: const EdgeInsets.all(12.0),
           child: SizedBox(
             width: _followerWidth,

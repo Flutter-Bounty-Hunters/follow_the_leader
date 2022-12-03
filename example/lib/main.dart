@@ -1,6 +1,6 @@
 import 'package:example/demo_boucing_ball.dart';
+import 'package:example/demo_draggable_ball.dart';
 import 'package:example/ios_popover/demo_toolbar.dart';
-import 'package:example/logging.dart';
 import 'package:flutter/material.dart';
 import 'package:follow_the_leader/follow_the_leader.dart';
 import 'package:logging/logging.dart';
@@ -10,8 +10,8 @@ import 'ios_popover/demo_popover.dart';
 
 void main() {
   FtlLogs.initLoggers(Level.FINEST, {
-    FtlLogs.follower,
-    appLog,
+    // FtlLogs.follower,
+    // appLog,
   });
   runApp(const MyApp());
 }
@@ -108,7 +108,11 @@ final _items = [
   ),
   _MenuItem(
     title: 'Bouncing Ball',
-    pageBuilder: (context) => const BoucingBallDemo(),
+    pageBuilder: (context) => const BouncingBallDemo(),
+  ),
+  _MenuItem(
+    title: 'Draggable Ball',
+    pageBuilder: (context) => const DraggableBallDemo(),
   ),
 ];
 
