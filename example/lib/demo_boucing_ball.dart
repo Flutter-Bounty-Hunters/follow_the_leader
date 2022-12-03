@@ -15,7 +15,7 @@ class _BoucingBallDemoState extends State<BoucingBallDemo> with SingleTickerProv
   final GlobalKey _screenBoundKey = GlobalKey();
   final GlobalKey _followerKey = GlobalKey();
   late Ticker ticker;
-  late CustomLayerLink _link;
+  late LeaderLink _link;
 
   /// Initial velocity of the leader.
   final Offset _initialVelocity = const Offset(300, 300);
@@ -68,7 +68,7 @@ class _BoucingBallDemoState extends State<BoucingBallDemo> with SingleTickerProv
     super.initState();
     ticker = createTicker(_onTick);
     ticker.start();
-    _link = CustomLayerLink();
+    _link = LeaderLink();
     _velocity = _initialVelocity;
   }
 
@@ -189,7 +189,7 @@ class _BoucingBallDemoState extends State<BoucingBallDemo> with SingleTickerProv
     return Positioned(
       left: _leaderOffset.dx,
       top: _leaderOffset.dy,
-      child: CustomCompositedTransformTarget(
+      child: Leader(
         link: _link,
         child: Container(
           height: _leaderRadius * 2,
@@ -207,7 +207,7 @@ class _BoucingBallDemoState extends State<BoucingBallDemo> with SingleTickerProv
     return Positioned(
       left: 0,
       top: 0,
-      child: LocationAwareCompositedTransformFollower(
+      child: Follower(
         key: _followerKey,
         link: _link,
         boundaryKey: _screenBoundKey,

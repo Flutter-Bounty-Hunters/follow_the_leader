@@ -10,7 +10,7 @@ void main() {
       bool tapped = false;
 
       final _screenBoundKey = GlobalKey();
-      final _link = CustomLayerLink();
+      final _link = LeaderLink();
 
       await tester.pumpWidget(
         MaterialApp(
@@ -24,7 +24,7 @@ void main() {
                   Positioned(
                     top: 0,
                     left: 0,
-                    child: CustomCompositedTransformTarget(
+                    child: Leader(
                       link: _link,
                       child: Container(color: Colors.red, width: 50, height: 50),
                     ),
@@ -32,7 +32,7 @@ void main() {
                   Positioned(
                     top: 0,
                     left: 0,
-                    child: LocationAwareCompositedTransformFollower(
+                    child: Follower(
                       link: _link,
                       boundaryKey: _screenBoundKey,
                       targetAnchor: Alignment.bottomRight,

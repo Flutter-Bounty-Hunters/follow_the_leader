@@ -1,11 +1,11 @@
 import 'dart:ui' as ui;
 
-import 'package:flutter/rendering.dart';
+import 'package:flutter/rendering.dart' hide LeaderLayer;
 import 'package:flutter/widgets.dart';
 import 'package:follow_the_leader/follow_the_leader.dart';
 import 'package:vector_math/vector_math_64.dart';
 
-class LocationAwareCompositedTransformFollower extends SingleChildRenderObjectWidget {
+class Follower extends SingleChildRenderObjectWidget {
   /// Creates a composited transform target widget.
   ///
   /// The [link] property must not be null. If it was also provided to a
@@ -13,7 +13,7 @@ class LocationAwareCompositedTransformFollower extends SingleChildRenderObjectWi
   /// order.
   ///
   /// The [showWhenUnlinked] and [offset] properties must also not be null.
-  const LocationAwareCompositedTransformFollower({
+  const Follower({
     Key? key,
     required this.link,
     required this.boundaryKey,
@@ -28,7 +28,7 @@ class LocationAwareCompositedTransformFollower extends SingleChildRenderObjectWi
   /// [CompositedTransformTarget].
   ///
   /// This property must not be null.
-  final CustomLayerLink link;
+  final LeaderLink link;
 
   final GlobalKey boundaryKey;
 
@@ -101,7 +101,7 @@ class RenderFollowerLayer extends RenderProxyBox {
   ///
   /// The [link] and [offset] arguments must not be null.
   RenderFollowerLayer({
-    required CustomLayerLink link,
+    required LeaderLink link,
     GlobalKey? boundaryKey,
     bool showWhenUnlinked = true,
     Offset offset = Offset.zero,
@@ -124,9 +124,9 @@ class RenderFollowerLayer extends RenderProxyBox {
 
   /// The link object that connects this [RenderFollowerLayer] with a
   /// [RenderLeaderLayer] earlier in the paint order.
-  CustomLayerLink get link => _link;
-  CustomLayerLink _link;
-  set link(CustomLayerLink value) {
+  LeaderLink get link => _link;
+  LeaderLink _link;
+  set link(LeaderLink value) {
     if (_link == value) return;
     FtlLogs.follower.fine("Setting new link");
     _link = value;
@@ -214,14 +214,14 @@ class RenderFollowerLayer extends RenderProxyBox {
 
   /// The layer we created when we were last painted.
   @override
-  CustomFollowerLayer? get layer => super.layer as CustomFollowerLayer?;
+  FollowerLayer? get layer => super.layer as FollowerLayer?;
 
   /// Return the transform that was used in the last composition phase, if any.
   ///
   /// If the [FollowerLayer] has not yet been created, was never composited, or
   /// was unable to determine the transform (see
   /// [FollowerLayer.getLastTransform]), this returns the identity matrix (see
-  /// [new Matrix4.identity].
+  /// [Matrix4.identity].
   Matrix4 getCurrentTransform() {
     return layer?.getLastTransform() ?? Matrix4.identity();
   }
@@ -254,7 +254,7 @@ class RenderFollowerLayer extends RenderProxyBox {
   Offset? _previousFollowerOffset;
   Offset? get previousFollowerOffset => _previousFollowerOffset;
 
-  /// Indicates whether or not we are in the first paint of the current [CustomLayerLink].
+  /// Indicates whether or not we are in the first paint of the current [LeaderLink].
   bool _firstPaintOfCurrentLink = true;
 
   @override
@@ -288,7 +288,7 @@ class RenderFollowerLayer extends RenderProxyBox {
     }
 
     if (layer == null) {
-      layer = CustomFollowerLayer(
+      layer = FollowerLayer(
         link: link,
         showWhenUnlinked: showWhenUnlinked,
         linkedOffset: _previousFollowerOffset,
@@ -360,7 +360,7 @@ class RenderFollowerLayer extends RenderProxyBox {
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    properties.add(DiagnosticsProperty<CustomLayerLink>('link', link));
+    properties.add(DiagnosticsProperty<LeaderLink>('link', link));
     properties.add(DiagnosticsProperty<bool>('showWhenUnlinked', showWhenUnlinked));
     properties.add(DiagnosticsProperty<Offset>('offset', offset));
     properties.add(TransformProperty('current transform matrix', getCurrentTransform()));
@@ -368,36 +368,36 @@ class RenderFollowerLayer extends RenderProxyBox {
 }
 
 /// A composited layer that applies a transformation matrix to its children such
-/// that they are positioned to match a [CustomLeaderLayer].
+/// that they are positioned to match a [LeaderLayer].
 ///
 /// If any of the ancestors of this layer have a degenerate matrix (e.g. scaling
 /// by zero), then the [FollowerLayer] will not be able to transform its child
-/// to the coordinate space of the [CustomLeaderLayer].
+/// to the coordinate space of the [LeaderLayer].
 ///
 /// A [linkedOffset] property can be provided to further offset the child layer
 /// from the leader layer, for example if the child is to follow the linked
 /// layer at a distance rather than directly overlapping it.
-class CustomFollowerLayer extends ContainerLayer {
+class FollowerLayer extends ContainerLayer {
   /// Creates a follower layer.
   ///
   /// The [link] property must not be null.
   ///
   /// The [unlinkedOffset], [linkedOffset], and [showWhenUnlinked] properties
   /// must be non-null before the compositing phase of the pipeline.
-  CustomFollowerLayer({
-    required CustomLayerLink link,
+  FollowerLayer({
+    required LeaderLink link,
     this.showWhenUnlinked = true,
     this.unlinkedOffset = Offset.zero,
     this.linkedOffset = Offset.zero,
   }) : _link = link;
 
-  /// The link to the [CustomLeaderLayer].
+  /// The link to the [LeaderLayer].
   ///
-  /// The same object should be provided to a [CustomLeaderLayer] that is earlier in
+  /// The same object should be provided to a [LeaderLayer] that is earlier in
   /// the layer tree. When this layer is composited, it will apply a transform
-  /// that moves its children to match the position of the [CustomLeaderLayer].
-  CustomLayerLink get link => _link;
-  set link(CustomLayerLink value) {
+  /// that moves its children to match the position of the [LeaderLayer].
+  LeaderLink get link => _link;
+  set link(LeaderLink value) {
     if (value != _link && _leaderHandle != null) {
       _leaderHandle!.dispose();
       _leaderHandle = value.registerFollower();
@@ -405,13 +405,13 @@ class CustomFollowerLayer extends ContainerLayer {
     _link = value;
   }
 
-  CustomLayerLink _link;
+  LeaderLink _link;
 
   /// Whether to show the layer's contents when the [link] does not point to a
-  /// [CustomLeaderLayer].
+  /// [LeaderLayer].
   ///
   /// When the layer is linked, children layers are positioned such that they
-  /// have the same global position as the linked [CustomLeaderLayer].
+  /// have the same global position as the linked [LeaderLayer].
   ///
   /// When the layer is not linked, then: if [showWhenUnlinked] is true,
   /// children are positioned as if the [FollowerLayer] was a [ContainerLayer];
@@ -422,7 +422,7 @@ class CustomFollowerLayer extends ContainerLayer {
   bool? showWhenUnlinked;
 
   /// Offset from parent in the parent's coordinate system, used when the layer
-  /// is not linked to a [CustomLeaderLayer].
+  /// is not linked to a [LeaderLayer].
   ///
   /// The scene must be explicitly recomposited after this property is changed
   /// (as described at [Layer]).
@@ -436,7 +436,7 @@ class CustomFollowerLayer extends ContainerLayer {
   Offset? unlinkedOffset;
 
   /// Offset from the origin of the leader layer to the origin of the child
-  /// layers, used when the layer is linked to a [CustomLeaderLayer].
+  /// layers, used when the layer is linked to a [LeaderLayer].
   ///
   /// The scene must be explicitly recomposited after this property is changed
   /// (as described at [Layer]).
@@ -499,7 +499,7 @@ class CustomFollowerLayer extends ContainerLayer {
 
   /// The transform that was used during the last composition phase.
   ///
-  /// If the [link] was not linked to a [CustomLeaderLayer], or if this layer has
+  /// If the [link] was not linked to a [LeaderLayer], or if this layer has
   /// a degenerate matrix applied, then this will be null.
   ///
   /// This method returns a new [Matrix4] instance each time it is invoked.
@@ -566,7 +566,7 @@ class CustomFollowerLayer extends ContainerLayer {
   /// Populate [_lastTransform] given the current state of the tree.
   void _establishTransform() {
     _lastTransform = null;
-    final CustomLeaderLayer? leader = _leaderHandle!.leader;
+    final LeaderLayer? leader = _leaderHandle!.leader;
     // Check to see if we are linked.
     if (leader == null) {
       return;
@@ -617,7 +617,7 @@ class CustomFollowerLayer extends ContainerLayer {
   /// {@template flutter.rendering.FollowerLayer.alwaysNeedsAddToScene}
   /// This disables retained rendering.
   ///
-  /// A [FollowerLayer] copies changes from a [CustomLeaderLayer] that could be anywhere
+  /// A [FollowerLayer] copies changes from a [LeaderLayer] that could be anywhere
   /// in the Layer tree, and that leader layer could change without notifying the
   /// follower layer. Therefore we have to always call a follower layer's
   /// [addToScene]. In order to call follower layer's [addToScene], leader layer's
@@ -672,7 +672,7 @@ class CustomFollowerLayer extends ContainerLayer {
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    properties.add(DiagnosticsProperty<CustomLayerLink>('link', link));
+    properties.add(DiagnosticsProperty<LeaderLink>('link', link));
     properties.add(TransformProperty('transform', getLastTransform(), defaultValue: null));
   }
 }

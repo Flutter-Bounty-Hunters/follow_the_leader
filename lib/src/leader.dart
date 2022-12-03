@@ -13,33 +13,33 @@ import 'layer_link.dart';
 /// that are subsequently composited in the same frame and were given the same
 /// [LayerLink] can position themselves at the same screen location.
 ///
-/// A single [CustomCompositedTransformTarget] can be followed by multiple
+/// A single [Leader] can be followed by multiple
 /// [CompositedTransformFollower] widgets.
 ///
-/// The [CustomCompositedTransformTarget] must come earlier in the paint order than
+/// The [Leader] must come earlier in the paint order than
 /// any linked [CompositedTransformFollower]s.
 ///
 /// See also:
 ///
 ///  * [CompositedTransformFollower], the widget that can target this one.
 ///  * [LeaderLayer], the layer that implements this widget's logic.
-class CustomCompositedTransformTarget extends SingleChildRenderObjectWidget {
+class Leader extends SingleChildRenderObjectWidget {
   /// Creates a composited transform target widget.
   ///
   /// The [link] property must not be null, and must not be currently being used
-  /// by any other [CustomCompositedTransformTarget] object that is in the tree.
-  const CustomCompositedTransformTarget({
+  /// by any other [Leader] object that is in the tree.
+  const Leader({
     Key? key,
     required this.link,
     Widget? child,
   }) : super(key: key, child: child);
 
-  /// The link object that connects this [CustomCompositedTransformTarget] with one or
+  /// The link object that connects this [Leader] with one or
   /// more [CompositedTransformFollower]s.
   ///
   /// This property must not be null. The object must not be associated with
-  /// another [CustomCompositedTransformTarget] that is also being painted.
-  final CustomLayerLink link;
+  /// another [Leader] that is also being painted.
+  final LeaderLink link;
 
   @override
   CustomRenderLeaderLayer createRenderObject(BuildContext context) {
@@ -65,7 +65,7 @@ class CustomRenderLeaderLayer extends RenderProxyBox {
   ///
   /// The [link] must not be null.
   CustomRenderLeaderLayer({
-    required CustomLayerLink link,
+    required LeaderLink link,
     RenderBox? child,
   })  : _link = link,
         super(child);
@@ -75,9 +75,9 @@ class CustomRenderLeaderLayer extends RenderProxyBox {
   ///
   /// This property must not be null. The object must not be associated with
   /// another [CustomRenderLeaderLayer] that is also being painted.
-  CustomLayerLink get link => _link;
-  CustomLayerLink _link;
-  set link(CustomLayerLink value) {
+  LeaderLink get link => _link;
+  LeaderLink _link;
+  set link(LeaderLink value) {
     if (_link == value) {
       return;
     }
@@ -111,9 +111,9 @@ class CustomRenderLeaderLayer extends RenderProxyBox {
   @override
   void paint(PaintingContext context, Offset offset) {
     if (layer == null) {
-      layer = CustomLeaderLayer(link: link, offset: offset);
+      layer = LeaderLayer(link: link, offset: offset);
     } else {
-      final CustomLeaderLayer leaderLayer = layer! as CustomLeaderLayer;
+      final LeaderLayer leaderLayer = layer! as LeaderLayer;
       leaderLayer
         ..link = link
         ..offset = offset;
@@ -125,7 +125,7 @@ class CustomRenderLeaderLayer extends RenderProxyBox {
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    properties.add(DiagnosticsProperty<CustomLayerLink>('link', link));
+    properties.add(DiagnosticsProperty<LeaderLink>('link', link));
   }
 }
 
@@ -134,16 +134,16 @@ class CustomRenderLeaderLayer extends RenderProxyBox {
 /// This layer collapses the accumulated offset into a transform and passes
 /// [Offset.zero] to its child layers in the [addToScene]/[addChildrenToScene]
 /// methods, so that [applyTransform] will work reliably.
-class CustomLeaderLayer extends ContainerLayer {
+class LeaderLayer extends ContainerLayer {
   /// Creates a leader layer.
   ///
   /// The [link] property must not be null, and must not have been provided to
-  /// any other [CustomLeaderLayer] layers that are [attached] to the layer tree at
+  /// any other [LeaderLayer] layers that are [attached] to the layer tree at
   /// the same time.
   ///
   /// The [offset] property must be non-null before the compositing phase of the
   /// pipeline.
-  CustomLeaderLayer({required CustomLayerLink link, Offset offset = Offset.zero})
+  LeaderLayer({required LeaderLink link, Offset offset = Offset.zero})
       : _link = link,
         _offset = offset;
 
@@ -151,9 +151,9 @@ class CustomLeaderLayer extends ContainerLayer {
   ///
   /// The link will be established when this layer is [attach]ed, and will be
   /// cleared when this layer is [detach]ed.
-  CustomLayerLink get link => _link;
-  CustomLayerLink _link;
-  set link(CustomLayerLink value) {
+  LeaderLink get link => _link;
+  LeaderLink _link;
+  set link(LeaderLink value) {
     if (_link == value) {
       return;
     }
@@ -248,6 +248,6 @@ class CustomLeaderLayer extends ContainerLayer {
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
     properties.add(DiagnosticsProperty<Offset>('offset', offset));
-    properties.add(DiagnosticsProperty<CustomLayerLink>('link', link));
+    properties.add(DiagnosticsProperty<LeaderLink>('link', link));
   }
 }
