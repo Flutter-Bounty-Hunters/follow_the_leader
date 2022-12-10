@@ -1,7 +1,7 @@
-import 'package:example/ios_popover/_ios_toolbar.dart';
 import 'package:flutter/material.dart';
+import 'package:overlord/overlord.dart';
 
-import '_toolbar_example.dart';
+import 'toolbar_example.dart';
 
 /// Demo which shows the capabilities of the [IosToolbar].
 ///
@@ -22,25 +22,25 @@ class _ToolbarDemoState extends State<ToolbarDemo> {
   late ToolbarDemoItem _selectedItem;
 
   final smallList = const [
-    IosMenuItem(label: 'Style'),
-    IosMenuItem(label: 'Duplicate'),
-    IosMenuItem(label: 'Cut'),
-    IosMenuItem(label: 'Copy'),
-    IosMenuItem(label: 'Paste'),
+    CupertinoPopoverToolbarMenuItem(label: 'Style'),
+    CupertinoPopoverToolbarMenuItem(label: 'Duplicate'),
+    CupertinoPopoverToolbarMenuItem(label: 'Cut'),
+    CupertinoPopoverToolbarMenuItem(label: 'Copy'),
+    CupertinoPopoverToolbarMenuItem(label: 'Paste'),
   ];
 
   final longList = const [
-    IosMenuItem(label: 'Style'),
-    IosMenuItem(label: 'Duplicate'),
-    IosMenuItem(label: 'Cut'),
-    IosMenuItem(label: 'Copy'),
-    IosMenuItem(label: 'Paste'),
-    IosMenuItem(label: 'Delete'),
-    IosMenuItem(label: 'Long Thing 1'),
-    IosMenuItem(label: 'Long Thing 2'),
-    IosMenuItem(label: 'Long Thing 3'),
-    IosMenuItem(label: 'Long Thing 4'),
-    IosMenuItem(label: 'Long Thing 5'),
+    CupertinoPopoverToolbarMenuItem(label: 'Style'),
+    CupertinoPopoverToolbarMenuItem(label: 'Duplicate'),
+    CupertinoPopoverToolbarMenuItem(label: 'Cut'),
+    CupertinoPopoverToolbarMenuItem(label: 'Copy'),
+    CupertinoPopoverToolbarMenuItem(label: 'Paste'),
+    CupertinoPopoverToolbarMenuItem(label: 'Delete'),
+    CupertinoPopoverToolbarMenuItem(label: 'Long Thing 1'),
+    CupertinoPopoverToolbarMenuItem(label: 'Long Thing 2'),
+    CupertinoPopoverToolbarMenuItem(label: 'Long Thing 3'),
+    CupertinoPopoverToolbarMenuItem(label: 'Long Thing 4'),
+    CupertinoPopoverToolbarMenuItem(label: 'Long Thing 5'),
   ];
 
   @override
@@ -77,23 +77,23 @@ class _ToolbarDemoState extends State<ToolbarDemo> {
           pages: [
             MenuPage(
               items: const [
-                IosMenuItem(label: 'Style'),
-                IosMenuItem(label: 'Duplicate'),
+                CupertinoPopoverToolbarMenuItem(label: 'Style'),
+                CupertinoPopoverToolbarMenuItem(label: 'Duplicate'),
               ],
             ),
             MenuPage(
               items: const [
-                IosMenuItem(label: 'Cut'),
-                IosMenuItem(label: 'Copy'),
-                IosMenuItem(label: 'Paste'),
-                IosMenuItem(label: 'Delete'),
+                CupertinoPopoverToolbarMenuItem(label: 'Cut'),
+                CupertinoPopoverToolbarMenuItem(label: 'Copy'),
+                CupertinoPopoverToolbarMenuItem(label: 'Paste'),
+                CupertinoPopoverToolbarMenuItem(label: 'Delete'),
               ],
             ),
             MenuPage(
               items: const [
-                IosMenuItem(label: 'Page 3 Copy'),
-                IosMenuItem(label: 'Page 3 Paste'),
-                IosMenuItem(label: 'Page 3 Delete'),
+                CupertinoPopoverToolbarMenuItem(label: 'Page 3 Copy'),
+                CupertinoPopoverToolbarMenuItem(label: 'Page 3 Paste'),
+                CupertinoPopoverToolbarMenuItem(label: 'Page 3 Delete'),
               ],
             ),
           ],
@@ -209,7 +209,7 @@ class _DraggableDemoState extends State<DraggableDemo> {
           top: _offset.dy,
           child: GestureDetector(
             onPanUpdate: _onPanUpdate,
-            child: IosToolbar(
+            child: CupertinoPopoverToolbar(
               globalFocalPoint: widget.focalPoint,
               padding: const EdgeInsets.all(12.0),
               arrowBaseWidth: 21,

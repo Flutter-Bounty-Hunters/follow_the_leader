@@ -7,24 +7,21 @@ import 'package:follow_the_leader/src/leader.dart';
 void main() {
   group('follow the leader', () {
     testWidgets('hit tests followers', (tester) async {
-      bool tapped = false;
+      tester.binding.window.physicalSizeTestValue = const Size(400, 400);
 
-      final _screenBoundKey = GlobalKey();
-      final _link = CustomLayerLink();
+      bool tapped = false;
+      final _link = LeaderLink();
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: SizedBox(
-              key: _screenBoundKey,
-              width: 400,
-              height: 400,
-              child: Stack(
+            body: Builder(builder: (context) {
+              return Stack(
                 children: [
                   Positioned(
                     top: 0,
                     left: 0,
-                    child: CustomCompositedTransformTarget(
+                    child: Leader(
                       link: _link,
                       child: Container(color: Colors.red, width: 50, height: 50),
                     ),
@@ -32,10 +29,10 @@ void main() {
                   Positioned(
                     top: 0,
                     left: 0,
-                    child: LocationAwareCompositedTransformFollower(
+                    child: Follower.withOffset(
                       link: _link,
-                      boundaryKey: _screenBoundKey,
-                      targetAnchor: Alignment.bottomRight,
+                      boundary: ScreenFollowerBoundary(MediaQuery.of(context).size),
+                      leaderAnchor: Alignment.bottomRight,
                       followerAnchor: Alignment.topLeft,
                       offset: const Offset(50, 50),
                       child: GestureDetector(
@@ -51,8 +48,8 @@ void main() {
                     ),
                   ),
                 ],
-              ),
-            ),
+              );
+            }),
           ),
         ),
       );

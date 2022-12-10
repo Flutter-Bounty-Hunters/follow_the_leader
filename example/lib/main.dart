@@ -1,17 +1,22 @@
-import 'package:example/demo_boucing_ball.dart';
+import 'package:example/demo_hover.dart';
+import 'package:example/demo_kitchen_sink.dart';
+import 'package:example/demo_popover_menu_bouncing_ball.dart';
+import 'package:example/demo_popover_menu_draggable_ball.dart';
+import 'package:example/demo_toolbar_draggable_ball.dart';
+import 'package:example/demo_toolbar_wide_draggable_ball.dart';
 import 'package:example/ios_popover/demo_toolbar.dart';
-import 'package:example/logging.dart';
 import 'package:flutter/material.dart';
 import 'package:follow_the_leader/follow_the_leader.dart';
 import 'package:logging/logging.dart';
 
 import 'demo_orbiting_circles.dart';
+import 'demo_toolbar_bouncing_ball.dart';
 import 'ios_popover/demo_popover.dart';
 
 void main() {
-  FollowTheLeaderLogs.initLoggers(Level.FINEST, {
-    followerLog,
-    appLog,
+  FtlLogs.initLoggers(Level.FINEST, {
+    // FtlLogs.follower,
+    // appLog,
   });
   runApp(const MyApp());
 }
@@ -36,7 +41,7 @@ class ExampleApp extends StatefulWidget {
   const ExampleApp({Key? key}) : super(key: key);
 
   @override
-  _ExampleAppState createState() => _ExampleAppState();
+  State createState() => _ExampleAppState();
 }
 
 class _ExampleAppState extends State<ExampleApp> {
@@ -95,6 +100,14 @@ class _ExampleAppState extends State<ExampleApp> {
 
 final _items = [
   _MenuItem(
+    title: 'Follow the Leader',
+    pageBuilder: (context) => const KitchenSinkDemo(),
+  ),
+  _MenuItem(
+    title: 'Hover',
+    pageBuilder: (context) => const HoverDemo(),
+  ),
+  _MenuItem(
     title: 'Orbiting Circles',
     pageBuilder: (context) => const OrbitingCirclesDemo(),
   ),
@@ -103,12 +116,28 @@ final _items = [
     pageBuilder: (context) => const PopoverDemo(),
   ),
   _MenuItem(
+    title: 'Popover Menu - Draggable Ball',
+    pageBuilder: (context) => const PopoverMenuDraggableBallDemo(),
+  ),
+  _MenuItem(
+    title: 'Popover Menu - Bouncing Ball',
+    pageBuilder: (context) => const PopoverMenuBouncingBallDemo(),
+  ),
+  _MenuItem(
     title: 'iOS Toolbar',
     pageBuilder: (context) => const ToolbarDemo(),
   ),
   _MenuItem(
-    title: 'Bouncing Ball',
-    pageBuilder: (context) => const BoucingBallDemo(),
+    title: 'Toolbar - Draggable Ball',
+    pageBuilder: (context) => const ToolbarDraggableBallDemo(),
+  ),
+  _MenuItem(
+    title: 'Toolbar (wide) - Draggable Ball',
+    pageBuilder: (context) => const WideToolbarDraggableBallDemo(),
+  ),
+  _MenuItem(
+    title: 'Toolbar - Bouncing Ball',
+    pageBuilder: (context) => const ToolbarBouncingBallDemo(),
   ),
 ];
 

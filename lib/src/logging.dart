@@ -2,21 +2,22 @@
 
 import 'package:logging/logging.dart' as logging;
 
-final _activeLoggers = <logging.Logger>{};
-
-/// Defines the names used for the loggers.
+/// Follow the Leader logger names.
 class LogNames {
   static const leader = 'leader';
   static const follower = 'follower';
 }
 
-final leaderLog = logging.Logger(LogNames.leader);
-final followerLog = logging.Logger(LogNames.follower);
+/// Follow the Leader logging.
+class FtlLogs {
+  static final leader = logging.Logger(LogNames.leader);
+  static final follower = logging.Logger(LogNames.follower);
 
-class FollowTheLeaderLogs {
+  static final _activeLoggers = <logging.Logger>{};
+
   /// Initialize the given [loggers] using the minimum [level].
   ///
-  /// To enable all the loggers, use [FollowTheLeaderLogs.initAllLogs].
+  /// To enable all the loggers, use [FtlLogs.initAllLogs].
   static void initLoggers(logging.Level level, Set<logging.Logger> loggers) {
     logging.hierarchicalLoggingEnabled = true;
 
@@ -34,7 +35,7 @@ class FollowTheLeaderLogs {
 
   /// Initializes all the available loggers.
   ///
-  /// To control which loggers are initialized, use [FollowTheLeaderLogs.initLoggers].
+  /// To control which loggers are initialized, use [FtlLogs.initLoggers].
   static void initAllLogs(logging.Level level) {
     initLoggers(level, {logging.Logger.root});
   }

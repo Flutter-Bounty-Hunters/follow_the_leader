@@ -14,13 +14,13 @@ class OrbitingCirclesDemo extends StatefulWidget {
 
 class _OrbitingCirclesDemoState extends State<OrbitingCirclesDemo> {
   final _screenBoundKey = GlobalKey();
-  late CustomLayerLink _link;
+  late LeaderLink _link;
   Offset _offset = const Offset(250, 250);
 
   @override
   void initState() {
     super.initState();
-    _link = CustomLayerLink();
+    _link = LeaderLink();
   }
 
   void _onPanUpdate(DragUpdateDetails details) {
@@ -43,7 +43,7 @@ class _OrbitingCirclesDemoState extends State<OrbitingCirclesDemo> {
               translation: const Offset(-0.5, -0.5),
               child: GestureDetector(
                 onPanUpdate: _onPanUpdate,
-                child: CustomCompositedTransformTarget(
+                child: Leader(
                   link: _link,
                   child: Container(
                     width: 50,
@@ -77,15 +77,15 @@ class _OrbitingCirclesDemoState extends State<OrbitingCirclesDemo> {
     return Positioned(
       left: 0,
       top: 0,
-      child: LocationAwareCompositedTransformFollower(
+      child: Follower.withOffset(
         link: _link,
-        boundaryKey: _screenBoundKey,
-        targetAnchor: Alignment.center,
-        followerAnchor: Alignment.center,
         offset: Offset(
           radius * cos(radians),
           radius * sin(radians),
         ),
+        boundary: ScreenFollowerBoundary(MediaQuery.of(context).size),
+        leaderAnchor: Alignment.center,
+        followerAnchor: Alignment.center,
         child: Container(
           width: 25,
           height: 25,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import '_ios_popover_menu.dart';
+import 'package:overlord/overlord.dart';
 
 /// An example of an [IosPopoverMenu] usage.
 ///
@@ -16,7 +15,7 @@ class PopoverExample extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: IosPopoverMenu(
+      child: CupertinoPopoverMenu(
         globalFocalPoint: focalPoint,
         padding: const EdgeInsets.all(12.0),
         arrowBaseWidth: 21,
