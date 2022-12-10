@@ -4,16 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:follow_the_leader/follow_the_leader.dart';
 import 'package:overlord/overlord.dart';
 
-/// Displays an [IosPopoverMenu] near a bouncing ball.
-class PopoverMenuBouncingBallDemo extends StatefulWidget {
-  const PopoverMenuBouncingBallDemo({super.key});
+/// Displays an [IosToolbar] near a bouncing ball.
+class ToolbarBouncingBallDemo extends StatefulWidget {
+  const ToolbarBouncingBallDemo({super.key});
 
   @override
-  State<PopoverMenuBouncingBallDemo> createState() => _PopoverMenuBouncingBallDemoState();
+  State<ToolbarBouncingBallDemo> createState() => _ToolbarBouncingBallDemoState();
 }
 
-class _PopoverMenuBouncingBallDemoState extends State<PopoverMenuBouncingBallDemo> with SingleTickerProviderStateMixin {
-  static const double _menuWidth = 100;
+class _ToolbarBouncingBallDemoState extends State<ToolbarBouncingBallDemo> with SingleTickerProviderStateMixin {
   static const double _ballRadius = 50.0;
 
   final GlobalKey _screenBoundsKey = GlobalKey();
@@ -25,7 +24,7 @@ class _PopoverMenuBouncingBallDemoState extends State<PopoverMenuBouncingBallDem
   /// Current offset of the leader.
   ///
   /// The offset changes at every tick.
-  Offset _ballOffset = const Offset(0, 200);
+  Offset _ballOffset = const Offset(300, 200);
 
   /// The global offset where the menu's arrow should point.
   Offset _globalMenuFocalPoint = Offset.zero;
@@ -33,7 +32,7 @@ class _PopoverMenuBouncingBallDemoState extends State<PopoverMenuBouncingBallDem
   @override
   void initState() {
     super.initState();
-    _aligner = CupertinoPopoverMenuAligner(_screenBoundsKey);
+    _aligner = CupertinoPopoverToolbarAligner(_screenBoundsKey);
   }
 
   /// Calculates the global offset where the menu's arrow should point.
@@ -58,7 +57,7 @@ class _PopoverMenuBouncingBallDemoState extends State<PopoverMenuBouncingBallDem
       followerKey: _followerKey,
       followerAligner: _aligner,
       follower: _buildMenu(),
-      initialBallOffset: const Offset(0, 200),
+      initialBallOffset: _ballOffset,
       onBallMove: (ballOffset) {
         setState(() {
           _ballOffset = ballOffset;
@@ -69,23 +68,15 @@ class _PopoverMenuBouncingBallDemoState extends State<PopoverMenuBouncingBallDem
   }
 
   Widget _buildMenu() {
-    return CupertinoPopoverMenu(
+    return CupertinoPopoverToolbar(
       globalFocalPoint: _globalMenuFocalPoint,
-      padding: const EdgeInsets.all(12.0),
-      child: const SizedBox(
-        width: _menuWidth,
-        height: 100,
-        child: Center(
-          child: Text(
-            'Popover Content',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-            ),
-          ),
-        ),
-      ),
+      children: const [
+        CupertinoPopoverToolbarMenuItem(label: 'Style'),
+        CupertinoPopoverToolbarMenuItem(label: 'Duplicate'),
+        CupertinoPopoverToolbarMenuItem(label: 'Cut'),
+        CupertinoPopoverToolbarMenuItem(label: 'Copy'),
+        CupertinoPopoverToolbarMenuItem(label: 'Paste'),
+      ],
     );
   }
 }

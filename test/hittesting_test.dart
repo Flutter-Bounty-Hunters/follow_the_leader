@@ -7,19 +7,16 @@ import 'package:follow_the_leader/src/leader.dart';
 void main() {
   group('follow the leader', () {
     testWidgets('hit tests followers', (tester) async {
-      bool tapped = false;
+      tester.binding.window.physicalSizeTestValue = const Size(400, 400);
 
-      final _screenBoundKey = GlobalKey();
+      bool tapped = false;
       final _link = LeaderLink();
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: SizedBox(
-              key: _screenBoundKey,
-              width: 400,
-              height: 400,
-              child: Stack(
+            body: Builder(builder: (context) {
+              return Stack(
                 children: [
                   Positioned(
                     top: 0,
@@ -34,7 +31,7 @@ void main() {
                     left: 0,
                     child: Follower.withOffset(
                       link: _link,
-                      boundaryKey: _screenBoundKey,
+                      boundary: ScreenFollowerBoundary(MediaQuery.of(context).size),
                       leaderAnchor: Alignment.bottomRight,
                       followerAnchor: Alignment.topLeft,
                       offset: const Offset(50, 50),
@@ -51,8 +48,8 @@ void main() {
                     ),
                   ),
                 ],
-              ),
-            ),
+              );
+            }),
           ),
         ),
       );

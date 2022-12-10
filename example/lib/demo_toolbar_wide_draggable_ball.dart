@@ -4,16 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:follow_the_leader/follow_the_leader.dart';
 import 'package:overlord/overlord.dart';
 
-/// Displays an [IosPopoverMenu] near a draggable ball.
-class PopoverMenuDraggableBallDemo extends StatefulWidget {
-  const PopoverMenuDraggableBallDemo({super.key});
+/// Displays a very wide [IosToolbar] near a draggable ball.
+class WideToolbarDraggableBallDemo extends StatefulWidget {
+  const WideToolbarDraggableBallDemo({super.key});
 
   @override
-  State<PopoverMenuDraggableBallDemo> createState() => _PopoverMenuDraggableBallDemoState();
+  State<WideToolbarDraggableBallDemo> createState() => _WideToolbarDraggableBallDemoState();
 }
 
-class _PopoverMenuDraggableBallDemoState extends State<PopoverMenuDraggableBallDemo> {
-  static const double _menuWidth = 100;
+class _WideToolbarDraggableBallDemoState extends State<WideToolbarDraggableBallDemo> {
   static const double _draggableBallRadius = 50.0;
 
   final GlobalKey _screenBoundsKey = GlobalKey();
@@ -23,7 +22,7 @@ class _PopoverMenuDraggableBallDemoState extends State<PopoverMenuDraggableBallD
   late final FollowerAligner _aligner;
 
   /// The (x,y) position of the draggable object, which is also our `Leader`.
-  Offset _draggableOffset = const Offset(300, 250);
+  Offset _ballOffset = const Offset(300, 200);
 
   /// The global offset where the menu's arrow should point.
   Offset _globalMenuFocalPoint = Offset.zero;
@@ -32,7 +31,7 @@ class _PopoverMenuDraggableBallDemoState extends State<PopoverMenuDraggableBallD
   void initState() {
     super.initState();
 
-    _aligner = CupertinoPopoverMenuAligner(_screenBoundsKey);
+    _aligner = CupertinoPopoverToolbarAligner(_screenBoundsKey);
 
     // After the first frame, calculate the menu focal point.
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
@@ -45,7 +44,7 @@ class _PopoverMenuDraggableBallDemoState extends State<PopoverMenuDraggableBallD
   void _onBallMove(Offset offset) {
     setState(() {
       // Update _draggableOffset before updating the menu focal point
-      _draggableOffset = offset;
+      _ballOffset = offset;
       _updateMenuFocalPoint();
     });
   }
@@ -58,7 +57,7 @@ class _PopoverMenuDraggableBallDemoState extends State<PopoverMenuDraggableBallD
       return;
     }
 
-    final focalPointInScreenBounds = _draggableOffset + const Offset(_draggableBallRadius, _draggableBallRadius);
+    final focalPointInScreenBounds = _ballOffset + const Offset(_draggableBallRadius, _draggableBallRadius);
     final globalLeaderOffset = screenBoundsBox.localToGlobal(focalPointInScreenBounds);
 
     _globalMenuFocalPoint = globalLeaderOffset;
@@ -74,7 +73,7 @@ class _PopoverMenuDraggableBallDemoState extends State<PopoverMenuDraggableBallD
           followerKey: _followerKey,
           followerAligner: _aligner,
           follower: _buildMenu(),
-          initialBallOffset: _draggableOffset,
+          initialBallOffset: _ballOffset,
           onBallMove: _onBallMove,
         ),
         _buildDebugFocalPoint(),
@@ -83,23 +82,35 @@ class _PopoverMenuDraggableBallDemoState extends State<PopoverMenuDraggableBallD
   }
 
   Widget _buildMenu() {
-    return CupertinoPopoverMenu(
+    return CupertinoPopoverToolbar(
       globalFocalPoint: _globalMenuFocalPoint,
-      padding: const EdgeInsets.all(12.0),
-      child: const SizedBox(
-        width: _menuWidth,
-        height: 100,
-        child: Center(
-          child: Text(
-            'Popover Content',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-            ),
-          ),
-        ),
-      ),
+      children: const [
+        CupertinoPopoverToolbarMenuItem(label: 'Style'),
+        CupertinoPopoverToolbarMenuItem(label: 'Duplicate'),
+        CupertinoPopoverToolbarMenuItem(label: 'Cut'),
+        CupertinoPopoverToolbarMenuItem(label: 'Copy'),
+        CupertinoPopoverToolbarMenuItem(label: 'Paste'),
+        CupertinoPopoverToolbarMenuItem(label: 'Style'),
+        CupertinoPopoverToolbarMenuItem(label: 'Duplicate'),
+        CupertinoPopoverToolbarMenuItem(label: 'Cut'),
+        CupertinoPopoverToolbarMenuItem(label: 'Copy'),
+        CupertinoPopoverToolbarMenuItem(label: 'Paste'),
+        CupertinoPopoverToolbarMenuItem(label: 'Style'),
+        CupertinoPopoverToolbarMenuItem(label: 'Duplicate'),
+        CupertinoPopoverToolbarMenuItem(label: 'Cut'),
+        CupertinoPopoverToolbarMenuItem(label: 'Copy'),
+        CupertinoPopoverToolbarMenuItem(label: 'Paste'),
+        CupertinoPopoverToolbarMenuItem(label: 'Style'),
+        CupertinoPopoverToolbarMenuItem(label: 'Duplicate'),
+        CupertinoPopoverToolbarMenuItem(label: 'Cut'),
+        CupertinoPopoverToolbarMenuItem(label: 'Copy'),
+        CupertinoPopoverToolbarMenuItem(label: 'Paste'),
+        CupertinoPopoverToolbarMenuItem(label: 'Style'),
+        CupertinoPopoverToolbarMenuItem(label: 'Duplicate'),
+        CupertinoPopoverToolbarMenuItem(label: 'Cut'),
+        CupertinoPopoverToolbarMenuItem(label: 'Copy'),
+        CupertinoPopoverToolbarMenuItem(label: 'Paste'),
+      ],
     );
   }
 

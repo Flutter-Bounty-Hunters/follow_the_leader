@@ -39,6 +39,10 @@ dependencies:
   follow_the_leader:
     path: ../
 
+  overlord:
+    git:
+      url: git@github.com:Flutter-Bounty-Hunters/overlord.git
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -2,26 +2,22 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/rendering.dart' hide LeaderLayer;
 import 'package:flutter/widgets.dart';
-import 'package:follow_the_leader/follow_the_leader.dart';
+import 'package:follow_the_leader/src/logging.dart';
 import 'package:vector_math/vector_math_64.dart';
 
-class Follower extends SingleChildRenderObjectWidget {
-  // Follower.withOffset()
-  //
-  // Follower.withinBoundingRect()
-  //
-  // Follower.withinBoundingWidget()
-  //
-  // Follower.withDynamics()
+import 'layer_link.dart';
+import 'leader.dart';
 
+/// A widget that follows a [Leader].
+class Follower extends SingleChildRenderObjectWidget {
   const Follower.withOffset({
     Key? key,
     required this.link,
-    required this.boundaryKey,
-    this.showWhenUnlinked = true,
     this.offset = Offset.zero,
-    this.leaderAnchor = Alignment.topLeft,
-    this.followerAnchor = Alignment.topLeft,
+    this.leaderAnchor = Alignment.topCenter,
+    this.followerAnchor = Alignment.bottomCenter,
+    this.boundary,
+    this.showWhenUnlinked = true,
     Widget? child,
   })  : aligner = null,
         super(key: key, child: child);
@@ -29,8 +25,8 @@ class Follower extends SingleChildRenderObjectWidget {
   const Follower.withDynamics({
     Key? key,
     required this.link,
-    required this.boundaryKey,
     required this.aligner,
+    this.boundary,
     this.showWhenUnlinked = false,
     Widget? child,
   })  : leaderAnchor = null,
@@ -44,7 +40,11 @@ class Follower extends SingleChildRenderObjectWidget {
   /// This property must not be null.
   final LeaderLink link;
 
-  final GlobalKey boundaryKey;
+  /// Boundary that constrains where the follower is allowed to appear, such as
+  /// within the bounds of the screen.
+  ///
+  /// If [boundary] is `null` then the follower isn't constrained at all.
+  final FollowerBoundary? boundary;
 
   final FollowerAligner? aligner;
 
@@ -92,7 +92,7 @@ class Follower extends SingleChildRenderObjectWidget {
   RenderFollowerLayer createRenderObject(BuildContext context) {
     return RenderFollowerLayer(
       link: link,
-      boundaryKey: boundaryKey,
+      boundary: boundary,
       aligner: aligner,
       showWhenUnlinked: showWhenUnlinked,
       offset: offset,
@@ -105,7 +105,7 @@ class Follower extends SingleChildRenderObjectWidget {
   void updateRenderObject(BuildContext context, RenderFollowerLayer renderObject) {
     renderObject
       ..link = link
-      ..boundaryKey = boundaryKey
+      ..boundary = boundary
       ..aligner = aligner
       ..showWhenUnlinked = showWhenUnlinked
       ..offset = offset
@@ -114,7 +114,9 @@ class Follower extends SingleChildRenderObjectWidget {
   }
 }
 
-typedef FollowerAligner = FollowerAlignment Function(Rect globalLeaderRect, Size followerSize);
+abstract class FollowerAligner {
+  FollowerAlignment align(Rect globalLeaderRect, Size followerSize);
+}
 
 class FollowerAlignment {
   const FollowerAlignment({
@@ -139,10 +141,103 @@ class FollowerAlignment {
   int get hashCode => leaderAnchor.hashCode ^ followerAnchor.hashCode;
 }
 
+/// A boundary that determines where a [Follower] is allowed to appear.
+abstract class FollowerBoundary {
+  /// Returns `true` if the given [offset] sits within this boundary,
+  /// or `false` if it sits outside.
+  bool contains(Offset offset);
+
+  /// Constrains the given [desiredOffset] to a legal [Offset] for this
+  /// boundary.
+  Offset constrain(LeaderLink link, RenderBox follower, Offset desiredOffset);
+}
+
+/// A [FollowerBoundary] that keeps the follower within the screen bounds.
+class ScreenFollowerBoundary implements FollowerBoundary {
+  const ScreenFollowerBoundary(this.screenSize);
+
+  final Size screenSize;
+
+  @override
+  bool contains(Offset offset) => screenSize.contains(offset);
+
+  @override
+  Offset constrain(LeaderLink link, RenderBox follower, Offset desiredOffset) {
+    final followerSize = follower.size;
+    final followerOffset = link.leader!.offset + desiredOffset;
+    final xAdjustment = followerOffset.dx < 0
+        ? -followerOffset.dx
+        : followerOffset.dx > (screenSize.width - followerSize.width)
+            ? (screenSize.width - followerSize.width) - followerOffset.dx
+            : 0.0;
+    final yAdjustment = followerOffset.dy < 0
+        ? -followerOffset.dy
+        : followerOffset.dy > (screenSize.height - followerSize.height)
+            ? (screenSize.height - followerSize.height) - followerOffset.dy
+            : 0.0;
+    final adjustment = Offset(xAdjustment, yAdjustment);
+
+    return desiredOffset + adjustment;
+  }
+}
+
+/// A [FollowerBoundary] that keeps the follower within the bounds of the widget
+/// attached to the given [boundaryKey].
+class WidgetFollowerBoundary implements FollowerBoundary {
+  const WidgetFollowerBoundary(this.boundaryKey);
+
+  final GlobalKey? boundaryKey;
+
+  @override
+  bool contains(Offset offset) {
+    if (boundaryKey == null || boundaryKey!.currentContext == null) {
+      return false;
+    }
+
+    final boundaryBox = boundaryKey!.currentContext!.findRenderObject() as RenderBox;
+    final boundaryRect = Rect.fromPoints(
+      boundaryBox.localToGlobal(Offset.zero),
+      boundaryBox.localToGlobal(boundaryBox.size.bottomRight(Offset.zero)),
+    );
+    return boundaryRect.contains(offset);
+  }
+
+  @override
+  Offset constrain(LeaderLink link, RenderBox follower, Offset desiredOffset) {
+    if (boundaryKey == null) {
+      return desiredOffset;
+    }
+
+    if (boundaryKey!.currentContext == null) {
+      FtlLogs.follower.warning(
+          "Tried to constrain a follower to bounds of another widget, but the GlobalKey wasn't attached to anything: $boundaryKey");
+      return desiredOffset;
+    }
+
+    final boundaryBox = boundaryKey!.currentContext!.findRenderObject() as RenderBox;
+    final followerSize = follower.size;
+    final boundaryGlobalOrigin = boundaryBox.localToGlobal(Offset.zero);
+    final followerOffset = link.leader!.offset + desiredOffset;
+    final xAdjustment = followerOffset.dx < boundaryGlobalOrigin.dx
+        ? boundaryGlobalOrigin.dx - followerOffset.dx
+        : followerOffset.dx > (boundaryGlobalOrigin.dx + boundaryBox.size.width - followerSize.width)
+            ? (boundaryBox.size.width - followerSize.width) - followerOffset.dx + boundaryGlobalOrigin.dx
+            : 0.0;
+    final yAdjustment = followerOffset.dy < boundaryGlobalOrigin.dy
+        ? boundaryGlobalOrigin.dy - followerOffset.dy
+        : followerOffset.dy > (boundaryGlobalOrigin.dy + boundaryBox.size.height - followerSize.height)
+            ? (boundaryBox.size.height - followerSize.height) - followerOffset.dy + boundaryGlobalOrigin.dy
+            : 0.0;
+    final adjustment = Offset(xAdjustment, yAdjustment);
+
+    return desiredOffset + adjustment;
+  }
+}
+
 class RenderFollowerLayer extends RenderProxyBox {
   RenderFollowerLayer({
     required LeaderLink link,
-    GlobalKey? boundaryKey,
+    FollowerBoundary? boundary,
     FollowerAligner? aligner,
     Alignment? leaderAnchor = Alignment.topLeft,
     Alignment? followerAnchor = Alignment.topLeft,
@@ -150,7 +245,7 @@ class RenderFollowerLayer extends RenderProxyBox {
     bool showWhenUnlinked = true,
     RenderBox? child,
   })  : _link = link,
-        _boundaryKey = boundaryKey,
+        _boundary = boundary,
         _aligner = aligner,
         _showWhenUnlinked = showWhenUnlinked,
         _offset = offset,
@@ -176,14 +271,25 @@ class RenderFollowerLayer extends RenderProxyBox {
     markNeedsPaint();
   }
 
-  GlobalKey? get boundaryKey => _boundaryKey;
-  GlobalKey? _boundaryKey;
-  set boundaryKey(GlobalKey? newKey) {
-    if (newKey == _boundaryKey) {
+  // GlobalKey? get boundaryKey => _boundaryKey;
+  // GlobalKey? _boundaryKey;
+  // set boundaryKey(GlobalKey? newKey) {
+  //   if (newKey == _boundaryKey) {
+  //     return;
+  //   }
+  //   FtlLogs.follower.fine("Setting new boundaryKey");
+  //   _boundaryKey = newKey;
+  //   markNeedsPaint();
+  // }
+
+  FollowerBoundary? get boundary => _boundary;
+  FollowerBoundary? _boundary;
+  set boundary(FollowerBoundary? newValue) {
+    if (newValue == _boundary) {
       return;
     }
-    FtlLogs.follower.fine("Setting new boundaryKey");
-    _boundaryKey = newKey;
+
+    _boundary = newValue;
     markNeedsPaint();
   }
 
@@ -371,8 +477,7 @@ class RenderFollowerLayer extends RenderProxyBox {
 
   void _calculateFollowerOffsetWithAligner() {
     final globalLeaderRect = link.leader!.offset & link.leaderSize!;
-    print("Global leader rect: $globalLeaderRect");
-    final followerAlignment = aligner!.call(globalLeaderRect, size);
+    final followerAlignment = aligner!.align(globalLeaderRect, size);
     final leaderAnchor = followerAlignment.leaderAnchor;
     final followerAnchor = followerAlignment.followerAnchor;
 
@@ -384,38 +489,16 @@ class RenderFollowerLayer extends RenderProxyBox {
       '(current value is $leaderAnchor).',
     );
 
-    print("Leader alignment: $leaderAnchor, follower alignment: $followerAnchor");
     final Offset effectiveLinkedOffset =
         (leaderSize == null ? Offset.zero : leaderAnchor.alongSize(leaderSize) - followerAnchor.alongSize(size)) +
             followerAlignment.followerOffset;
     FtlLogs.follower.fine("Leader layer offset: ${link.leader!.offset}");
-    final boundaryBox = boundaryKey!.currentContext!.findRenderObject() as RenderBox;
-    FtlLogs.follower.fine("Boundary box size: ${boundaryBox.size}");
-    FtlLogs.follower.fine("Follower box size: $size");
-    // final boundaryOffset = boundaryBox.globalToLocal(localToGlobal(Offset.zero));
-    final boundaryOffset = link.leader!.offset + effectiveLinkedOffset;
-    print(
-        "Boundary offset: $boundaryOffset, leader offset: ${link.leader!.offset}, effective offset: $effectiveLinkedOffset, offset: $offset, leader size: ${leaderAnchor.alongSize(leaderSize!)}, follower size: ${followerAnchor.alongSize(size)}");
-    final xAdjustment = boundaryOffset.dx < 0
-        ? -boundaryOffset.dx
-        : boundaryOffset.dx > (boundaryBox.size.width - size.width)
-            ? (boundaryBox.size.width - size.width) - boundaryOffset.dx
-            : 0.0;
-    final yAdjustment = boundaryOffset.dy < 0
-        ? -boundaryOffset.dy
-        : boundaryOffset.dy > (boundaryBox.size.height - size.height)
-            ? (boundaryBox.size.height - size.height) - boundaryOffset.dy
-            : 0.0;
-    final adjustment = Offset(xAdjustment, yAdjustment);
-    FtlLogs.follower.fine("Adjustment: $adjustment");
 
-    _previousFollowerOffset = effectiveLinkedOffset + adjustment;
+    _previousFollowerOffset =
+        boundary != null ? boundary!.constrain(link, this, effectiveLinkedOffset) : effectiveLinkedOffset;
   }
 
   void _calculateFollowerOffsetWithStaticValue() {
-    final globalLeaderRect = link.leader!.offset & link.leaderSize!;
-    print("Global leader rect: $globalLeaderRect");
-
     final Size? leaderSize = link.leaderSize;
     assert(
       link.leaderSize != null || (!link.leaderConnected || leaderAnchor == Alignment.topLeft),
@@ -424,32 +507,13 @@ class RenderFollowerLayer extends RenderProxyBox {
       '(current value is $leaderAnchor).',
     );
 
-    print("Leader alignment: $leaderAnchor, follower alignment: $followerAnchor, layer offset: $offset");
     final Offset effectiveLinkedOffset = (leaderSize == null
         ? offset!
         : leaderAnchor!.alongSize(leaderSize) - followerAnchor!.alongSize(size) + offset!);
     FtlLogs.follower.fine("Leader layer offset: ${link.leader!.offset}");
-    final boundaryBox = boundaryKey!.currentContext!.findRenderObject() as RenderBox;
-    FtlLogs.follower.fine("Boundary box size: ${boundaryBox.size}");
-    FtlLogs.follower.fine("Follower box size: $size");
-    // final boundaryOffset = boundaryBox.globalToLocal(localToGlobal(Offset.zero));
-    final boundaryOffset = link.leader!.offset + effectiveLinkedOffset;
-    print(
-        "Boundary offset: $boundaryOffset, leader offset: ${link.leader!.offset}, effective offset: $effectiveLinkedOffset, offset: $offset, leader size: ${leaderAnchor!.alongSize(leaderSize!)}, follower size: ${followerAnchor!.alongSize(size)}");
-    final xAdjustment = boundaryOffset.dx < 0
-        ? -boundaryOffset.dx
-        : boundaryOffset.dx > (boundaryBox.size.width - size.width)
-            ? (boundaryBox.size.width - size.width) - boundaryOffset.dx
-            : 0.0;
-    final yAdjustment = boundaryOffset.dy < 0
-        ? -boundaryOffset.dy
-        : boundaryOffset.dy > (boundaryBox.size.height - size.height)
-            ? (boundaryBox.size.height - size.height) - boundaryOffset.dy
-            : 0.0;
-    final adjustment = Offset(xAdjustment, yAdjustment);
-    FtlLogs.follower.fine("Adjustment: $adjustment");
 
-    _previousFollowerOffset = effectiveLinkedOffset + adjustment;
+    _previousFollowerOffset =
+        boundary != null ? boundary!.constrain(link, this, effectiveLinkedOffset) : effectiveLinkedOffset;
   }
 
   @override

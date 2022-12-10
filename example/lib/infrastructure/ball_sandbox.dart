@@ -273,8 +273,8 @@ class _BallSandboxState extends State<BallSandbox> {
       child: Follower.withDynamics(
         key: widget.followerKey,
         link: _leaderLink,
-        boundaryKey: widget.boundsKey,
         aligner: widget.followerAligner,
+        boundary: WidgetFollowerBoundary(widget.boundsKey),
         child: widget.follower,
       ),
     );

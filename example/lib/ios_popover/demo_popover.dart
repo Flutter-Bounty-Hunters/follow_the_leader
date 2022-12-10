@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:overlord/overlord.dart';
 
-import 'ios_popover_menu.dart';
 import 'popover_example.dart';
 
 /// Demo which shows the capabilities of the [IosPopoverMenu].
@@ -155,7 +155,7 @@ class _DraggableDemoState extends State<DraggableDemo> {
           top: _offset.dy,
           child: GestureDetector(
             onPanUpdate: _onPanUpdate,
-            child: IosPopoverMenu(
+            child: CupertinoPopoverMenu(
               globalFocalPoint: widget.focalPoint,
               padding: const EdgeInsets.all(12.0),
               arrowBaseWidth: 21,

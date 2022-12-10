@@ -1,5 +1,5 @@
-import 'package:example/ios_popover/ios_toolbar.dart';
 import 'package:flutter/material.dart';
+import 'package:overlord/overlord.dart';
 
 /// An example of an [IosToolbar] usage.
 ///
@@ -26,11 +26,11 @@ class ToolbarExample extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final toolbar = children != null
-        ? IosToolbar(
+        ? CupertinoPopoverToolbar(
             globalFocalPoint: focalPoint,
             children: children!,
           )
-        : IosToolbar.paginated(
+        : CupertinoPopoverToolbar.paginated(
             globalFocalPoint: focalPoint,
             pages: pages,
           );
@@ -44,25 +44,6 @@ class ToolbarExample extends StatelessWidget {
 
     return Center(
       child: result,
-    );
-  }
-}
-
-class IosMenuItem extends StatelessWidget {
-  const IosMenuItem({Key? key, required this.label}) : super(key: key);
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextButton(
-      onPressed: () {},
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: Colors.white,
-        ),
-      ),
     );
   }
 }

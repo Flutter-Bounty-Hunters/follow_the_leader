@@ -17,7 +17,7 @@ class FtlLogs {
 
   /// Initialize the given [loggers] using the minimum [level].
   ///
-  /// To enable all the loggers, use [FollowTheLeaderLogs.initAllLogs].
+  /// To enable all the loggers, use [FtlLogs.initAllLogs].
   static void initLoggers(logging.Level level, Set<logging.Logger> loggers) {
     logging.hierarchicalLoggingEnabled = true;
 
@@ -35,7 +35,7 @@ class FtlLogs {
 
   /// Initializes all the available loggers.
   ///
-  /// To control which loggers are initialized, use [FollowTheLeaderLogs.initLoggers].
+  /// To control which loggers are initialized, use [FtlLogs.initLoggers].
   static void initAllLogs(logging.Level level) {
     initLoggers(level, {logging.Logger.root});
   }

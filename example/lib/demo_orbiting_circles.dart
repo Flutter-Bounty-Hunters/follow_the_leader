@@ -79,13 +79,13 @@ class _OrbitingCirclesDemoState extends State<OrbitingCirclesDemo> {
       top: 0,
       child: Follower.withOffset(
         link: _link,
-        boundaryKey: _screenBoundKey,
-        leaderAnchor: Alignment.center,
-        followerAnchor: Alignment.center,
         offset: Offset(
           radius * cos(radians),
           radius * sin(radians),
         ),
+        boundary: ScreenFollowerBoundary(MediaQuery.of(context).size),
+        leaderAnchor: Alignment.center,
+        followerAnchor: Alignment.center,
         child: Container(
           width: 25,
           height: 25,
