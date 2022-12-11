@@ -186,9 +186,9 @@ class _KitchenSinkDemoState extends State<KitchenSinkDemo> {
       return Follower.withOffset(
         link: _pinLink,
         offset: _followerDirection.toOffset(20),
-        boundary: _boundary,
         leaderAnchor: _followerDirection.leaderAlignment,
         followerAnchor: _followerDirection.followerAlignment,
+        boundary: _boundary,
         child: menu,
       );
     } else {

@@ -6,3 +6,53 @@
 
 > This project is a Flutter Bounty Hunters [proof-of-concept](http://policies.flutterbountyhunters.com/proof-of-concept). Want more following features? [Fund a milestone](http://policies.flutterbountyhunters.com/fund-milestone) today!!
 
+---
+
+## Getting Started
+Select a widget that you want to follow and wrap it with a `Leader` widget. Give the `Leader`
+widget a `LeaderLink`, to share with `Follower`s.
+
+```dart
+Leader(
+  link: _leaderLink,
+  child: YourLeaderWidget(),
+);
+```
+
+Add a widget that you want to follow your `Leader`, and wrap it with a `Follower` widget.
+
+```dart
+// Follower appears 20px above the Leader.
+Follower.withOffset(
+  link: _leaderLink,
+  offset: const Offset(0, -20),
+  leaderAnchor: Alignment.topCenter,
+  followerAnchor: Alignment.bottomCenter,
+  child: YourFollowerWidget(),
+);
+```
+
+`Follower`'s can position themselves with a constant distance from a `Leader` using `.withOffset()`,
+as shown above. Or, `Follower`'s can choose their exact location on every frame by using
+`.withDynamics()`.
+
+```dart
+// Follower appears where the aligner says it should.
+Follower.withOffset(
+  link: _leaderLink,
+  aligner: _aligner,
+  child: YourFollowerWidget(),
+);
+```
+
+To constrain where your `Follower` is allowed to appear, pass a `boundary` to your `Follower`.
+
+```dart
+// Follower is constrained by the given boundary.
+Follower.withOffset(
+  link: _leaderLink,
+  aligner: _aligner,
+  boundary: _boundary,
+  child: YourFollowerWidget(),
+);
+```
