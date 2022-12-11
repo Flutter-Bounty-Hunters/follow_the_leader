@@ -5,7 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:follow_the_leader/src/logging.dart';
 import 'package:vector_math/vector_math_64.dart';
 
-import 'layer_link.dart';
+import 'leader_link.dart';
 import 'leader.dart';
 
 /// A widget that follows a [Leader].

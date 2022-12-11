@@ -14,7 +14,7 @@ class _HoverDemoState extends State<HoverDemo> {
       width: double.infinity,
       height: double.infinity,
       color: const Color(0xFF222222),
-      child: Center(
+      child: const Center(
         child: HoverPuck(
           color: Colors.red,
         ),

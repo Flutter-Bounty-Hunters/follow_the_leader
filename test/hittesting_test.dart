@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:follow_the_leader/src/follower.dart';
-import 'package:follow_the_leader/src/layer_link.dart';
+import 'package:follow_the_leader/src/leader_link.dart';
 import 'package:follow_the_leader/src/leader.dart';
 
 void main() {
