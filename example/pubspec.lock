@@ -142,8 +142,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: HEAD
-      resolved-ref: "6423162103efc1a7b041d4ea1262e7c8ab90f0c7"
+      ref: getting-to-work-with-follow-the-leader
+      resolved-ref: "2babd0defe091c7ac5f231e8f52240ef13d0da4e"
       url: "git@github.com:Flutter-Bounty-Hunters/overlord.git"
     source: git
     version: "0.0.1"

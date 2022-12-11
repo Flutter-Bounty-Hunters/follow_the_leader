@@ -1,17 +1,10 @@
 import 'package:example/demo_hover.dart';
 import 'package:example/demo_kitchen_sink.dart';
-import 'package:example/demo_popover_menu_bouncing_ball.dart';
-import 'package:example/demo_popover_menu_draggable_ball.dart';
-import 'package:example/demo_toolbar_draggable_ball.dart';
-import 'package:example/demo_toolbar_wide_draggable_ball.dart';
-import 'package:example/ios_popover/demo_toolbar.dart';
 import 'package:flutter/material.dart';
 import 'package:follow_the_leader/follow_the_leader.dart';
 import 'package:logging/logging.dart';
 
 import 'demo_orbiting_circles.dart';
-import 'demo_toolbar_bouncing_ball.dart';
-import 'ios_popover/demo_popover.dart';
 
 void main() {
   FtlLogs.initLoggers(Level.FINEST, {
@@ -27,10 +20,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Location Aware Follower',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      title: 'Follow the Leader Example',
+      theme: ThemeData.dark(),
       debugShowCheckedModeBanner: false,
       home: const ExampleApp(),
     );
@@ -62,7 +53,6 @@ class _ExampleAppState extends State<ExampleApp> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        foregroundColor: Colors.black,
       ),
       extendBodyBehindAppBar: true,
       body: _selectedMenu.pageBuilder(context),
@@ -110,34 +100,6 @@ final _items = [
   _MenuItem(
     title: 'Orbiting Circles',
     pageBuilder: (context) => const OrbitingCirclesDemo(),
-  ),
-  _MenuItem(
-    title: 'iOS Popover',
-    pageBuilder: (context) => const PopoverDemo(),
-  ),
-  _MenuItem(
-    title: 'Popover Menu - Draggable Ball',
-    pageBuilder: (context) => const PopoverMenuDraggableBallDemo(),
-  ),
-  _MenuItem(
-    title: 'Popover Menu - Bouncing Ball',
-    pageBuilder: (context) => const PopoverMenuBouncingBallDemo(),
-  ),
-  _MenuItem(
-    title: 'iOS Toolbar',
-    pageBuilder: (context) => const ToolbarDemo(),
-  ),
-  _MenuItem(
-    title: 'Toolbar - Draggable Ball',
-    pageBuilder: (context) => const ToolbarDraggableBallDemo(),
-  ),
-  _MenuItem(
-    title: 'Toolbar (wide) - Draggable Ball',
-    pageBuilder: (context) => const WideToolbarDraggableBallDemo(),
-  ),
-  _MenuItem(
-    title: 'Toolbar - Bouncing Ball',
-    pageBuilder: (context) => const ToolbarBouncingBallDemo(),
   ),
 ];
 

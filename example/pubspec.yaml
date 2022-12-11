@@ -37,11 +37,17 @@ dependencies:
   logging: ^1.0.1
 
   follow_the_leader:
-    path: ../
+    git:
+      url: git@github.com:Flutter-Bounty-Hunters/follow_the_leader.git
 
   overlord:
     git:
       url: git@github.com:Flutter-Bounty-Hunters/overlord.git
+      ref: getting-to-work-with-follow-the-leader
+
+dependency_overrides:
+  follow_the_leader:
+    path: ../
 
 dev_dependencies:
   flutter_test:
