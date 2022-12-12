@@ -56,3 +56,27 @@ Follower.withOffset(
   child: YourFollowerWidget(),
 );
 ```
+
+## Building multiple widgets without layouts
+Building follower widgets is a bit unusual with Flutter. Typically, whenever we build multiple
+widgets in Flutter, we place them in a layout container, such as `Column`, `Row`, or `Stack`.
+But follower widgets don't respect ancestor layout rules. That's the whole point.
+
+`follow_the_leader` introduces a new container widget, which builds children, but doesn't attempt
+to apply any particular layout rules. The primary purpose of this widget is to make it clear to
+readers that you aren't trying to layout the children.
+
+```dart
+BuildInOrder(
+  children: [
+    MyContentWithALeader(),
+    Follower.withOffset(),
+    Follower.withDynamics(),
+  ],
+);
+```
+
+The `BuildInOrder` widget builds each child widget in the order that it's provided. This fact is
+important because `Leader` widgets must be built before their `Follower`s. But `BuildInOrder` does
+not impose any `Offset` on its children. `BuildInOrder` passes its parent's constraints down to the
+`children`.
