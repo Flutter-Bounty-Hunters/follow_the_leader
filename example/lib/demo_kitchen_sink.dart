@@ -18,7 +18,6 @@ class _KitchenSinkDemoState extends State<KitchenSinkDemo> {
   final _pinLink = LeaderLink();
 
   final _pinOffset = ValueNotifier<Offset?>(null);
-  final _globalMenuFocalPoint = ValueNotifier<Offset?>(null);
   _FollowerDirection _followerDirection = _FollowerDirection.up;
   _FollowerConstraint _followerConstraints = _FollowerConstraint.none;
   _MenuType _menuType = _MenuType.smallPopover;
@@ -29,7 +28,6 @@ class _KitchenSinkDemoState extends State<KitchenSinkDemo> {
 
   void _onPanUpdate(DragUpdateDetails details) {
     _pinOffset.value = _pinOffset.value! + details.delta;
-    _globalMenuFocalPoint.value = (context.findRenderObject() as RenderBox).localToGlobal(_pinOffset.value!);
   }
 
   void _onNoLimitsTap() {
@@ -104,7 +102,6 @@ class _KitchenSinkDemoState extends State<KitchenSinkDemo> {
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         setState(() {
           _pinOffset.value = (context.findRenderObject() as RenderBox).size.center(Offset.zero);
-          _globalMenuFocalPoint.value = (context.findRenderObject() as RenderBox).localToGlobal(_pinOffset.value!);
         });
       });
     }
@@ -189,13 +186,15 @@ class _KitchenSinkDemoState extends State<KitchenSinkDemo> {
         leaderAnchor: _followerDirection.leaderAlignment,
         followerAnchor: _followerDirection.followerAlignment,
         boundary: _boundary,
+        repaintWhenLeaderChanges: true,
         child: menu,
       );
     } else {
-      return Follower.withDynamics(
+      return Follower.withAligner(
         link: _pinLink,
-        boundary: _boundary,
         aligner: _aligner,
+        boundary: _boundary,
+        repaintWhenLeaderChanges: true,
         child: menu,
       );
     }
@@ -210,44 +209,36 @@ class _KitchenSinkDemoState extends State<KitchenSinkDemo> {
           color: Colors.red,
         );
       case _MenuType.iOSToolbar:
-        return AnimatedBuilder(
-          animation: _globalMenuFocalPoint,
-          builder: (context, value) {
-            final isContentVisible = _boundary == null || _boundary!.contains(_globalMenuFocalPoint.value!);
-
-            return AnimatedOpacity(
-              opacity: isContentVisible ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 250),
-              child: CupertinoPopoverToolbar(
-                globalFocalPoint: _globalMenuFocalPoint.value ?? Offset.zero,
-                children: _toolbarMenuItems,
-              ),
-            );
-          },
+        return FollowerFadeOutBeyondBoundary(
+          link: _pinLink,
+          boundary: _boundary,
+          child: CupertinoPopoverToolbar(
+            focalPoint: LeaderMenuFocalPoint(link: _pinLink),
+            children: _toolbarMenuItems,
+          ),
         );
       case _MenuType.iOSMenu:
-        return AnimatedBuilder(
-          animation: _globalMenuFocalPoint,
-          builder: (context, value) {
-            return CupertinoPopoverMenu(
-              globalFocalPoint: _globalMenuFocalPoint.value ?? Offset.zero,
-              padding: const EdgeInsets.all(12.0),
-              child: const SizedBox(
-                width: 100,
-                height: 54,
-                child: Center(
-                  child: Text(
-                    'Popover Content',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                    ),
+        return FollowerFadeOutBeyondBoundary(
+          link: _pinLink,
+          boundary: _boundary,
+          child: CupertinoPopoverMenu(
+            focalPoint: LeaderMenuFocalPoint(link: _pinLink),
+            padding: const EdgeInsets.all(12.0),
+            child: const SizedBox(
+              width: 100,
+              height: 54,
+              child: Center(
+                child: Text(
+                  'Popover Content',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
                   ),
                 ),
               ),
-            );
-          },
+            ),
+          ),
         );
     }
   }

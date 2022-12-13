@@ -30,24 +30,22 @@ dependencies:
   flutter:
     sdk: flutter
 
-
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.2
   logging: ^1.0.1
 
   follow_the_leader:
     git:
       url: git@github.com:Flutter-Bounty-Hunters/follow_the_leader.git
 
-  overlord:
-    git:
-      url: git@github.com:Flutter-Bounty-Hunters/overlord.git
-      ref: getting-to-work-with-follow-the-leader
+  overlord: ^0.0.1
 
 dependency_overrides:
   follow_the_leader:
     path: ../
+
+  overlord:
+    git:
+      url: git@github.com:Flutter-Bounty-Hunters/overlord.git
+      ref: main
 
 dev_dependencies:
   flutter_test:

@@ -5,8 +5,8 @@ import 'package:flutter/widgets.dart';
 import 'package:follow_the_leader/src/logging.dart';
 import 'package:vector_math/vector_math_64.dart';
 
-import 'leader_link.dart';
 import 'leader.dart';
+import 'leader_link.dart';
 
 /// A widget that follows a [Leader].
 class Follower extends SingleChildRenderObjectWidget {
@@ -18,16 +18,18 @@ class Follower extends SingleChildRenderObjectWidget {
     this.followerAnchor = Alignment.bottomCenter,
     this.boundary,
     this.showWhenUnlinked = true,
+    this.repaintWhenLeaderChanges = false,
     Widget? child,
   })  : aligner = null,
         super(key: key, child: child);
 
-  const Follower.withDynamics({
+  const Follower.withAligner({
     Key? key,
     required this.link,
     required this.aligner,
     this.boundary,
     this.showWhenUnlinked = false,
+    this.repaintWhenLeaderChanges = false,
     Widget? child,
   })  : leaderAnchor = null,
         followerAnchor = null,
@@ -78,39 +80,48 @@ class Follower extends SingleChildRenderObjectWidget {
   final Offset? offset;
 
   /// Whether to show the widget's contents when there is no corresponding
-  /// [CompositedTransformTarget] with the same [link].
-  ///
-  /// When the widget is linked, the child is positioned such that it has the
-  /// same global position as the linked [CompositedTransformTarget].
+  /// [Leader] with the same [link].
   ///
   /// When the widget is not linked, then: if [showWhenUnlinked] is true, the
   /// child is visible and not repositioned; if it is false, then child is
   /// hidden.
   final bool showWhenUnlinked;
 
+  /// Whether to repaint the [child] when the [Leader] changes offset
+  /// or size.
+  ///
+  /// This should be `true` when the [child]'s appearance is based on the
+  /// location or size of the [Leader], such as a menu with an arrow that
+  /// points in the direction of the [Leader]. Otherwise, if the [child]'s
+  /// appearance isn't impacted by [Leader], then passing `false` will be
+  /// more efficient, because fewer repaints will be scheduled.
+  final bool repaintWhenLeaderChanges;
+
   @override
-  RenderFollowerLayer createRenderObject(BuildContext context) {
-    return RenderFollowerLayer(
+  RenderFollower createRenderObject(BuildContext context) {
+    return RenderFollower(
       link: link,
-      boundary: boundary,
-      aligner: aligner,
-      showWhenUnlinked: showWhenUnlinked,
       offset: offset,
       leaderAnchor: leaderAnchor,
       followerAnchor: followerAnchor,
+      aligner: aligner,
+      boundary: boundary,
+      showWhenUnlinked: showWhenUnlinked,
+      repaintWhenLeaderChanges: repaintWhenLeaderChanges,
     );
   }
 
   @override
-  void updateRenderObject(BuildContext context, RenderFollowerLayer renderObject) {
+  void updateRenderObject(BuildContext context, RenderFollower renderObject) {
     renderObject
       ..link = link
-      ..boundary = boundary
-      ..aligner = aligner
-      ..showWhenUnlinked = showWhenUnlinked
       ..offset = offset
       ..leaderAnchor = leaderAnchor
-      ..followerAnchor = followerAnchor;
+      ..followerAnchor = followerAnchor
+      ..aligner = aligner
+      ..boundary = boundary
+      ..showWhenUnlinked = showWhenUnlinked
+      ..repaintWhenLeaderChanges = repaintWhenLeaderChanges;
   }
 }
 
@@ -234,8 +245,8 @@ class WidgetFollowerBoundary implements FollowerBoundary {
   }
 }
 
-class RenderFollowerLayer extends RenderProxyBox {
-  RenderFollowerLayer({
+class RenderFollower extends RenderProxyBox {
+  RenderFollower({
     required LeaderLink link,
     FollowerBoundary? boundary,
     FollowerAligner? aligner,
@@ -243,44 +254,70 @@ class RenderFollowerLayer extends RenderProxyBox {
     Alignment? followerAnchor = Alignment.topLeft,
     Offset? offset = Offset.zero,
     bool showWhenUnlinked = true,
+    bool repaintWhenLeaderChanges = false,
     RenderBox? child,
   })  : _link = link,
-        _boundary = boundary,
-        _aligner = aligner,
-        _showWhenUnlinked = showWhenUnlinked,
         _offset = offset,
         _leaderAnchor = leaderAnchor,
         _followerAnchor = followerAnchor,
+        _aligner = aligner,
+        _boundary = boundary,
+        _showWhenUnlinked = showWhenUnlinked,
+        _repaintWhenLeaderChanges = repaintWhenLeaderChanges,
         super(child);
 
   @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    if (repaintWhenLeaderChanges) {
+      _link.addListener(_onLinkChange);
+    }
+  }
+
+  @override
   void detach() {
+    if (repaintWhenLeaderChanges) {
+      _link.removeListener(_onLinkChange);
+    }
     layer = null;
     super.detach();
   }
 
-  /// The link object that connects this [RenderFollowerLayer] with a
+  /// The link object that connects this [RenderFollower] with a
   /// [RenderLeaderLayer] earlier in the paint order.
   LeaderLink get link => _link;
   LeaderLink _link;
   set link(LeaderLink value) {
-    if (_link == value) return;
-    FtlLogs.follower.fine("Setting new link");
+    if (_link == value) {
+      return;
+    }
+
+    FtlLogs.follower.fine("Setting new link - $value");
+
+    if (repaintWhenLeaderChanges) {
+      _link.removeListener(_onLinkChange);
+    }
+
     _link = value;
+
+    if (repaintWhenLeaderChanges) {
+      _link.addListener(_onLinkChange);
+    }
+
     _firstPaintOfCurrentLink = true;
+
     markNeedsPaint();
   }
 
-  // GlobalKey? get boundaryKey => _boundaryKey;
-  // GlobalKey? _boundaryKey;
-  // set boundaryKey(GlobalKey? newKey) {
-  //   if (newKey == _boundaryKey) {
-  //     return;
-  //   }
-  //   FtlLogs.follower.fine("Setting new boundaryKey");
-  //   _boundaryKey = newKey;
-  //   markNeedsPaint();
-  // }
+  void _onLinkChange() {
+    if (owner == null) {
+      // We're not attached to the framework pipeline.
+      return;
+    }
+
+    FtlLogs.follower.finest("Follower's LeaderLink reported a change: $_link. Requesting Follower child repaint.");
+    child?.markNeedsPaint();
+  }
 
   FollowerBoundary? get boundary => _boundary;
   FollowerBoundary? _boundary;
@@ -304,23 +341,6 @@ class RenderFollowerLayer extends RenderProxyBox {
     markNeedsPaint();
   }
 
-  /// Whether to show the render object's contents when there is no
-  /// corresponding [RenderLeaderLayer] with the same [link].
-  ///
-  /// When the render object is linked, the child is positioned such that it has
-  /// the same global position as the linked [RenderLeaderLayer].
-  ///
-  /// When the render object is not linked, then: if [showWhenUnlinked] is true,
-  /// the child is visible and not repositioned; if it is false, then child is
-  /// hidden, and its hit testing is also disabled.
-  bool get showWhenUnlinked => _showWhenUnlinked;
-  bool _showWhenUnlinked;
-  set showWhenUnlinked(bool value) {
-    if (_showWhenUnlinked == value) return;
-    _showWhenUnlinked = value;
-    markNeedsPaint();
-  }
-
   /// The offset to apply to the origin of the linked [RenderLeaderLayer] to
   /// obtain this render object's origin.
   Offset? get offset => _offset;
@@ -337,10 +357,10 @@ class RenderFollowerLayer extends RenderProxyBox {
   ///
   /// {@template flutter.rendering.RenderFollowerLayer.leaderAnchor}
   /// For example, when [leaderAnchor] and [followerAnchor] are both
-  /// [Alignment.topLeft], this [RenderFollowerLayer] will be top left aligned
+  /// [Alignment.topLeft], this [RenderFollower] will be top left aligned
   /// with the linked [RenderLeaderLayer]. When [leaderAnchor] is
   /// [Alignment.bottomLeft] and [followerAnchor] is [Alignment.topLeft], this
-  /// [RenderFollowerLayer] will be left aligned with the linked
+  /// [RenderFollower] will be left aligned with the linked
   /// [RenderLeaderLayer], and its top edge will line up with the
   /// [RenderLeaderLayer]'s bottom edge.
   /// {@endtemplate}
@@ -354,7 +374,7 @@ class RenderFollowerLayer extends RenderProxyBox {
     markNeedsPaint();
   }
 
-  /// The anchor point on this [RenderFollowerLayer] that will line up with
+  /// The anchor point on this [RenderFollower] that will line up with
   /// [followerAnchor] on the linked [RenderLeaderLayer].
   ///
   /// {@macro flutter.rendering.RenderFollowerLayer.leaderAnchor}
@@ -366,6 +386,29 @@ class RenderFollowerLayer extends RenderProxyBox {
     if (_followerAnchor == value) return;
     _followerAnchor = value;
     markNeedsPaint();
+  }
+
+  bool get showWhenUnlinked => _showWhenUnlinked;
+  bool _showWhenUnlinked;
+  set showWhenUnlinked(bool value) {
+    if (_showWhenUnlinked == value) return;
+    _showWhenUnlinked = value;
+    markNeedsPaint();
+  }
+
+  bool get repaintWhenLeaderChanges => _repaintWhenLeaderChanges;
+  bool _repaintWhenLeaderChanges;
+  set repaintWhenLeaderChanges(bool newValue) {
+    if (newValue == _repaintWhenLeaderChanges) {
+      return;
+    }
+
+    _repaintWhenLeaderChanges = newValue;
+    if (_repaintWhenLeaderChanges) {
+      _link.addListener(_onLinkChange);
+    } else {
+      _link.removeListener(_onLinkChange);
+    }
   }
 
   @override
@@ -453,17 +496,12 @@ class RenderFollowerLayer extends RenderProxyBox {
     context.pushLayer(
       layer!,
       (context, offset) {
-        FtlLogs.follower.fine("Painting follower content. Incoming offset: $offset");
+        FtlLogs.follower.fine("Painting follower content.");
         super.paint(context, offset);
       },
       Offset.zero,
-      childPaintBounds: const Rect.fromLTRB(
-        // We don't know where we'll end up, so we have no idea what our cull rect should be.
-        double.negativeInfinity,
-        double.negativeInfinity,
-        double.infinity,
-        double.infinity,
-      ),
+      // We don't know where we'll end up, so we have no idea what our cull rect should be.
+      childPaintBounds: Rect.largest,
     );
   }
 

@@ -270,7 +270,7 @@ class _BallSandboxState extends State<BallSandbox> {
     return Positioned(
       left: 0,
       top: 0,
-      child: Follower.withDynamics(
+      child: Follower.withAligner(
         key: widget.followerKey,
         link: _leaderLink,
         aligner: widget.followerAligner,

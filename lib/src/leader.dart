@@ -214,6 +214,7 @@ class LeaderLayer extends ContainerLayer {
   @override
   void addToScene(ui.SceneBuilder builder) {
     _lastOffset = offset;
+    link.offset = offset;
     if (_lastOffset != Offset.zero) {
       engineLayer = builder.pushTransform(
         Matrix4.translationValues(_lastOffset!.dx, _lastOffset!.dy, 0.0).storage,
