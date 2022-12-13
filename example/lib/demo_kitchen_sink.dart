@@ -18,7 +18,6 @@ class _KitchenSinkDemoState extends State<KitchenSinkDemo> {
   final _pinLink = LeaderLink();
 
   final _pinOffset = ValueNotifier<Offset?>(null);
-  final _globalMenuFocalPoint = ValueNotifier<Offset?>(null);
   _FollowerDirection _followerDirection = _FollowerDirection.up;
   _FollowerConstraint _followerConstraints = _FollowerConstraint.none;
   _MenuType _menuType = _MenuType.smallPopover;
@@ -29,7 +28,6 @@ class _KitchenSinkDemoState extends State<KitchenSinkDemo> {
 
   void _onPanUpdate(DragUpdateDetails details) {
     _pinOffset.value = _pinOffset.value! + details.delta;
-    // _globalMenuFocalPoint.value = (context.findRenderObject() as RenderBox).localToGlobal(_pinOffset.value!);
   }
 
   void _onNoLimitsTap() {
@@ -104,7 +102,6 @@ class _KitchenSinkDemoState extends State<KitchenSinkDemo> {
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         setState(() {
           _pinOffset.value = (context.findRenderObject() as RenderBox).size.center(Offset.zero);
-          _globalMenuFocalPoint.value = (context.findRenderObject() as RenderBox).localToGlobal(_pinOffset.value!);
         });
       });
     }

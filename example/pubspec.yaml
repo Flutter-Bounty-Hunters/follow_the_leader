@@ -43,7 +43,7 @@ dependencies:
   overlord:
     git:
       url: git@github.com:Flutter-Bounty-Hunters/overlord.git
-      ref: 2_dynamic-menu-focal-point
+      ref: main
 
 dependency_overrides:
   follow_the_leader:
