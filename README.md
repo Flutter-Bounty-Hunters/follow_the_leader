@@ -34,11 +34,11 @@ Follower.withOffset(
 
 `Follower`'s can position themselves with a constant distance from a `Leader` using `.withOffset()`,
 as shown above. Or, `Follower`'s can choose their exact location on every frame by using
-`.withDynamics()`.
+`.withAligner()`.
 
 ```dart
 // Follower appears where the aligner says it should.
-Follower.withOffset(
+Follower.withAligner(
   link: _leaderLink,
   aligner: _aligner,
   child: YourFollowerWidget(),
@@ -49,7 +49,7 @@ To constrain where your `Follower` is allowed to appear, pass a `boundary` to yo
 
 ```dart
 // Follower is constrained by the given boundary.
-Follower.withOffset(
+Follower.withAligner(
   link: _leaderLink,
   aligner: _aligner,
   boundary: _boundary,

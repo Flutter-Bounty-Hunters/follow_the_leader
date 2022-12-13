@@ -1,13 +1,35 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart' hide LeaderLayer;
+import 'package:flutter/scheduler.dart';
 
 import 'leader.dart';
 
 /// Links one or more [Follower] positions to a [Leader].
-class LeaderLink {
+class LeaderLink with ChangeNotifier {
   /// Whether a [LeaderLayer] is currently connected to this link.
-  bool get leaderConnected => leader != null;
-  LeaderLayer? leader;
+  bool get leaderConnected => _leader != null;
+
+  LeaderLayer? get leader => _leader;
+  LeaderLayer? _leader;
+  set leader(LeaderLayer? newLeader) {
+    if (newLeader == _leader) {
+      return;
+    }
+
+    _leader = newLeader;
+  }
+
+  Offset? get offset => _offset;
+  Offset? _offset;
+  set offset(Offset? newOffset) {
+    if (newOffset == _offset) {
+      return;
+    }
+
+    _offset = newOffset;
+    notifyListeners();
+  }
 
   /// The total size of the content of the connected [LeaderLayer].
   ///
@@ -15,7 +37,16 @@ class LeaderLink {
   /// registered [LeaderLayer] (for instance a [RenderLeaderLayer] that shares
   /// this link with its followers). This size may be outdated before and during
   /// layout.
-  Size? leaderSize;
+  Size? get leaderSize => _leaderSize;
+  Size? _leaderSize;
+  set leaderSize(Size? newSize) {
+    if (newSize == _leaderSize) {
+      return;
+    }
+
+    _leaderSize = newSize;
+    notifyListeners();
+  }
 
   bool get hasFollowers => _connectedFollowers > 0;
   int _connectedFollowers = 0;
@@ -31,6 +62,21 @@ class LeaderLink {
     assert(_connectedFollowers >= 0);
     _connectedFollowers++;
     return CustomLayerLinkHandle(this);
+  }
+
+  @override
+  void notifyListeners() {
+    if (WidgetsBinding.instance.schedulerPhase == SchedulerPhase.persistentCallbacks) {
+      // We're in the middle of a layout and paint phase. Notify listeners
+      // at the end of the frame.
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        super.notifyListeners();
+      });
+      return;
+    }
+
+    // We're not in a layout/paint phase. Immediately notify listeners.
+    super.notifyListeners();
   }
 
   @override
