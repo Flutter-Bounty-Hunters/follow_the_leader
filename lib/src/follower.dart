@@ -175,7 +175,7 @@ class ScreenFollowerBoundary implements FollowerBoundary {
   @override
   Offset constrain(LeaderLink link, RenderBox follower, Offset desiredOffset) {
     final followerSize = follower.size;
-    final followerOffset = link.leader!.offset + desiredOffset;
+    final followerOffset = link.offset! + desiredOffset;
     final xAdjustment = followerOffset.dx < 0
         ? -followerOffset.dx
         : followerOffset.dx > (screenSize.width - followerSize.width)
@@ -228,7 +228,7 @@ class WidgetFollowerBoundary implements FollowerBoundary {
     final boundaryBox = boundaryKey!.currentContext!.findRenderObject() as RenderBox;
     final followerSize = follower.size;
     final boundaryGlobalOrigin = boundaryBox.localToGlobal(Offset.zero);
-    final followerOffset = link.leader!.offset + desiredOffset;
+    final followerOffset = link.offset! + desiredOffset;
     final xAdjustment = followerOffset.dx < boundaryGlobalOrigin.dx
         ? boundaryGlobalOrigin.dx - followerOffset.dx
         : followerOffset.dx > (boundaryGlobalOrigin.dx + boundaryBox.size.width - followerSize.width)
@@ -450,8 +450,33 @@ class RenderFollower extends RenderProxyBox {
   bool _firstPaintOfCurrentLink = true;
 
   @override
+  void performLayout() {
+    child?.layout(constraints.loosen(), parentUsesSize: true);
+
+    if (constraints.hasBoundedWidth && constraints.hasBoundedHeight) {
+      // `Follower` hit testing will only take place where the widget tree thinks
+      // this widget resides. Therefore, `Follower`s take up all the space that they
+      // can, even if their children are smaller.
+      //
+      // When a `Follower` is used in a widget tree, it must be placed at a location
+      // where its size allows it to receive hit tests for any possible `Leader`
+      // location. An `Overlay`, or a similar full-screen area should always works.
+      // When a `Follower` is placed in a more narrow area of the layout, developers
+      // need to take care that the resulting size facilitates all possible hit test
+      // offsets.
+      size = constraints.biggest;
+    } else {
+      size = child!.size;
+    }
+  }
+
+  @override
   void paint(PaintingContext context, Offset offset) {
-    FtlLogs.follower.fine("Painting composited follower: $offset");
+    if (child == null) {
+      return;
+    }
+
+    FtlLogs.follower.fine("Painting Follower - paint offset: $offset, displacement from Leader: $_offset");
 
     if (!link.leaderConnected && _previousFollowerOffset == null) {
       FtlLogs.follower.fine("The leader isn't connected and there's no cached offset. Not painting anything.");
@@ -478,6 +503,7 @@ class RenderFollower extends RenderProxyBox {
       _calculateFollowerOffset();
     }
 
+    FtlLogs.follower.finer("Positioning follower layer at: $_previousFollowerOffset");
     if (layer == null) {
       layer = FollowerLayer(
         link: link,
@@ -496,7 +522,7 @@ class RenderFollower extends RenderProxyBox {
     context.pushLayer(
       layer!,
       (context, offset) {
-        FtlLogs.follower.fine("Painting follower content.");
+        FtlLogs.follower.finer("Painting follower content in Follower's Layer.");
         super.paint(context, offset);
       },
       Offset.zero,
@@ -514,8 +540,9 @@ class RenderFollower extends RenderProxyBox {
   }
 
   void _calculateFollowerOffsetWithAligner() {
+    FtlLogs.follower.fine("Calculating Follower offset using a dynamic aligner.");
     final globalLeaderRect = link.leader!.offset & link.leaderSize!;
-    final followerAlignment = aligner!.align(globalLeaderRect, size);
+    final followerAlignment = aligner!.align(globalLeaderRect, child!.size);
     final leaderAnchor = followerAlignment.leaderAnchor;
     final followerAnchor = followerAlignment.followerAnchor;
 
@@ -527,31 +554,35 @@ class RenderFollower extends RenderProxyBox {
       '(current value is $leaderAnchor).',
     );
 
-    final Offset effectiveLinkedOffset =
-        (leaderSize == null ? Offset.zero : leaderAnchor.alongSize(leaderSize) - followerAnchor.alongSize(size)) +
-            followerAlignment.followerOffset;
-    FtlLogs.follower.fine("Leader layer offset: ${link.leader!.offset}");
+    final followerSize = child!.size;
+    FtlLogs.follower.finer("Leader size: $leaderSize, follower size: $followerSize");
+    FtlLogs.follower.finer("Leader layer offset: ${link.leader!.offset}");
+    final Offset effectiveLinkedOffset = (leaderSize == null
+            ? Offset.zero
+            : leaderAnchor.alongSize(leaderSize) - followerAnchor.alongSize(followerSize)) +
+        followerAlignment.followerOffset;
+    FtlLogs.follower.finer("(Non-constrained) Follower offset: $effectiveLinkedOffset");
 
     _previousFollowerOffset =
-        boundary != null ? boundary!.constrain(link, this, effectiveLinkedOffset) : effectiveLinkedOffset;
+        boundary != null ? boundary!.constrain(link, child!, effectiveLinkedOffset) : effectiveLinkedOffset;
+    FtlLogs.follower.finer("(Constrained) Follower offset: $_previousFollowerOffset");
   }
 
   void _calculateFollowerOffsetWithStaticValue() {
-    final Size? leaderSize = link.leaderSize;
-    assert(
-      link.leaderSize != null || (!link.leaderConnected || leaderAnchor == Alignment.topLeft),
-      '$link: layer is linked to ${link.leader} but a valid leaderSize is not set. '
-      'leaderSize is required when leaderAnchor is not Alignment.topLeft '
-      '(current value is $leaderAnchor).',
-    );
-
-    final Offset effectiveLinkedOffset = (leaderSize == null
+    FtlLogs.follower.fine("Calculating Follower offset using a static Leader displacement.");
+    FtlLogs.follower.finer("Leader global offset: ${link.offset}");
+    FtlLogs.follower.finer("Leader local offset: ${link.leader!.offset}");
+    FtlLogs.follower
+        .finer("Leader anchor point: ${link.leaderSize != null ? leaderAnchor!.alongSize(link.leaderSize!) : null}");
+    FtlLogs.follower.finer("Follower anchor point: ${followerAnchor!.alongSize(child!.size)}");
+    final Offset effectiveLinkedOffset = (link.leaderSize == null
         ? offset!
-        : leaderAnchor!.alongSize(leaderSize) - followerAnchor!.alongSize(size) + offset!);
-    FtlLogs.follower.fine("Leader layer offset: ${link.leader!.offset}");
+        : leaderAnchor!.alongSize(link.leaderSize!) - followerAnchor!.alongSize(child!.size) + offset!);
+    FtlLogs.follower.finer("(Non-constrained) Follower offset: $effectiveLinkedOffset");
 
     _previousFollowerOffset =
-        boundary != null ? boundary!.constrain(link, this, effectiveLinkedOffset) : effectiveLinkedOffset;
+        boundary != null ? boundary!.constrain(link, child!, effectiveLinkedOffset) : effectiveLinkedOffset;
+    FtlLogs.follower.finer("(Constrained) Follower offset: $_previousFollowerOffset");
   }
 
   @override
@@ -566,8 +597,6 @@ class RenderFollower extends RenderProxyBox {
   /// [FollowerLayer.getLastTransform]), this returns the identity matrix (see
   /// [Matrix4.identity].
   Matrix4 getCurrentTransform() {
-    // return layer?.getLastTransform() ?? Matrix4.identity();
-
     final transform = layer?.getLastTransform() ?? Matrix4.identity();
     if (_previousFollowerOffset != null) {
       transform.translate(_previousFollowerOffset!.dx, _previousFollowerOffset!.dy);

@@ -20,6 +20,7 @@ class LeaderLink with ChangeNotifier {
     _leader = newLeader;
   }
 
+  /// Global offset for the top-left corner of the [Leader]'s content.
   Offset? get offset => _offset;
   Offset? _offset;
   set offset(Offset? newOffset) {
