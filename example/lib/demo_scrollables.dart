@@ -70,7 +70,7 @@ class _VerticalListState extends State<_VerticalList> {
             return ListView.builder(
               controller: _scrollController,
               itemBuilder: (context, index) {
-                if (index == 0) {
+                if (index == 1) {
                   return _LeaderAndFollowerListItem(
                     height: constraints.maxHeight,
                     repaint: _scrollController,
