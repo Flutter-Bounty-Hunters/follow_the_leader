@@ -58,6 +58,8 @@ class _ExampleAppState extends State<ExampleApp> {
       ),
       extendBodyBehindAppBar: true,
       body: Builder(builder: (bodyContext) {
+        // Use an intermediate Builder so that the BuildContext that we
+        // give to the pageBuilder has finite layout bounds.
         return _selectedMenu.pageBuilder(bodyContext);
       }),
       drawer: _buildDrawer(),

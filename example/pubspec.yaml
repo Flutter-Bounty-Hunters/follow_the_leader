@@ -45,7 +45,7 @@ dependency_overrides:
   overlord:
     git:
       url: git@github.com:Flutter-Bounty-Hunters/overlord.git
-      ref: b54542a499e837e921c074159dbb4241e2f4e43c
+      ref: main
 
 dev_dependencies:
   flutter_test:
