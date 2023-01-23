@@ -73,7 +73,7 @@ class _VerticalListState extends State<_VerticalList> {
                 if (index == 1) {
                   return _LeaderAndFollowerListItem(
                     height: constraints.maxHeight,
-                    repaint: _scrollController,
+                    recalculateGlobalOffset: _scrollController,
                     boundsKey: _boundsKey,
                   );
                 }
@@ -137,7 +137,7 @@ class _HorizontalListState extends State<_HorizontalList> {
                 if (index == 1) {
                   return _LeaderAndFollowerListItem(
                     width: constraints.maxWidth,
-                    repaint: _scrollController,
+                    recalculateGlobalOffset: _scrollController,
                     boundsKey: _boundsKey,
                   );
                 }
@@ -197,13 +197,13 @@ class _LeaderAndFollowerListItem extends StatefulWidget {
     Key? key,
     this.width,
     this.height,
-    required this.repaint,
+    required this.recalculateGlobalOffset,
     required this.boundsKey,
   }) : super(key: key);
 
   final double? width;
   final double? height;
-  final Listenable repaint;
+  final Listenable recalculateGlobalOffset;
   final GlobalKey boundsKey;
 
   @override
@@ -249,7 +249,7 @@ class _LeaderAndFollowerListItemState extends State<_LeaderAndFollowerListItem> 
             child: Center(
               child: Leader(
                 link: _anchor,
-                repaint: widget.repaint,
+                recalculateGlobalOffset: widget.recalculateGlobalOffset,
                 child: Container(width: 25, height: 25, color: Colors.red),
               ),
             ),

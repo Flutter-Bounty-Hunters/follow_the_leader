@@ -30,7 +30,7 @@ class Leader extends SingleChildRenderObjectWidget {
   const Leader({
     Key? key,
     required this.link,
-    this.repaint,
+    this.recalculateGlobalOffset,
     Widget? child,
   }) : super(key: key, child: child);
 
@@ -41,13 +41,28 @@ class Leader extends SingleChildRenderObjectWidget {
   /// another [Leader] that is also being painted.
   final LeaderLink link;
 
-  final Listenable? repaint;
+  /// Signal that instructs the [Leader] to update its global offset in its
+  /// [LeaderLink].
+  ///
+  /// This signal needs to be sent whenever a [Leader]'s ancestor widget moves
+  /// relative to the screen origin without rebuilding its subtree. For example,
+  /// `ListView`s, by default, wrap their children in `RepaintBoundary`s. This means
+  /// that when the `ListView` scrolls up and down, it doesn't re-build, re-layout or
+  /// re-paint the list items. If a [Leader] sits inside of a list item, the [Leader]
+  /// doesn't get any opportunity to update its [LeaderLink] with its latest position.
+  /// Therefore, in that case, you should pass the `ScrollController` as [recalculateGlobalOffset] so
+  /// that the [Leader] can listen for every scroll change and then re-calculate its
+  /// global offset for [Follower]s.
+  ///
+  /// This signal causes the [Leader] to schedule a repaint, because that's where
+  /// [Leader]s calculate and report their global offsets.
+  final Listenable? recalculateGlobalOffset;
 
   @override
   RenderLeader createRenderObject(BuildContext context) {
     return RenderLeader(
       link: link,
-      repaint: repaint,
+      recalculateGlobalOffset: recalculateGlobalOffset,
     );
   }
 
@@ -55,7 +70,7 @@ class Leader extends SingleChildRenderObjectWidget {
   void updateRenderObject(BuildContext context, RenderLeader renderObject) {
     renderObject
       ..link = link
-      ..repaint = repaint;
+      ..recalculateGlobalOffset = recalculateGlobalOffset;
   }
 }
 
@@ -64,16 +79,17 @@ class Leader extends SingleChildRenderObjectWidget {
 class RenderLeader extends RenderProxyBox {
   RenderLeader({
     required LeaderLink link,
-    Listenable? repaint,
+    Listenable? recalculateGlobalOffset,
     RenderBox? child,
   })  : _link = link,
         super(child) {
-    this.repaint = repaint;
+    // Call the setter so that the listener is added.
+    this.recalculateGlobalOffset = recalculateGlobalOffset;
   }
 
   @override
   void dispose() {
-    _repaint?.removeListener(markNeedsPaint);
+    _recalculateGlobalOffset?.removeListener(markNeedsPaint);
     super.dispose();
   }
 
@@ -100,15 +116,15 @@ class RenderLeader extends RenderProxyBox {
     markNeedsPaint();
   }
 
-  Listenable? _repaint;
-  set repaint(Listenable? repaint) {
-    if (repaint == _repaint) {
+  Listenable? _recalculateGlobalOffset;
+  set recalculateGlobalOffset(Listenable? recalculateGlobalOffset) {
+    if (recalculateGlobalOffset == _recalculateGlobalOffset) {
       return;
     }
 
-    _repaint?.removeListener(markNeedsPaint);
-    _repaint = repaint;
-    _repaint?.addListener(markNeedsPaint);
+    _recalculateGlobalOffset?.removeListener(markNeedsPaint);
+    _recalculateGlobalOffset = recalculateGlobalOffset;
+    _recalculateGlobalOffset?.addListener(markNeedsPaint);
   }
 
   @override
