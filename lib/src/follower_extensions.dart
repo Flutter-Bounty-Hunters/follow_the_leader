@@ -12,6 +12,7 @@ class FollowerFadeOutBeyondBoundary extends StatelessWidget {
   const FollowerFadeOutBeyondBoundary({
     Key? key,
     required this.link,
+    this.enabled = true,
     this.boundary,
     this.duration = const Duration(milliseconds: 250),
     this.curve = Curves.linear,
@@ -21,6 +22,9 @@ class FollowerFadeOutBeyondBoundary extends StatelessWidget {
   /// A [LeaderLink] that's attached to a [Leader] widget, whose offset
   /// determines whether this widget should be visible.
   final LeaderLink link;
+
+  /// Whether the content should fade-out when the [Leader] is beyond the [boundary].
+  final bool enabled;
 
   /// A [FollowerBoundary], which is combined with the [link] [Leader]'s
   /// offset, to determine whether this widget should be visible.
@@ -40,9 +44,9 @@ class FollowerFadeOutBeyondBoundary extends StatelessWidget {
     return AnimatedBuilder(
       animation: link,
       builder: (context, value) {
-        final isContentVisible = boundary == null || link.offset == null || boundary!.contains(link.offset!);
+        final isContentVisible = boundary == null || (link.offset != null && boundary!.contains(link.offset!));
         return AnimatedOpacity(
-          opacity: isContentVisible ? 1.0 : 0.0,
+          opacity: isContentVisible || !enabled ? 1.0 : 0.0,
           duration: duration,
           curve: curve,
           child: child,

@@ -1,9 +1,8 @@
 import 'dart:ui' as ui;
 
-import 'package:flutter/rendering.dart';
+import 'package:flutter/rendering.dart' hide FollowerLayer;
 import 'package:flutter/widgets.dart';
-
-import 'leader_link.dart';
+import 'package:follow_the_leader/follow_the_leader.dart';
 
 /// A widget that can be targeted by a [CompositedTransformFollower].
 ///
@@ -31,6 +30,7 @@ class Leader extends SingleChildRenderObjectWidget {
   const Leader({
     Key? key,
     required this.link,
+    this.repaint,
     Widget? child,
   }) : super(key: key, child: child);
 
@@ -41,40 +41,47 @@ class Leader extends SingleChildRenderObjectWidget {
   /// another [Leader] that is also being painted.
   final LeaderLink link;
 
+  final Listenable? repaint;
+
   @override
-  CustomRenderLeaderLayer createRenderObject(BuildContext context) {
-    return CustomRenderLeaderLayer(
+  RenderLeader createRenderObject(BuildContext context) {
+    return RenderLeader(
       link: link,
+      repaint: repaint,
     );
   }
 
   @override
-  void updateRenderObject(BuildContext context, CustomRenderLeaderLayer renderObject) {
-    renderObject.link = link;
+  void updateRenderObject(BuildContext context, RenderLeader renderObject) {
+    renderObject
+      ..link = link
+      ..repaint = repaint;
   }
 }
 
-/// Provides an anchor for a [RenderFollowerLayer].
-///
-/// See also:
-///
-///  * [CompositedTransformTarget], the corresponding widget.
-///  * [LeaderLayer], the layer that this render object creates.
-class CustomRenderLeaderLayer extends RenderProxyBox {
-  /// Creates a render object that uses a [LeaderLayer].
-  ///
-  /// The [link] must not be null.
-  CustomRenderLeaderLayer({
+/// [RenderObject] for a [Leader] widget, which reports an offset that
+/// can be followed by a [Follower].
+class RenderLeader extends RenderProxyBox {
+  RenderLeader({
     required LeaderLink link,
+    Listenable? repaint,
     RenderBox? child,
   })  : _link = link,
-        super(child);
+        super(child) {
+    this.repaint = repaint;
+  }
 
-  /// The link object that connects this [CustomRenderLeaderLayer] with one or more
+  @override
+  void dispose() {
+    _repaint?.removeListener(markNeedsPaint);
+    super.dispose();
+  }
+
+  /// The link object that connects this [RenderLeader] with one or more
   /// [RenderFollowerLayer]s.
   ///
   /// This property must not be null. The object must not be associated with
-  /// another [CustomRenderLeaderLayer] that is also being painted.
+  /// another [RenderLeader] that is also being painted.
   LeaderLink get link => _link;
   LeaderLink _link;
   set link(LeaderLink value) {
@@ -93,6 +100,17 @@ class CustomRenderLeaderLayer extends RenderProxyBox {
     markNeedsPaint();
   }
 
+  Listenable? _repaint;
+  set repaint(Listenable? repaint) {
+    if (repaint == _repaint) {
+      return;
+    }
+
+    _repaint?.removeListener(markNeedsPaint);
+    _repaint = repaint;
+    _repaint?.addListener(markNeedsPaint);
+  }
+
   @override
   bool get alwaysNeedsCompositing => true;
 
@@ -103,6 +121,7 @@ class CustomRenderLeaderLayer extends RenderProxyBox {
 
   @override
   void performLayout() {
+    FtlLogs.leader.finer("Laying out Leader - $hashCode");
     super.performLayout();
     _previousLayoutSize = size;
     link.leaderSize = size;
@@ -110,15 +129,18 @@ class CustomRenderLeaderLayer extends RenderProxyBox {
 
   @override
   void paint(PaintingContext context, Offset offset) {
+    final globalOffset = localToGlobal(Offset.zero);
+    FtlLogs.leader.finer("Painting Leader - $hashCode - offset: $offset - global offset: $globalOffset");
+    link.offset = globalOffset;
     if (layer == null) {
-      layer = LeaderLayer(link: link, offset: offset);
+      layer = LeaderLayer(link: link, offset: offset); // - Offset(0, offset.dy));
     } else {
       final LeaderLayer leaderLayer = layer! as LeaderLayer;
       leaderLayer
         ..link = link
-        ..offset = offset;
+        ..offset = offset; // - Offset(0, offset.dy);
     }
-    context.pushLayer(layer!, super.paint, Offset.zero);
+    context.pushLayer(layer!, super.paint, Offset.zero); //offset - globalOffset);
     assert(layer != null);
   }
 
@@ -214,7 +236,6 @@ class LeaderLayer extends ContainerLayer {
   @override
   void addToScene(ui.SceneBuilder builder) {
     _lastOffset = offset;
-    link.offset = offset;
     if (_lastOffset != Offset.zero) {
       engineLayer = builder.pushTransform(
         Matrix4.translationValues(_lastOffset!.dx, _lastOffset!.dy, 0.0).storage,

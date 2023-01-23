@@ -203,10 +203,24 @@ class _KitchenSinkDemoState extends State<KitchenSinkDemo> {
   Widget _buildMenu() {
     switch (_menuType) {
       case _MenuType.smallPopover:
-        return Container(
-          width: 100,
-          height: 54,
-          color: Colors.red,
+        return GestureDetector(
+          onPanStart: (_) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text("DRAG START!"),
+              duration: Duration(seconds: 2),
+            ));
+          },
+          onPanEnd: (_) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text("DRAG END!"),
+              duration: Duration(seconds: 2),
+            ));
+          },
+          child: Container(
+            width: 100,
+            height: 54,
+            color: Colors.red,
+          ),
         );
       case _MenuType.iOSToolbar:
         return FollowerFadeOutBeyondBoundary(

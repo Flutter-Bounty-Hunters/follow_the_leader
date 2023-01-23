@@ -1,5 +1,6 @@
 import 'package:example/demo_hover.dart';
 import 'package:example/demo_kitchen_sink.dart';
+import 'package:example/demo_scrollables.dart';
 import 'package:flutter/material.dart';
 import 'package:follow_the_leader/follow_the_leader.dart';
 import 'package:logging/logging.dart';
@@ -8,7 +9,8 @@ import 'demo_orbiting_circles.dart';
 
 void main() {
   FtlLogs.initLoggers(Level.FINEST, {
-    FtlLogs.follower,
+    // FtlLogs.leader,
+    // FtlLogs.follower,
     // appLog,
   });
   runApp(const MyApp());
@@ -55,7 +57,9 @@ class _ExampleAppState extends State<ExampleApp> {
         elevation: 0,
       ),
       extendBodyBehindAppBar: true,
-      body: _selectedMenu.pageBuilder(context),
+      body: Builder(builder: (bodyContext) {
+        return _selectedMenu.pageBuilder(bodyContext);
+      }),
       drawer: _buildDrawer(),
     );
   }
@@ -100,6 +104,10 @@ final _items = [
   _MenuItem(
     title: 'Orbiting Circles',
     pageBuilder: (context) => const OrbitingCirclesDemo(),
+  ),
+  _MenuItem(
+    title: 'Scrollables',
+    pageBuilder: (context) => const ScrollablesDemo(),
   ),
 ];
 
