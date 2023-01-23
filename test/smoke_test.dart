@@ -92,6 +92,48 @@ void main() {
 
       // Reaching this point without an error is the success condition.
     });
+
+    testWidgets("build when the Leader comes and goes", (widgetTester) async {
+      final showLeader = ValueNotifier<bool>(false);
+      final link = LeaderLink();
+
+      await _pumpScaffold(
+        widgetTester: widgetTester,
+        child: Stack(
+          children: [
+            Center(
+              child: ValueListenableBuilder(
+                  valueListenable: showLeader,
+                  builder: (context, value, child) {
+                    // Don't build the Leader. Make the Follower and orphan.
+                    if (!showLeader.value) {
+                      return const SizedBox();
+                    }
+
+                    // Build the Leader.
+                    return Leader(
+                      link: link,
+                    );
+                  }),
+            ),
+            Follower.withOffset(
+              link: link,
+              offset: const Offset(0, -50),
+            ),
+          ],
+        ),
+      );
+
+      // Switch the value to show the Leader and rebuild.
+      showLeader.value = true;
+      await widgetTester.pumpAndSettle();
+
+      // Switch the value to get rid of the Leader and rebuild.
+      showLeader.value = false;
+      await widgetTester.pumpAndSettle();
+
+      // Reaching this point without an error is the success condition.
+    });
   });
 }
 
