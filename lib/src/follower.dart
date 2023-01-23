@@ -451,6 +451,8 @@ class RenderFollower extends RenderProxyBox {
 
   @override
   void performLayout() {
+    child?.layout(constraints.loosen(), parentUsesSize: true);
+
     if (constraints.hasBoundedWidth && constraints.hasBoundedHeight) {
       // `Follower` hit testing will only take place where the widget tree thinks
       // this widget resides. Therefore, `Follower`s take up all the space that they
@@ -463,9 +465,9 @@ class RenderFollower extends RenderProxyBox {
       // need to take care that the resulting size facilitates all possible hit test
       // offsets.
       size = constraints.biggest;
+    } else {
+      size = child!.size;
     }
-
-    child?.layout(constraints.loosen(), parentUsesSize: true);
   }
 
   @override
