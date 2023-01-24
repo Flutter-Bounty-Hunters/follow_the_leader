@@ -44,7 +44,11 @@ class LeaderLink with ChangeNotifier {
     notifyListeners();
   }
 
-  /// The total size of the content of the connected [LeaderLayer].
+  /// The size of the content of the connected [LeaderLayer].
+  ///
+  /// This is the un-scaled size of the [Leader] widget. The final [Leader]
+  /// painting might be scaled up or down from this point. See [scale] for
+  /// access to that information.
   ///
   /// Generally this should be set by the [RenderObject] that paints on the
   /// registered [LeaderLayer] (for instance a [RenderLeaderLayer] that shares
@@ -62,11 +66,11 @@ class LeaderLink with ChangeNotifier {
   }
 
   Offset? getOffsetInLeader(Alignment alignment) {
-    if (_offset == null || _leaderSize == null) {
+    if (_offset == null || _leaderSize == null || _scale == null) {
       return null;
     }
 
-    return _offset! + alignment.alongSize(_leaderSize!);
+    return _offset! + alignment.alongSize(_leaderSize! * _scale!);
   }
 
   bool get hasFollowers => _connectedFollowers > 0;
