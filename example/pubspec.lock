@@ -114,10 +114,10 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: "0aef364c47be5b759b5913b1470b6dd7f6faf949"
+      resolved-ref: "9cf0e2e0c9682ff4cfd056c8f915510bfca386bb"
       url: "https://github.com/Flutter-Bounty-Hunters/overlord"
     source: git
-    version: "0.0.2+1"
+    version: "0.0.3"
   path:
     dependency: transitive
     description:

@@ -1,10 +1,10 @@
 # 0.0.4+1
-Fix Leader offset reporting (January, 2022)
+Fix Leader offset reporting (January, 2023)
 
  * Fix `getOffsetInLeader` from last release by correctly applying `Leader` scale.
 
 # 0.0.4
-Scrollables and scaling (January, 2022)
+Scrollables and scaling (January, 2023)
 
  * Added `recalculateGlobalOffset` to `Leader`, which should be used to notify `Leader`s when an ancestor `Scrollable` scrolls, so the `Leader` can notify `Follower`s that it moved.
  * Added `scale` and `getOffsetInLeader` to `LeaderLink` because the `Leader`'s scale was previously ignored.
