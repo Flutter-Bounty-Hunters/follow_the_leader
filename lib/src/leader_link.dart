@@ -32,6 +32,18 @@ class LeaderLink with ChangeNotifier {
     notifyListeners();
   }
 
+  /// The current scale of the [Leader].
+  double? get scale => _scale;
+  double? _scale;
+  set scale(double? newScale) {
+    if (newScale == _scale) {
+      return;
+    }
+
+    _scale = newScale;
+    notifyListeners();
+  }
+
   /// The total size of the content of the connected [LeaderLayer].
   ///
   /// Generally this should be set by the [RenderObject] that paints on the
@@ -47,6 +59,14 @@ class LeaderLink with ChangeNotifier {
 
     _leaderSize = newSize;
     notifyListeners();
+  }
+
+  Offset? getOffsetInLeader(Alignment alignment) {
+    if (_offset == null || _leaderSize == null) {
+      return null;
+    }
+
+    return _offset! + alignment.alongSize(_leaderSize!);
   }
 
   bool get hasFollowers => _connectedFollowers > 0;

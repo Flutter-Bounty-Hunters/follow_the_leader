@@ -146,17 +146,21 @@ class RenderLeader extends RenderProxyBox {
   @override
   void paint(PaintingContext context, Offset offset) {
     final globalOffset = localToGlobal(Offset.zero);
-    FtlLogs.leader.finer("Painting Leader - $hashCode - offset: $offset - global offset: $globalOffset");
-    link.offset = globalOffset;
+    final scale = (localToGlobal(const Offset(1, 0)) - localToGlobal(Offset.zero)).dx;
+    FtlLogs.leader
+        .finer("Painting Leader - $hashCode - offset: $offset - global offset: $globalOffset - scale: $scale");
+    link
+      ..offset = globalOffset
+      ..scale = scale;
     if (layer == null) {
-      layer = LeaderLayer(link: link, offset: offset); // - Offset(0, offset.dy));
+      layer = LeaderLayer(link: link, offset: offset);
     } else {
       final LeaderLayer leaderLayer = layer! as LeaderLayer;
       leaderLayer
         ..link = link
-        ..offset = offset; // - Offset(0, offset.dy);
+        ..offset = offset;
     }
-    context.pushLayer(layer!, super.paint, Offset.zero); //offset - globalOffset);
+    context.pushLayer(layer!, super.paint, Offset.zero);
     assert(layer != null);
   }
 

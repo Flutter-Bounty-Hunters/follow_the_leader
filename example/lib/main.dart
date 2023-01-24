@@ -1,5 +1,6 @@
 import 'package:example/demo_hover.dart';
 import 'package:example/demo_kitchen_sink.dart';
+import 'package:example/demo_scaling.dart';
 import 'package:example/demo_scrollables.dart';
 import 'package:flutter/material.dart';
 import 'package:follow_the_leader/follow_the_leader.dart';
@@ -106,6 +107,10 @@ final _items = [
   _MenuItem(
     title: 'Orbiting Circles',
     pageBuilder: (context) => const OrbitingCirclesDemo(),
+  ),
+  _MenuItem(
+    title: 'Scaling',
+    pageBuilder: (context) => const ScalingDemo(),
   ),
   _MenuItem(
     title: 'Scrollables',
