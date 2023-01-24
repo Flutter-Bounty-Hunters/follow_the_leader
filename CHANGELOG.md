@@ -1,3 +1,9 @@
+# 0.0.4
+Scrollables and scaling (January, 2022)
+
+ * Added `recalculateGlobalOffset` to `Leader`, which should be used to notify `Leader`s when an ancestor `Scrollable` scrolls, so the `Leader` can notify `Follower`s that it moved.
+ * Added `scale` and `getOffsetInLeader` to `LeaderLink` because the `Leader`'s scale was previously ignored.
+
 # 0.0.3 
 Easier following (December, 2022)
 
