@@ -66,7 +66,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.0.3"
+    version: "0.0.4+1"
   golden_toolkit:
     dependency: "direct dev"
     description:
@@ -114,7 +114,7 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: b54542a499e837e921c074159dbb4241e2f4e43c
+      resolved-ref: "0aef364c47be5b759b5913b1470b6dd7f6faf949"
       url: "https://github.com/Flutter-Bounty-Hunters/overlord"
     source: git
     version: "0.0.2+1"

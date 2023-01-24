@@ -1,3 +1,8 @@
+# 0.0.4+1
+Fix Leader offset reporting (January, 2022)
+
+ * Fix `getOffsetInLeader` from last release by correctly applying `Leader` scale.
+
 # 0.0.4
 Scrollables and scaling (January, 2022)
 
