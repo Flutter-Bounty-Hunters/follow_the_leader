@@ -139,28 +139,57 @@ class RenderLeader extends RenderProxyBox {
   void performLayout() {
     FtlLogs.leader.finer("Laying out Leader - $hashCode");
     super.performLayout();
+    FtlLogs.leader.finer(" - leader size: $size");
     _previousLayoutSize = size;
     link.leaderSize = size;
   }
 
   @override
   void paint(PaintingContext context, Offset offset) {
+    FtlLogs.leader.finer("Painting Leader ($hashCode)");
+
     final globalOffset = localToGlobal(Offset.zero);
     final scale = (localToGlobal(const Offset(1, 0)) - localToGlobal(Offset.zero)).dx;
-    FtlLogs.leader
-        .finer("Painting Leader - $hashCode - offset: $offset - global offset: $globalOffset - scale: $scale");
+    final halfChildSize = Offset(child!.size.width / 2, child!.size.height / 2);
+    final scaledOffset = offset + halfChildSize - (halfChildSize * scale);
+    FtlLogs.leader.finer(" - paint offset: $offset");
+    FtlLogs.leader.finer(" - scaled paint offset: $scaledOffset");
+    FtlLogs.leader.finer(" - global offset: $globalOffset");
+    FtlLogs.leader.finer(" - follower content size (unscaled): ${child?.size}");
+    FtlLogs.leader.finer(" - scale: $scale");
+
+    final leaderToScreenTransform = getTransformTo(null);
+    print("Leader to screen transform:");
+    print("$leaderToScreenTransform");
+
+    final screenToLeaderTransform = getTransformTo(null)..invert();
+    print("Screen to leader transform:");
+    print("$screenToLeaderTransform");
+
     link
+      ..screenToLeader = screenToLeaderTransform
+      ..leaderToScreen = leaderToScreenTransform
+      ..leaderContentBoundsInLeaderSpace =
+          Offset.zero & child!.size // TODO: query the actual child offset for cases where its not zero
       ..offset = globalOffset
       ..scale = scale;
+
     if (layer == null) {
-      layer = LeaderLayer(link: link, offset: offset);
+      layer = LeaderLayer(
+        link: link,
+        offset: offset,
+      );
     } else {
       final LeaderLayer leaderLayer = layer! as LeaderLayer;
       leaderLayer
         ..link = link
         ..offset = offset;
     }
-    context.pushLayer(layer!, super.paint, Offset.zero);
+
+    context.pushLayer(layer!, (paintContext, offset) {
+      FtlLogs.leader.finer("Painting leader content within LeaderLayer. Paint offset: $offset");
+      super.paint(paintContext, offset);
+    }, Offset.zero);
     assert(layer != null);
   }
 
@@ -228,6 +257,7 @@ class LeaderLayer extends ContainerLayer {
 
   @override
   void attach(Object owner) {
+    FtlLogs.leader.finer("Attaching LeaderLayer to owner: $owner");
     super.attach(owner);
     _lastOffset = null;
     link.leader = this;
@@ -235,6 +265,7 @@ class LeaderLayer extends ContainerLayer {
 
   @override
   void detach() {
+    FtlLogs.leader.finer("Detaching LeaderLayer from owner");
     link.leader = null;
     _lastOffset = null;
     super.detach();
@@ -255,15 +286,16 @@ class LeaderLayer extends ContainerLayer {
 
   @override
   void addToScene(ui.SceneBuilder builder) {
+    FtlLogs.leader.finer("Adding LeaderLayer to scene. Offset: $offset");
     _lastOffset = offset;
-    if (_lastOffset != Offset.zero) {
+    if (offset != Offset.zero) {
       engineLayer = builder.pushTransform(
-        Matrix4.translationValues(_lastOffset!.dx, _lastOffset!.dy, 0.0).storage,
+        Matrix4.translationValues(offset.dx, offset.dy, 0.0).storage,
         oldLayer: engineLayer as ui.TransformEngineLayer?,
       );
     }
     addChildrenToScene(builder);
-    if (_lastOffset != Offset.zero) {
+    if (offset != Offset.zero) {
       builder.pop();
     }
   }
@@ -280,6 +312,7 @@ class LeaderLayer extends ContainerLayer {
   //  suggest that ContainerLayer was given an API to serve a specific subclass.
   @override
   void applyTransform(Layer? child, Matrix4 transform) {
+    print("LeaderLayer applyTransform()");
     assert(_lastOffset != null);
     if (_lastOffset != Offset.zero) {
       transform.translate(_lastOffset!.dx, _lastOffset!.dy);

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart' hide LeaderLayer;
 import 'package:flutter/scheduler.dart';
+import 'package:vector_math/vector_math_64.dart';
 
 import 'leader.dart';
 
@@ -19,6 +20,20 @@ class LeaderLink with ChangeNotifier {
 
     _leader = newLeader;
   }
+
+  /// Transform that maps a coordinate in screen-space to a coordinate
+  /// in leader space.
+  Matrix4? screenToLeader;
+
+  /// Transform that maps a coordinate in leader-space to a coordinate
+  /// in screen space.
+  Matrix4? leaderToScreen;
+
+  /// The bounds of the leader's child widget in leader-space.
+  ///
+  /// For example, if the leader's child sits at the leader's origin,
+  /// the top-left of this [Rect] will be (0, 0).
+  Rect? leaderContentBoundsInLeaderSpace;
 
   /// Global offset for the top-left corner of the [Leader]'s content.
   Offset? get offset => _offset;
@@ -70,7 +85,24 @@ class LeaderLink with ChangeNotifier {
       return null;
     }
 
-    return _offset! + alignment.alongSize(_leaderSize! * _scale!);
+    print("getOffsetInLeader - _offset: $_offset, _leaderSize: $_leaderSize, _scale: $_scale");
+    print(" - answer: ${_offset! + alignment.alongSize(_leaderSize! * _scale!)}");
+
+    Offset leaderOrigin = Offset.zero;
+    if (_leader!.lastOffset != null) {
+      final transform = Matrix4.identity();
+      _leader!.applyTransform(null, transform);
+      final leaderOriginVec = transform.transform3(Vector3(0, 0, 0));
+      leaderOrigin = Offset(leaderOriginVec.x, leaderOriginVec.y);
+      print(" - leader origin: $leaderOrigin");
+    } else {
+      leaderOrigin = Offset.zero; //Offset(560, 0);
+    }
+    print(" - offset in leader without leader origin: ${_offset! + alignment.alongSize(_leaderSize! * _scale!)}");
+    print(
+        " - offset in leader with leader origin: ${_offset! + alignment.alongSize(_leaderSize! * _scale!) + leaderOrigin}");
+
+    return _offset! + alignment.alongSize(_leaderSize! * _scale!) + leaderOrigin;
   }
 
   bool get hasFollowers => _connectedFollowers > 0;

@@ -431,7 +431,7 @@ class RenderFollower extends RenderProxyBox {
 
   @override
   bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
-    final followerOffset = _previousFollowerOffset ?? Offset.zero;
+    final followerOffset = _followerOffsetFromLeader ?? Offset.zero;
     final transform = layer?.getLastTransform()?..translate(followerOffset.dx, followerOffset.dy);
 
     return result.addWithPaintTransform(
@@ -443,14 +443,15 @@ class RenderFollower extends RenderProxyBox {
     );
   }
 
-  Offset? _previousFollowerOffset;
-  Offset? get previousFollowerOffset => _previousFollowerOffset;
+  Offset? _followerOffsetFromLeader;
+  Offset? get previousFollowerOffset => _followerOffsetFromLeader;
 
   /// Indicates whether or not we are in the first paint of the current [LeaderLink].
   bool _firstPaintOfCurrentLink = true;
 
   @override
   void performLayout() {
+    print("Follower performLayout()");
     child?.layout(constraints.loosen(), parentUsesSize: true);
 
     if (constraints.hasBoundedWidth && constraints.hasBoundedHeight) {
@@ -472,13 +473,12 @@ class RenderFollower extends RenderProxyBox {
 
   @override
   void paint(PaintingContext context, Offset offset) {
+    FtlLogs.follower.finer("Painting Follower - paint offset: $offset");
     if (child == null) {
       return;
     }
 
-    FtlLogs.follower.fine("Painting Follower - paint offset: $offset, displacement from Leader: $_offset");
-
-    if (!link.leaderConnected && _previousFollowerOffset == null) {
+    if (!link.leaderConnected && _followerOffsetFromLeader == null) {
       FtlLogs.follower.fine("The leader isn't connected and there's no cached offset. Not painting anything.");
       if (!_firstPaintOfCurrentLink) {
         // We already painted and we still don't have a leader connected.
@@ -502,27 +502,33 @@ class RenderFollower extends RenderProxyBox {
     if (link.leaderConnected) {
       _calculateFollowerOffset();
     }
+    FtlLogs.follower.fine("Final follower offset relative to leader: $_followerOffsetFromLeader");
 
-    FtlLogs.follower.finer("Positioning follower layer at: $_previousFollowerOffset");
     if (layer == null) {
       layer = FollowerLayer(
         link: link,
         showWhenUnlinked: showWhenUnlinked,
-        linkedOffset: _previousFollowerOffset,
-        unlinkedOffset: _previousFollowerOffset,
+        followerOffsetFromScreenOrigin: offset,
+        linkedOffset: _followerOffsetFromLeader,
+        // linkedOffset: Offset.zero,
+        unlinkedOffset: _followerOffsetFromLeader,
+        followerSize: child!.size,
       );
     } else {
       layer
         ?..link = link
         ..showWhenUnlinked = showWhenUnlinked
-        ..linkedOffset = _previousFollowerOffset
-        ..unlinkedOffset = _previousFollowerOffset;
+        ..followerOffsetFromScreenOrigin = offset
+        ..linkedOffset = _followerOffsetFromLeader
+        // ..linkedOffset = Offset.zero
+        ..unlinkedOffset = _followerOffsetFromLeader
+        ..followerSize = child!.size;
     }
 
     context.pushLayer(
       layer!,
       (context, offset) {
-        FtlLogs.follower.finer("Painting follower content in Follower's Layer.");
+        FtlLogs.follower.finer("Painting follower content in Follower's Layer. Painting offset: $Offset");
         super.paint(context, offset);
       },
       Offset.zero,
@@ -540,32 +546,44 @@ class RenderFollower extends RenderProxyBox {
   }
 
   void _calculateFollowerOffsetWithAligner() {
-    FtlLogs.follower.fine("Calculating Follower offset using a dynamic aligner.");
-    final globalLeaderRect = link.leader!.offset & link.leaderSize!;
+    FtlLogs.follower.finer("Calculating Follower offset using an aligner.");
+
+    final globalLeaderTopLeftVec = link.leaderToScreen!.transform3(
+        Vector3(link.leaderContentBoundsInLeaderSpace!.left, link.leaderContentBoundsInLeaderSpace!.top, 0));
+    final globalLeaderBottomRightVec = link.leaderToScreen!.transform3(
+        Vector3(link.leaderContentBoundsInLeaderSpace!.right, link.leaderContentBoundsInLeaderSpace!.bottom, 0));
+    final globalLeaderRect = Rect.fromPoints(
+      Offset(globalLeaderTopLeftVec.x, globalLeaderTopLeftVec.y),
+      Offset(globalLeaderBottomRightVec.x, globalLeaderBottomRightVec.y),
+    );
+    FtlLogs.follower.finer(" - Global leader rect: $globalLeaderRect");
+
+    final Size? leaderSize = link.leaderSize;
+    FtlLogs.follower.finer(" - Leader size: $leaderSize");
+    FtlLogs.follower.finer(" - Leader layer offset: ${link.leader!.offset}");
+
     final followerAlignment = aligner!.align(globalLeaderRect, child!.size);
     final leaderAnchor = followerAlignment.leaderAnchor;
     final followerAnchor = followerAlignment.followerAnchor;
 
-    final Size? leaderSize = link.leaderSize;
-    assert(
-      link.leaderSize != null || (!link.leaderConnected || leaderAnchor == Alignment.topLeft),
-      '$link: layer is linked to ${link.leader} but a valid leaderSize is not set. '
-      'leaderSize is required when leaderAnchor is not Alignment.topLeft '
-      '(current value is $leaderAnchor).',
-    );
+    final followerTransform = Matrix4.identity();
+    applyPaintTransform(child!, followerTransform);
 
-    final followerSize = child!.size;
-    FtlLogs.follower.finer("Leader size: $leaderSize, follower size: $followerSize");
-    FtlLogs.follower.finer("Leader layer offset: ${link.leader!.offset}");
-    final Offset effectiveLinkedOffset = (leaderSize == null
+    final followerScale =
+        (followerTransform.transform3(Vector3(1, 0, 0)) - followerTransform.transform3(Vector3.zero())).x;
+    final followerSize = child!.size * followerScale;
+    FtlLogs.follower.finer(" - Follower size: $followerSize ($followerScale scale)");
+
+    final Offset followerOffsetRelativeToLeader = (leaderSize == null
             ? Offset.zero
             : leaderAnchor.alongSize(leaderSize) - followerAnchor.alongSize(followerSize)) +
         followerAlignment.followerOffset;
-    FtlLogs.follower.finer("(Non-constrained) Follower offset: $effectiveLinkedOffset");
+    FtlLogs.follower.finer(" - (Non-constrained) Follower offset relative to leader: $followerOffsetRelativeToLeader");
 
-    _previousFollowerOffset =
-        boundary != null ? boundary!.constrain(link, child!, effectiveLinkedOffset) : effectiveLinkedOffset;
-    FtlLogs.follower.finer("(Constrained) Follower offset: $_previousFollowerOffset");
+    _followerOffsetFromLeader = boundary != null
+        ? boundary!.constrain(link, child!, followerOffsetRelativeToLeader)
+        : followerOffsetRelativeToLeader;
+    FtlLogs.follower.finer(" - (Constrained) Follower offset relative to leader: $_followerOffsetFromLeader");
   }
 
   void _calculateFollowerOffsetWithStaticValue() {
@@ -580,14 +598,15 @@ class RenderFollower extends RenderProxyBox {
         : leaderAnchor!.alongSize(link.leaderSize!) - followerAnchor!.alongSize(child!.size) + offset!);
     FtlLogs.follower.finer("(Non-constrained) Follower offset: $effectiveLinkedOffset");
 
-    _previousFollowerOffset =
+    _followerOffsetFromLeader =
         boundary != null ? boundary!.constrain(link, child!, effectiveLinkedOffset) : effectiveLinkedOffset;
-    FtlLogs.follower.finer("(Constrained) Follower offset: $_previousFollowerOffset");
+    FtlLogs.follower.finer("(Constrained) Follower offset: $_followerOffsetFromLeader");
   }
 
   @override
   void applyPaintTransform(RenderBox child, Matrix4 transform) {
-    transform.multiply(getCurrentTransform());
+    print("Follower applyPaintTransform() - previousFollowerOffset: $_followerOffsetFromLeader");
+    transform.multiply(_getCurrentTransform());
   }
 
   /// Return the transform that was used in the last composition phase, if any.
@@ -596,11 +615,21 @@ class RenderFollower extends RenderProxyBox {
   /// was unable to determine the transform (see
   /// [FollowerLayer.getLastTransform]), this returns the identity matrix (see
   /// [Matrix4.identity].
-  Matrix4 getCurrentTransform() {
+  Matrix4 _getCurrentTransform() {
+    FtlLogs.follower.finest("RenderFollower - getCurrentTransform()");
+    FtlLogs.follower
+        .finest(" - has FollowerLayer? ${layer != null}, has existing transform? ${layer?.getLastTransform() != null}");
+    FtlLogs.follower
+        .finest(" - follower origin in screen-space (according to localToGlobal): ${localToGlobal(Offset.zero)}");
+    FtlLogs.follower.finest(
+        " - delta from follower origin to screen origin (according to FollowerLayer): ${layer?._transformOffset(Offset.zero)}");
+    FtlLogs.follower.finest(" - follower offset from leader: $_followerOffsetFromLeader");
     final transform = layer?.getLastTransform() ?? Matrix4.identity();
-    if (_previousFollowerOffset != null) {
-      transform.translate(_previousFollowerOffset!.dx, _previousFollowerOffset!.dy);
+
+    if (_followerOffsetFromLeader != null) {
+      transform.translate(_followerOffsetFromLeader!.dx, _followerOffsetFromLeader!.dy);
     }
+
     return transform;
   }
 
@@ -610,7 +639,7 @@ class RenderFollower extends RenderProxyBox {
     properties.add(DiagnosticsProperty<LeaderLink>('link', link));
     properties.add(DiagnosticsProperty<bool>('showWhenUnlinked', showWhenUnlinked));
     properties.add(DiagnosticsProperty<Offset>('offset', offset));
-    properties.add(TransformProperty('current transform matrix', getCurrentTransform()));
+    properties.add(TransformProperty('current transform matrix', _getCurrentTransform()));
   }
 }
 
@@ -634,8 +663,10 @@ class FollowerLayer extends ContainerLayer {
   FollowerLayer({
     required LeaderLink link,
     this.showWhenUnlinked = true,
+    required this.followerOffsetFromScreenOrigin,
     this.unlinkedOffset = Offset.zero,
     this.linkedOffset = Offset.zero,
+    this.followerSize,
   }) : _link = link;
 
   /// The link to the [LeaderLayer].
@@ -696,16 +727,22 @@ class FollowerLayer extends ContainerLayer {
   ///  * [unlinkedOffset], for when the layer is not linked.
   Offset? linkedOffset;
 
+  Offset followerOffsetFromScreenOrigin;
+
+  Size? followerSize;
+
   CustomLayerLinkHandle? _leaderHandle;
 
   @override
   void attach(Object owner) {
+    FtlLogs.follower.finer("Attaching FollowerLayer to owner: $owner");
     super.attach(owner);
     _leaderHandle = _link.registerFollower();
   }
 
   @override
   void detach() {
+    FtlLogs.follower.finer("Detaching FollowerLayer from owner");
     super.detach();
     _leaderHandle?.dispose();
     _leaderHandle = null;
@@ -715,19 +752,6 @@ class FollowerLayer extends ContainerLayer {
   Matrix4? _lastTransform;
   Matrix4? _invertedTransform;
   bool _inverseDirty = true;
-
-  Offset? _transformOffset(Offset localPosition) {
-    if (_inverseDirty) {
-      _invertedTransform = Matrix4.tryInvert(getLastTransform()!);
-      _inverseDirty = false;
-    }
-    if (_invertedTransform == null) {
-      return null;
-    }
-    final Vector4 vector = Vector4(localPosition.dx, localPosition.dy, 0.0, 1.0);
-    final Vector4 result = _invertedTransform!.transform(vector);
-    return Offset(result[0] - linkedOffset!.dx, result[1] - linkedOffset!.dy);
-  }
 
   @override
   bool findAnnotations<S extends Object>(AnnotationResult<S> result, Offset localPosition, {required bool onlyFirst}) {
@@ -744,6 +768,20 @@ class FollowerLayer extends ContainerLayer {
     return super.findAnnotations<S>(result, transformedOffset, onlyFirst: onlyFirst);
   }
 
+  Offset? _transformOffset(Offset localPosition) {
+    if (_inverseDirty) {
+      _invertedTransform = Matrix4.tryInvert(getLastTransform()!);
+      _inverseDirty = false;
+    }
+    if (_invertedTransform == null) {
+      return null;
+    }
+    final Vector4 vector = Vector4(localPosition.dx, localPosition.dy, 0.0, 1.0);
+    final Vector4 result = _invertedTransform!.transform(vector);
+    // return Offset(result[0] - linkedOffset!.dx, result[1] - linkedOffset!.dy);
+    return Offset(result[0], result[1]);
+  }
+
   /// The transform that was used during the last composition phase.
   ///
   /// If the [link] was not linked to a [LeaderLayer], or if this layer has
@@ -754,111 +792,24 @@ class FollowerLayer extends ContainerLayer {
     if (_lastTransform == null) {
       return null;
     }
-    final Matrix4 result = Matrix4.translationValues(-_lastOffset!.dx, -_lastOffset!.dy, 0.0);
+
+    final result = Matrix4.translationValues(
+      -followerOffsetFromScreenOrigin.dx - _lastOffset!.dx,
+      -followerOffsetFromScreenOrigin.dy - _lastOffset!.dy,
+      0.0,
+    );
+
+    // ---- this is where we're somehow missing the follower origin adjustment
+    // result.translate(
+    //   -followerOffsetFromScreenOrigin.dx,
+    //   -followerOffsetFromScreenOrigin.dy,
+    // );
+    // result.translate(-560.0, 0.0);
+    // ---- ^ where should this come from?
+
     result.multiply(_lastTransform!);
+
     return result;
-  }
-
-  /// Call [applyTransform] for each layer in the provided list.
-  ///
-  /// The list is in reverse order (deepest first). The first layer will be
-  /// treated as the child of the second, and so forth. The first layer in the
-  /// list won't have [applyTransform] called on it. The first layer may be
-  /// null.
-  static Matrix4 _collectTransformForLayerChain(List<ContainerLayer?> layers) {
-    // Initialize our result matrix.
-    final Matrix4 result = Matrix4.identity();
-    // Apply each layer to the matrix in turn, starting from the last layer,
-    // and providing the previous layer as the child.
-    for (int index = layers.length - 1; index > 0; index -= 1) {
-      layers[index]?.applyTransform(layers[index - 1], result);
-    }
-    return result;
-  }
-
-  /// Find the common ancestor of two layers [a] and [b] by searching towards
-  /// the root of the tree, and append each ancestor of [a] or [b] visited along
-  /// the path to [ancestorsA] and [ancestorsB] respectively.
-  ///
-  /// Returns null if [a] [b] do not share a common ancestor, in which case the
-  /// results in [ancestorsA] and [ancestorsB] are undefined.
-  static Layer? _pathsToCommonAncestor(
-    Layer? a,
-    Layer? b,
-    List<ContainerLayer?> ancestorsA,
-    List<ContainerLayer?> ancestorsB,
-  ) {
-    // No common ancestor found.
-    if (a == null || b == null) {
-      return null;
-    }
-
-    if (identical(a, b)) {
-      return a;
-    }
-
-    if (a.depth < b.depth) {
-      ancestorsB.add(b.parent);
-      return _pathsToCommonAncestor(a, b.parent, ancestorsA, ancestorsB);
-    } else if (a.depth > b.depth) {
-      ancestorsA.add(a.parent);
-      return _pathsToCommonAncestor(a.parent, b, ancestorsA, ancestorsB);
-    }
-
-    ancestorsA.add(a.parent);
-    ancestorsB.add(b.parent);
-    return _pathsToCommonAncestor(a.parent, b.parent, ancestorsA, ancestorsB);
-  }
-
-  /// Populate [_lastTransform] given the current state of the tree.
-  void _establishTransform() {
-    _lastTransform = null;
-    final LeaderLayer? leader = _leaderHandle!.leader;
-    // Check to see if we are linked.
-    if (leader == null) {
-      return;
-    }
-    // If we're linked, check the link is valid.
-    assert(
-      leader.owner == owner,
-      'Linked LeaderLayer anchor is not in the same layer tree as the FollowerLayer.',
-    );
-    assert(
-      leader.lastOffset != null,
-      'LeaderLayer anchor must come before FollowerLayer in paint order, but the reverse was true.',
-    );
-
-    // Stores [leader, ..., commonAncestor] after calling _pathsToCommonAncestor.
-    final List<ContainerLayer?> forwardLayers = <ContainerLayer>[leader];
-    // Stores [this (follower), ..., commonAncestor] after calling
-    // _pathsToCommonAncestor.
-    final List<ContainerLayer?> inverseLayers = <ContainerLayer>[this];
-
-    final Layer? ancestor = _pathsToCommonAncestor(
-      leader,
-      this,
-      forwardLayers,
-      inverseLayers,
-    );
-    assert(ancestor != null);
-
-    final Matrix4 forwardTransform = _collectTransformForLayerChain(forwardLayers);
-    // Further transforms the coordinate system to a hypothetical child (null)
-    // of the leader layer, to account for the leader's additional paint offset
-    // and layer offset (LeaderLayer._lastOffset).
-    leader.applyTransform(null, forwardTransform);
-    forwardTransform.translate(linkedOffset!.dx, linkedOffset!.dy);
-
-    final Matrix4 inverseTransform = _collectTransformForLayerChain(inverseLayers);
-
-    if (inverseTransform.invert() == 0.0) {
-      // We are in a degenerate transform, so there's not much we can do.
-      return;
-    }
-    // Combine the matrices and store the result.
-    inverseTransform.multiply(forwardTransform);
-    _lastTransform = inverseTransform;
-    _inverseDirty = true;
   }
 
   /// {@template flutter.rendering.FollowerLayer.alwaysNeedsAddToScene}
@@ -876,6 +827,7 @@ class FollowerLayer extends ContainerLayer {
 
   @override
   void addToScene(ui.SceneBuilder builder) {
+    FtlLogs.follower.finer("Adding FollowerLayer to scene");
     assert(showWhenUnlinked != null);
     if (_leaderHandle!.leader == null && !showWhenUnlinked!) {
       _lastTransform = null;
@@ -906,14 +858,208 @@ class FollowerLayer extends ContainerLayer {
     _inverseDirty = true;
   }
 
+  /// Populate [_lastTransform] given the current state of the tree.
+  void _establishTransform() {
+    FtlLogs.follower.finest("Establishing FollowerLayer transform");
+    FtlLogs.follower.finest(" - follower linked offset: $linkedOffset");
+    _lastTransform = null;
+    final LeaderLayer? leader = _leaderHandle!.leader;
+    // Check to see if we are linked.
+    if (leader == null) {
+      return;
+    }
+    // If we're linked, check the link is valid.
+    assert(
+      leader.owner == owner,
+      'Linked LeaderLayer anchor is not in the same layer tree as the FollowerLayer.',
+    );
+    assert(
+      leader.lastOffset != null,
+      'LeaderLayer anchor must come before FollowerLayer in paint order, but the reverse was true.',
+    );
+
+    // Stores [leader, ..., commonAncestor] after calling _pathsToCommonAncestor.
+    final List<ContainerLayer?> leaderToAncestorLayers = <ContainerLayer>[leader];
+    // Stores [this (follower), ..., commonAncestor] after calling
+    // _pathsToCommonAncestor.
+    final List<ContainerLayer?> followerToAncestorLayers = <ContainerLayer>[this];
+
+    // final Layer? ancestor = _pathsToCommonAncestor(
+    //   leader,
+    //   this,
+    //   leaderToAncestorLayers,
+    //   followerToAncestorLayers,
+    // );
+    // assert(ancestor != null);
+
+    _pathToRoot(
+      leader,
+      leaderToAncestorLayers,
+    );
+    FtlLogs.follower.finest(" - Leader ancestor path:");
+    for (final layer in leaderToAncestorLayers) {
+      FtlLogs.follower.finest("   - $layer");
+    }
+
+    _pathToRoot(
+      this,
+      followerToAncestorLayers,
+    );
+    FtlLogs.follower.finest(" - Follower ancestor path");
+    for (final layer in followerToAncestorLayers) {
+      FtlLogs.follower.finest("   - $layer");
+    }
+
+    final Matrix4 leaderTransform = _collectTransformForLayerChain(leaderToAncestorLayers);
+    FtlLogs.follower.finest(" - Leader transform to screen-space \n$leaderTransform");
+    // Further transforms the coordinate system to a hypothetical child (null)
+    // of the leader layer, to account for the leader's additional paint offset
+    // and layer offset (LeaderLayer._lastOffset).
+    leader.applyTransform(null, leaderTransform);
+    // leaderTransform.translate(linkedOffset!.dx, linkedOffset!.dy);
+
+    final Matrix4 screenToFollowerTransform = _collectTransformForLayerChain(followerToAncestorLayers);
+    if (screenToFollowerTransform.invert() == 0.0) {
+      // We are in a degenerate transform, so there's not much we can do.
+      return;
+    }
+    FtlLogs.follower.finest(" - Follower transform to screen-space \n$screenToFollowerTransform");
+
+    // Calculate the leader and follower scale so that we can un-apply the
+    // leader scale, and add the follower scale. We do this because we don't
+    // want to force the follower to always be the scale of the leader.
+    final leaderScale = (leaderTransform.transform3(Vector3(1, 0, 0)) - leaderTransform.transform3(Vector3.zero())).x;
+    FtlLogs.follower.finest(" - Leader scale: $leaderScale");
+    final followerScale = 1 /
+        (screenToFollowerTransform.transform3(Vector3(1, 0, 0)) - screenToFollowerTransform.transform3(Vector3.zero()))
+            .x; // We invert the scale because the transform is an inverse
+    FtlLogs.follower.finest(" - Follower scale: $followerScale");
+
+    // Put follower transform into leader space. This operation would be all
+    // we need, if we didn't want to undo the leader's scale factor.
+    screenToFollowerTransform.multiply(leaderTransform);
+    // final followerOffsetVector = screenToFollowerTransform.transform3(Vector3.zero());
+    // final followerOffset = Offset(followerOffsetVector.x, followerOffsetVector.y);
+    final leaderOffsetVector = leaderTransform.transform3(Vector3.zero());
+    final leaderOffset = Offset(leaderOffsetVector.x, leaderOffsetVector.y);
+    FtlLogs.follower.finest(" - Leader origin in screen space: $leaderOffset");
+
+    final leaderSize = _link.leaderSize! * leaderScale;
+    FtlLogs.follower.finest(" - leader size: $leaderSize");
+
+    // Combine the matrices and store the result.
+    _lastTransform = screenToFollowerTransform
+      ..scale(1 / leaderScale) // <- inverted because we want to undo the Leader scale
+      // TODO: replace these manual translations with an aligner or a static offset from the Follower
+      ..translate(leaderSize.width / 2, 0.0) // <- this is a manual implementation for horizontal center on top
+      ..scale(followerScale)
+      ..translate(-followerSize!.width / 2, -followerSize!.height);
+
+    _inverseDirty = true;
+  }
+
+  /// Call [applyTransform] for each layer in the provided list.
+  ///
+  /// The list is in reverse order (deepest first). The first layer will be
+  /// treated as the child of the second, and so forth. The first layer in the
+  /// list won't have [applyTransform] called on it. The first layer may be
+  /// null.
+  Matrix4 _collectTransformForLayerChain(List<ContainerLayer?> layers) {
+    print("_collectTransformForLayerChain()");
+    print(" - this: $this");
+    // Initialize our result matrix.
+    final Matrix4 result = Matrix4.identity();
+    // Apply each layer to the matrix in turn, starting from the last layer,
+    // and providing the previous layer as the child.
+    for (int index = layers.length - 1; index > 0; index -= 1) {
+      print("Calling applyTransform() on layer: ${layers[index]}");
+      layers[index]?.applyTransform(layers[index - 1], result);
+    }
+    return result;
+  }
+
+  void _pathToRoot(
+    Layer layer,
+    List<ContainerLayer?> ancestors,
+  ) {
+    Layer currentLayer = layer;
+    while (currentLayer.parent != null) {
+      ancestors.add(currentLayer.parent!);
+      currentLayer = currentLayer.parent!;
+    }
+  }
+
+  /// Find the common ancestor of two layers [a] and [b] by searching towards
+  /// the root of the tree, and append each ancestor of [a] or [b] visited along
+  /// the path to [ancestorsA] and [ancestorsB] respectively.
+  ///
+  /// Returns null if [a] [b] do not share a common ancestor, in which case the
+  /// results in [ancestorsA] and [ancestorsB] are undefined.
+  Layer? _pathsToCommonAncestor(
+    Layer? a,
+    Layer? b,
+    List<ContainerLayer?> ancestorsA,
+    List<ContainerLayer?> ancestorsB,
+  ) {
+    // No common ancestor found.
+    if (a == null || b == null) {
+      return null;
+    }
+
+    if (identical(a, b)) {
+      return a;
+    }
+
+    if (a.depth < b.depth) {
+      ancestorsB.add(b.parent);
+      return _pathsToCommonAncestor(a, b.parent, ancestorsA, ancestorsB);
+    } else if (a.depth > b.depth) {
+      ancestorsA.add(a.parent);
+      return _pathsToCommonAncestor(a.parent, b, ancestorsA, ancestorsB);
+    }
+
+    ancestorsA.add(a.parent);
+    ancestorsB.add(b.parent);
+    return _pathsToCommonAncestor(a.parent, b.parent, ancestorsA, ancestorsB);
+  }
+
   @override
   void applyTransform(Layer? child, Matrix4 transform) {
+    print("FollowerLayer - applyTransform()");
+    print("Transform before translation: \n$transform");
     assert(child != null);
     if (_lastTransform != null) {
-      transform.multiply(_lastTransform!);
+      transform.translate(-560, 0);
+      // transform.multiply(_lastTransform!);
+      // TODO: ^ this is used in establishTransform to calculate the
+      //       follower-to-screen transform, which is what decides where
+      //       the blue dot appears. But our layer is currently reporting
+      //       an identity transform:
+      //
+      // flutter: (55.484) follower > FINEST:  - Follower ancestor path
+      // flutter: (55.485) follower > FINEST:    - FollowerLayer#6f8a4(engine layer: TransformEngineLayer#4213d, handles: 2, link: LeaderLink#f9e23(<linked>))
+      // flutter: (55.485) follower > FINEST:    - OffsetLayer#cf758(engine layer: OffsetEngineLayer#90e18, handles: 2, offset: Offset(0.0, 0.0))
+      // flutter: (55.485) follower > FINEST:    - OffsetLayer#099ce(engine layer: OffsetEngineLayer#5731a, handles: 2, offset: Offset(0.0, 0.0))
+      // flutter: (55.486) follower > FINEST:    - TransformLayer#da433(owner: RenderView#58ee2, engine layer: TransformEngineLayer#3ce61, handles: 1, offset: Offset(0.0, 0.0), transform: [1.0,0.0,0.0,0.0; 0.0,1.0,0.0,0.0; 0.0,0.0,1.0,0.0; 0.0,0.0,0.0,1.0])
+      //
+      // flutter: (55.486) follower > FINEST:  - Follower transform to screen-space
+      // [0] 1.0,0.0,0.0,0.0
+      // [1] 0.0,1.0,0.0,0.0
+      // [2] 0.0,0.0,1.0,0.0
+      // [3] 0.0,0.0,0.0,1.0
+      //
+      //      This transform should include the offset for the Follower widget. In the case
+      //      of the current scaling demo, that should be (560, 0), not (0, 0).
+      //      This is why the blue circle appears on the left half of the screen
+      //      instead of the right half.
+      //
+      //      It appears to be our responsibility to apply that offset in this
+      //      method.
     } else {
-      transform.multiply(Matrix4.translationValues(unlinkedOffset!.dx, unlinkedOffset!.dy, 0));
+      transform.translate(-560, 0);
+      // transform.multiply(Matrix4.translationValues(unlinkedOffset!.dx, unlinkedOffset!.dy, 0));
     }
+    print("Transform after translation: \n$transform");
   }
 
   @override
