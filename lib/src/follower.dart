@@ -257,7 +257,7 @@ class RenderFollower extends RenderProxyBox {
     bool repaintWhenLeaderChanges = false,
     RenderBox? child,
   })  : _link = link,
-        _offset = offset,
+        _gapFromLeaderInScreenSpace = offset,
         _leaderAnchor = leaderAnchor,
         _followerAnchor = followerAnchor,
         _aligner = aligner,
@@ -343,12 +343,12 @@ class RenderFollower extends RenderProxyBox {
 
   /// The offset to apply to the origin of the linked [RenderLeaderLayer] to
   /// obtain this render object's origin.
-  Offset? get offset => _offset;
-  Offset? _offset;
+  Offset? get offset => _gapFromLeaderInScreenSpace;
+  Offset? _gapFromLeaderInScreenSpace;
   set offset(Offset? value) {
-    if (_offset == value) return;
+    if (_gapFromLeaderInScreenSpace == value) return;
     FtlLogs.follower.fine("Setting new follower offset");
-    _offset = value;
+    _gapFromLeaderInScreenSpace = value;
     markNeedsPaint();
   }
 
@@ -451,7 +451,7 @@ class RenderFollower extends RenderProxyBox {
 
   @override
   void performLayout() {
-    print("Follower performLayout()");
+    FtlLogs.follower.finer("Laying out Follower");
     child?.layout(constraints.loosen(), parentUsesSize: true);
 
     if (constraints.hasBoundedWidth && constraints.hasBoundedHeight) {
@@ -469,6 +469,7 @@ class RenderFollower extends RenderProxyBox {
     } else {
       size = child!.size;
     }
+    FtlLogs.follower.finer(" - Follower layout size: $size");
   }
 
   @override
@@ -509,8 +510,11 @@ class RenderFollower extends RenderProxyBox {
         link: link,
         showWhenUnlinked: showWhenUnlinked,
         followerOffsetFromScreenOrigin: offset,
+        leaderAnchor: _leaderAnchor,
+        followerGap: _gapFromLeaderInScreenSpace ?? Offset.zero,
+        followerAnchor: _followerAnchor,
+        aligner: _aligner,
         linkedOffset: _followerOffsetFromLeader,
-        // linkedOffset: Offset.zero,
         unlinkedOffset: _followerOffsetFromLeader,
         followerSize: child!.size,
       );
@@ -519,8 +523,11 @@ class RenderFollower extends RenderProxyBox {
         ?..link = link
         ..showWhenUnlinked = showWhenUnlinked
         ..followerOffsetFromScreenOrigin = offset
+        ..leaderAnchor = _leaderAnchor
+        ..followerGap = _gapFromLeaderInScreenSpace ?? Offset.zero
+        ..followerAnchor = _followerAnchor
+        ..aligner = _aligner
         ..linkedOffset = _followerOffsetFromLeader
-        // ..linkedOffset = Offset.zero
         ..unlinkedOffset = _followerOffsetFromLeader
         ..followerSize = child!.size;
     }
@@ -574,7 +581,9 @@ class RenderFollower extends RenderProxyBox {
     final followerSize = child!.size * followerScale;
     FtlLogs.follower.finer(" - Follower size: $followerSize ($followerScale scale)");
 
-    final Offset followerOffsetRelativeToLeader = (leaderSize == null
+    // TODO: add follower gap to this calculation
+
+    final followerOffsetRelativeToLeader = (leaderSize == null
             ? Offset.zero
             : leaderAnchor.alongSize(leaderSize) - followerAnchor.alongSize(followerSize)) +
         followerAlignment.followerOffset;
@@ -593,13 +602,16 @@ class RenderFollower extends RenderProxyBox {
     FtlLogs.follower
         .finer("Leader anchor point: ${link.leaderSize != null ? leaderAnchor!.alongSize(link.leaderSize!) : null}");
     FtlLogs.follower.finer("Follower anchor point: ${followerAnchor!.alongSize(child!.size)}");
-    final Offset effectiveLinkedOffset = (link.leaderSize == null
-        ? offset!
-        : leaderAnchor!.alongSize(link.leaderSize!) - followerAnchor!.alongSize(child!.size) + offset!);
-    FtlLogs.follower.finer("(Non-constrained) Follower offset: $effectiveLinkedOffset");
 
-    _followerOffsetFromLeader =
-        boundary != null ? boundary!.constrain(link, child!, effectiveLinkedOffset) : effectiveLinkedOffset;
+    final gap = _gapFromLeaderInScreenSpace ?? Offset.zero;
+    final Offset desiredFollowerOffsetFromLeader = (link.leaderSize == null
+        ? gap
+        : leaderAnchor!.alongSize(link.leaderSize!) - followerAnchor!.alongSize(child!.size) + gap);
+    FtlLogs.follower.finer("(Non-constrained) Follower offset: $desiredFollowerOffsetFromLeader");
+
+    _followerOffsetFromLeader = boundary != null
+        ? boundary!.constrain(link, child!, desiredFollowerOffsetFromLeader)
+        : desiredFollowerOffsetFromLeader;
     FtlLogs.follower.finer("(Constrained) Follower offset: $_followerOffsetFromLeader");
   }
 
@@ -654,16 +666,18 @@ class RenderFollower extends RenderProxyBox {
 /// from the leader layer, for example if the child is to follow the linked
 /// layer at a distance rather than directly overlapping it.
 class FollowerLayer extends ContainerLayer {
-  /// Creates a follower layer.
-  ///
-  /// The [link] property must not be null.
-  ///
-  /// The [unlinkedOffset], [linkedOffset], and [showWhenUnlinked] properties
-  /// must be non-null before the compositing phase of the pipeline.
   FollowerLayer({
     required LeaderLink link,
     this.showWhenUnlinked = true,
+    // TODO: find out if we really need this passed to us. Is this same
+    //       information not available through our parent layers? It looks
+    //       like this value is the RenderFollower paint `offset`. That
+    //       would seem to suggest that the info isn't limited to RenderFollower.
     required this.followerOffsetFromScreenOrigin,
+    this.leaderAnchor,
+    this.followerGap = Offset.zero,
+    this.followerAnchor,
+    this.aligner,
     this.unlinkedOffset = Offset.zero,
     this.linkedOffset = Offset.zero,
     this.followerSize,
@@ -675,6 +689,7 @@ class FollowerLayer extends ContainerLayer {
   /// the layer tree. When this layer is composited, it will apply a transform
   /// that moves its children to match the position of the [LeaderLayer].
   LeaderLink get link => _link;
+  LeaderLink _link;
   set link(LeaderLink value) {
     if (value != _link && _leaderHandle != null) {
       _leaderHandle!.dispose();
@@ -683,7 +698,13 @@ class FollowerLayer extends ContainerLayer {
     _link = value;
   }
 
-  LeaderLink _link;
+  Alignment? leaderAnchor;
+
+  Offset followerGap;
+
+  Alignment? followerAnchor;
+
+  FollowerAligner? aligner;
 
   /// Whether to show the layer's contents when the [link] does not point to a
   /// [LeaderLayer].
@@ -778,7 +799,6 @@ class FollowerLayer extends ContainerLayer {
     }
     final Vector4 vector = Vector4(localPosition.dx, localPosition.dy, 0.0, 1.0);
     final Vector4 result = _invertedTransform!.transform(vector);
-    // return Offset(result[0] - linkedOffset!.dx, result[1] - linkedOffset!.dy);
     return Offset(result[0], result[1]);
   }
 
@@ -794,19 +814,21 @@ class FollowerLayer extends ContainerLayer {
     }
 
     final result = Matrix4.translationValues(
+      // Because we're a Layer, we're responsible for reporting our
+      // offset from our parent.
+      // TODO: check whether this offset should really be from the
+      //       screen origin, or whether it's our offset from our
+      //       parent layer. If parent layer, rename from
+      //       "followerOffsetFromScreenOrigin" to "followerOffsetFromParent"
       -followerOffsetFromScreenOrigin.dx - _lastOffset!.dx,
       -followerOffsetFromScreenOrigin.dy - _lastOffset!.dy,
       0.0,
     );
 
-    // ---- this is where we're somehow missing the follower origin adjustment
-    // result.translate(
-    //   -followerOffsetFromScreenOrigin.dx,
-    //   -followerOffsetFromScreenOrigin.dy,
-    // );
-    // result.translate(-560.0, 0.0);
-    // ---- ^ where should this come from?
-
+    // TODO: find out what _lastTransform is doing for us. Up above
+    //       we apply our offset from parent, and _lastOffset. Why
+    //       are we multiplying _lastTransform on top? Add a comment
+    //       with the explanation.
     result.multiply(_lastTransform!);
 
     return result;
@@ -914,9 +936,10 @@ class FollowerLayer extends ContainerLayer {
     FtlLogs.follower.finest(" - Leader transform to screen-space \n$leaderTransform");
     // Further transforms the coordinate system to a hypothetical child (null)
     // of the leader layer, to account for the leader's additional paint offset
-    // and layer offset (LeaderLayer._lastOffset).
+    // and layer offset (LeaderLayer._lastOffset). In other words, leaderTransform
+    // up above gets us to the top-left of the LeaderLayer, but we want
+    // leaderTransform to get us to the top-left of the content inside the LeaderLayer.
     leader.applyTransform(null, leaderTransform);
-    // leaderTransform.translate(linkedOffset!.dx, linkedOffset!.dy);
 
     final Matrix4 screenToFollowerTransform = _collectTransformForLayerChain(followerToAncestorLayers);
     if (screenToFollowerTransform.invert() == 0.0) {
@@ -937,7 +960,7 @@ class FollowerLayer extends ContainerLayer {
 
     // Put follower transform into leader space. This operation would be all
     // we need, if we didn't want to undo the leader's scale factor.
-    screenToFollowerTransform.multiply(leaderTransform);
+    final screenToLeaderTransform = screenToFollowerTransform.clone()..multiply(leaderTransform);
     // final followerOffsetVector = screenToFollowerTransform.transform3(Vector3.zero());
     // final followerOffset = Offset(followerOffsetVector.x, followerOffsetVector.y);
     final leaderOffsetVector = leaderTransform.transform3(Vector3.zero());
@@ -947,37 +970,125 @@ class FollowerLayer extends ContainerLayer {
     final leaderSize = _link.leaderSize! * leaderScale;
     FtlLogs.follower.finest(" - leader size: $leaderSize");
 
-    // Combine the matrices and store the result.
-    _lastTransform = screenToFollowerTransform
+    final anchorMetrics = aligner != null
+        ? _calculateAlignerAnchorMetrics(
+            leaderSize: leaderSize,
+            followerSize: followerSize!,
+          )
+        : _calculateStaticAnchorMetrics(
+            leaderSize: leaderSize,
+            followerSize: followerSize!,
+          );
+
+    // Build the full transform to get from screen-space to
+    // follower-space, such that the Follower is aligned in the
+    // desired way with the Leader.
+    _lastTransform = screenToLeaderTransform
+      // Scale from leader-space to screen-space.
       ..scale(1 / leaderScale) // <- inverted because we want to undo the Leader scale
-      // TODO: replace these manual translations with an aligner or a static offset from the Follower
-      ..translate(leaderSize.width / 2, 0.0) // <- this is a manual implementation for horizontal center on top
+      // Move the origin to the point on the Leader where we want to anchor
+      // the Follower. This offset is in screen-space.
+      ..translate(anchorMetrics.leaderAnchorInScreenSpace.dx, anchorMetrics.leaderAnchorInScreenSpace.dy)
+      // Add a gap between the Leader and the Follower, as desired. This
+      // offset is in screen-space.
+      ..translate(anchorMetrics.followerGapInScreenSpace.dx, anchorMetrics.followerGapInScreenSpace.dy)
+      // Scale from screen-space to follower-space.
       ..scale(followerScale)
-      ..translate(-followerSize!.width / 2, -followerSize!.height);
+      // Move the origin to the point on the Follower where we want to anchor
+      // to the Leader (in addition to the gap we added above). This offset
+      // is in follower-space, e.g., if the natural width of the follower is
+      // `100`, but the follower is scaled 2x to `200`, and we want center
+      // alignment, then the `dx` will be `50`, because that's horizontal center
+      // in follower-space.
+      ..translate(anchorMetrics.followerAnchorInFollowerSpace.dx, anchorMetrics.followerAnchorInFollowerSpace.dy);
 
     _inverseDirty = true;
   }
 
-  /// Call [applyTransform] for each layer in the provided list.
+  _AnchorMetrics _calculateAlignerAnchorMetrics({
+    required Size leaderSize,
+    required Size followerSize,
+  }) {
+    final leaderOriginOnScreenVec = _link.leaderToScreen!.transform3(Vector3.zero());
+    final leaderOriginOnScreen = Offset(leaderOriginOnScreenVec.x, leaderOriginOnScreenVec.y);
+    final leaderGlobalRect = leaderOriginOnScreen & leaderSize;
+
+    final alignment = aligner!.align(leaderGlobalRect, followerSize);
+
+    return _AnchorMetrics(
+      leaderAnchorInScreenSpace: alignment.leaderAnchor.alongSize(leaderSize),
+      followerGapInScreenSpace: alignment.followerOffset,
+      followerAnchorInFollowerSpace: -alignment.followerAnchor.alongSize(followerSize),
+    );
+  }
+
+  _AnchorMetrics _calculateStaticAnchorMetrics({
+    required Size leaderSize,
+    required Size followerSize,
+  }) {
+    FtlLogs.follower.finest(" - leader anchor alignment: $leaderAnchor");
+    final leaderAnchorAlignment = leaderAnchor ?? Alignment.bottomCenter;
+    final leaderAnchorOffset = leaderAnchorAlignment.alongSize(leaderSize);
+
+    FtlLogs.follower.finest(" - follower anchor alignment: $followerAnchor");
+    final followerAnchorAlignment = followerAnchor ?? Alignment.topCenter;
+    final followerAnchorOffset = -followerAnchorAlignment.alongSize(followerSize);
+
+    // final followerGapOffset = Offset(
+    //   leaderAnchorAlignment.x == -1.0
+    //       ? -50
+    //       : leaderAnchorAlignment.x == 1.0
+    //           ? 50
+    //           : 0,
+    //   leaderAnchorAlignment.y == -1.0
+    //       ? -50
+    //       : leaderAnchorAlignment.y == 1.0
+    //           ? 50
+    //           : 0,
+    // );
+
+    return _AnchorMetrics(
+      leaderAnchorInScreenSpace: leaderAnchorOffset,
+      followerGapInScreenSpace: followerGap,
+      followerAnchorInFollowerSpace: followerAnchorOffset,
+    );
+  }
+
+  /// Builds and returns a transform that goes from a layer-space to
+  /// screen-space.
+  ///
+  /// To create a transform that goes from screen-space to layer-space,
+  /// invert the returned transform.
+  ///
+  /// This method calls [applyTransform] for each layer in the provided list.
   ///
   /// The list is in reverse order (deepest first). The first layer will be
-  /// treated as the child of the second, and so forth. The first layer in the
-  /// list won't have [applyTransform] called on it. The first layer may be
-  /// null.
+  /// treated as the child of the second, and so forth.
+  ///
+  /// The first layer in the list won't have [applyTransform] called on it.
+  ///
+  /// The first layer may be `null`.
   Matrix4 _collectTransformForLayerChain(List<ContainerLayer?> layers) {
-    print("_collectTransformForLayerChain()");
-    print(" - this: $this");
+    FtlLogs.follower.finest("_collectTransformForLayerChain()");
     // Initialize our result matrix.
     final Matrix4 result = Matrix4.identity();
     // Apply each layer to the matrix in turn, starting from the last layer,
     // and providing the previous layer as the child.
     for (int index = layers.length - 1; index > 0; index -= 1) {
-      print("Calling applyTransform() on layer: ${layers[index]}");
+      FtlLogs.follower.finest("Calling applyTransform() on layer: ${layers[index]}");
       layers[index]?.applyTransform(layers[index - 1], result);
     }
     return result;
   }
 
+  /// Collects all of [layer]'s parents in the given [ancestors] list.
+  ///
+  /// The list of [ancestors] can be used to build up a single transform
+  /// that goes from screen-space to [layer]-space, and vis-a-versa.
+  ///
+  /// The [ancestors] list should already contain [layer] when it's provided.
+  /// The [ancestors] list starts with [layer] and proceeds parent-by-parent
+  /// until it reaches the top-most [Layer] of the tree.
   void _pathToRoot(
     Layer layer,
     List<ContainerLayer?> ancestors,
@@ -989,77 +1100,64 @@ class FollowerLayer extends ContainerLayer {
     }
   }
 
-  /// Find the common ancestor of two layers [a] and [b] by searching towards
-  /// the root of the tree, and append each ancestor of [a] or [b] visited along
-  /// the path to [ancestorsA] and [ancestorsB] respectively.
-  ///
-  /// Returns null if [a] [b] do not share a common ancestor, in which case the
-  /// results in [ancestorsA] and [ancestorsB] are undefined.
-  Layer? _pathsToCommonAncestor(
-    Layer? a,
-    Layer? b,
-    List<ContainerLayer?> ancestorsA,
-    List<ContainerLayer?> ancestorsB,
-  ) {
-    // No common ancestor found.
-    if (a == null || b == null) {
-      return null;
-    }
+  // TODO: Originally, Leader-to-and-from-Follower transforms were
+  //       calculated by finding a common ancestor and then transforming
+  //       from there. Debugging transforms was so difficult that I switched
+  //       to using root screen-space. This adds a bunch of unnecessary
+  //       transforms beyond the root ancestor, but it was the only way
+  //       I could get things working. Determine whether using screen-space
+  //       is a performance issue. If it is, bring back common layer ancestor
+  //       searches. FYI - screen-space is always a possible worst-case common
+  //       ancestor.
+  // /// Find the common ancestor of two layers [a] and [b] by searching towards
+  // /// the root of the tree, and append each ancestor of [a] or [b] visited along
+  // /// the path to [ancestorsA] and [ancestorsB] respectively.
+  // ///
+  // /// Returns null if [a] [b] do not share a common ancestor, in which case the
+  // /// results in [ancestorsA] and [ancestorsB] are undefined.
+  // Layer? _pathsToCommonAncestor(
+  //   Layer? a,
+  //   Layer? b,
+  //   List<ContainerLayer?> ancestorsA,
+  //   List<ContainerLayer?> ancestorsB,
+  // ) {
+  //   // No common ancestor found.
+  //   if (a == null || b == null) {
+  //     return null;
+  //   }
+  //
+  //   if (identical(a, b)) {
+  //     return a;
+  //   }
+  //
+  //   if (a.depth < b.depth) {
+  //     ancestorsB.add(b.parent);
+  //     return _pathsToCommonAncestor(a, b.parent, ancestorsA, ancestorsB);
+  //   } else if (a.depth > b.depth) {
+  //     ancestorsA.add(a.parent);
+  //     return _pathsToCommonAncestor(a.parent, b, ancestorsA, ancestorsB);
+  //   }
+  //
+  //   ancestorsA.add(a.parent);
+  //   ancestorsB.add(b.parent);
+  //   return _pathsToCommonAncestor(a.parent, b.parent, ancestorsA, ancestorsB);
+  // }
 
-    if (identical(a, b)) {
-      return a;
-    }
-
-    if (a.depth < b.depth) {
-      ancestorsB.add(b.parent);
-      return _pathsToCommonAncestor(a, b.parent, ancestorsA, ancestorsB);
-    } else if (a.depth > b.depth) {
-      ancestorsA.add(a.parent);
-      return _pathsToCommonAncestor(a.parent, b, ancestorsA, ancestorsB);
-    }
-
-    ancestorsA.add(a.parent);
-    ancestorsB.add(b.parent);
-    return _pathsToCommonAncestor(a.parent, b.parent, ancestorsA, ancestorsB);
-  }
-
+  // Note: applyTransform() is called indirectly by establishTransform()
+  //       when calculating the follower-to-screen transform.
   @override
   void applyTransform(Layer? child, Matrix4 transform) {
-    print("FollowerLayer - applyTransform()");
-    print("Transform before translation: \n$transform");
+    FtlLogs.follower.finest("FollowerLayer - applyTransform()");
+    FtlLogs.follower.finest("Transform before translation: \n$transform");
+
     assert(child != null);
     if (_lastTransform != null) {
-      transform.translate(-560, 0);
-      // transform.multiply(_lastTransform!);
-      // TODO: ^ this is used in establishTransform to calculate the
-      //       follower-to-screen transform, which is what decides where
-      //       the blue dot appears. But our layer is currently reporting
-      //       an identity transform:
-      //
-      // flutter: (55.484) follower > FINEST:  - Follower ancestor path
-      // flutter: (55.485) follower > FINEST:    - FollowerLayer#6f8a4(engine layer: TransformEngineLayer#4213d, handles: 2, link: LeaderLink#f9e23(<linked>))
-      // flutter: (55.485) follower > FINEST:    - OffsetLayer#cf758(engine layer: OffsetEngineLayer#90e18, handles: 2, offset: Offset(0.0, 0.0))
-      // flutter: (55.485) follower > FINEST:    - OffsetLayer#099ce(engine layer: OffsetEngineLayer#5731a, handles: 2, offset: Offset(0.0, 0.0))
-      // flutter: (55.486) follower > FINEST:    - TransformLayer#da433(owner: RenderView#58ee2, engine layer: TransformEngineLayer#3ce61, handles: 1, offset: Offset(0.0, 0.0), transform: [1.0,0.0,0.0,0.0; 0.0,1.0,0.0,0.0; 0.0,0.0,1.0,0.0; 0.0,0.0,0.0,1.0])
-      //
-      // flutter: (55.486) follower > FINEST:  - Follower transform to screen-space
-      // [0] 1.0,0.0,0.0,0.0
-      // [1] 0.0,1.0,0.0,0.0
-      // [2] 0.0,0.0,1.0,0.0
-      // [3] 0.0,0.0,0.0,1.0
-      //
-      //      This transform should include the offset for the Follower widget. In the case
-      //      of the current scaling demo, that should be (560, 0), not (0, 0).
-      //      This is why the blue circle appears on the left half of the screen
-      //      instead of the right half.
-      //
-      //      It appears to be our responsibility to apply that offset in this
-      //      method.
+      transform.multiply(_lastTransform!);
     } else {
-      transform.translate(-560, 0);
-      // transform.multiply(Matrix4.translationValues(unlinkedOffset!.dx, unlinkedOffset!.dy, 0));
+      transform.multiply(Matrix4.translationValues(unlinkedOffset!.dx, unlinkedOffset!.dy, 0));
     }
-    print("Transform after translation: \n$transform");
+
+    FtlLogs.follower.finest("Transform after translation: \n$transform");
   }
 
   @override
@@ -1068,4 +1166,24 @@ class FollowerLayer extends ContainerLayer {
     properties.add(DiagnosticsProperty<LeaderLink>('link', link));
     properties.add(TransformProperty('transform', getLastTransform(), defaultValue: null));
   }
+}
+
+class _AnchorMetrics {
+  const _AnchorMetrics({
+    required this.leaderAnchorInScreenSpace,
+    required this.followerGapInScreenSpace,
+    required this.followerAnchorInFollowerSpace,
+  });
+
+  /// Delta offset from the Leader's origin to the Leader's anchor
+  /// point, measured in screen-space distance.
+  final Offset leaderAnchorInScreenSpace;
+
+  /// Delta offset from the Leader's anchor point to the Follower's
+  /// anchor point, measured in screen-space distance.
+  final Offset followerGapInScreenSpace;
+
+  /// Delta offset from the Follower's origin to the Follower's anchor
+  /// point, measured in follower-space distance.
+  final Offset followerAnchorInFollowerSpace;
 }

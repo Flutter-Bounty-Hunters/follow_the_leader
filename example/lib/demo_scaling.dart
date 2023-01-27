@@ -54,119 +54,6 @@ class _ScalingDemoState extends State<ScalingDemo> {
             ),
           ),
         ),
-        Positioned(
-          // Screen origin
-          left: 0,
-          top: 0,
-          child: FractionalTranslation(
-            translation: const Offset(-0.5, -0.5),
-            child: Container(
-              width: 10,
-              height: 10,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.yellow,
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          // Follower top-left (with Leader scale of 3.9078)
-          left: 772,
-          top: 91,
-          child: FractionalTranslation(
-            translation: const Offset(-0.5, -0.5),
-            child: Container(
-              width: 10,
-              height: 10,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.yellow,
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          // Follower top-left (with Leader scale of 3.9078)
-          left: 772,
-          top: 91,
-          child: FractionalTranslation(
-            translation: const Offset(-0.5, -0.5),
-            child: Container(
-              width: 10,
-              height: 10,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.yellow,
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          // Reported delta from Follower origin to screen origin, i.e., getTransformOffset()
-          //
-          // These numbers should give us the top-left of the menu, but they don't.
-          // The difference, as shown by the commented out numbers, is the value of
-          // _previousFollowerOffset. When we add those negative numbers, we get the
-          // expected top-left corner of the menu.
-          left: 827, // - 55.5,
-          top: 175, // - 83,
-          child: FractionalTranslation(
-            translation: const Offset(-0.5, -0.5),
-            child: Container(
-              width: 10,
-              height: 10,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.yellow,
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          // Leader layer offset
-          left: 827,
-          top: 191,
-          child: FractionalTranslation(
-            translation: const Offset(-0.5, -0.5),
-            child: Container(
-              width: 10,
-              height: 10,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.green,
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          // Leader center
-          left: 840, //1400,
-          top: 204,
-          child: FractionalTranslation(
-            translation: const Offset(-0.5, -0.5),
-            child: Container(
-              width: 10,
-              height: 10,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.yellow,
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          // Divider
-          left: 560,
-          top: 100,
-          child: Container(
-            width: 4,
-            height: 100,
-            decoration: const BoxDecoration(
-              color: Colors.yellow,
-            ),
-          ),
-        ),
       ],
     );
   }
@@ -235,7 +122,9 @@ class _ScaleLeaderAndFollowerState extends State<_ScaleLeaderAndFollower> {
                   Follower.withAligner(
                     link: _anchor,
                     aligner: _aligner,
-                    boundary: _viewportBoundary,
+                    // leaderAnchor: Alignment.topCenter,
+                    // followerAnchor: Alignment.bottomCenter,
+                    // offset: Offset(0, -25),
                     repaintWhenLeaderChanges: true,
                     child: CupertinoPopoverToolbar(
                       focalPoint: _focalPoint,
@@ -324,7 +213,9 @@ class _ScaleLeaderButNotFollowerState extends State<_ScaleLeaderButNotFollower> 
           child: Follower.withAligner(
             link: _anchor,
             aligner: _aligner,
-            boundary: _viewportBoundary,
+            // leaderAnchor: Alignment.topCenter,
+            // followerAnchor: Alignment.bottomCenter,
+            // offset: Offset(0, -25),
             repaintWhenLeaderChanges: true,
             child: CupertinoPopoverToolbar(
               focalPoint: _focalPoint,
@@ -392,6 +283,9 @@ class _ScaleFollowerButNotLeaderState extends State<_ScaleFollowerButNotLeader> 
           child: Follower.withAligner(
             link: _anchor,
             aligner: _aligner,
+            // leaderAnchor: Alignment.topCenter,
+            // followerAnchor: Alignment.bottomCenter,
+            // offset: Offset(0, -25),
             repaintWhenLeaderChanges: true,
             child: CupertinoPopoverToolbar(
               focalPoint: _focalPoint,
