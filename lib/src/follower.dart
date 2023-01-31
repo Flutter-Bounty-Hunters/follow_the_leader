@@ -1,9 +1,7 @@
-import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' hide LeaderLayer;
-import 'package:flutter/widgets.dart';
 import 'package:follow_the_leader/src/logging.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
@@ -180,15 +178,15 @@ class ScreenFollowerBoundary implements FollowerBoundary {
     final xAdjustment = globalFollowerRect.left < 0
         ? -globalFollowerRect.left
         : globalFollowerRect.right > screenSize.width
-            ? -globalFollowerRect.right - screenSize.width
+            ? screenSize.width - globalFollowerRect.right
             : 0.0;
     final yAdjustment = globalFollowerRect.top < 0
         ? -globalFollowerRect.top
         : globalFollowerRect.bottom > screenSize.height
-            ? -globalFollowerRect.bottom - screenSize.height
+            ? screenSize.height - globalFollowerRect.bottom
             : 0.0;
 
-    return globalFollowerRect.translate(xAdjustment, yAdjustment).topLeft;
+    return Offset(xAdjustment, yAdjustment);
 
     // final followerSize = follower.size;
     // final followerOffset = link.offset! + desiredOffset;
