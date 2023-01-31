@@ -162,7 +162,7 @@ abstract class FollowerBoundary {
 
   /// Constrains the given [desiredOffset] to a legal [Offset] for this
   /// boundary.
-  Offset constrain(Rect globalFollowerRect);
+  Offset constrain(Rect globalFollowerRect, double followerScale);
 }
 
 /// A [FollowerBoundary] that keeps the follower within the screen bounds.
@@ -175,7 +175,7 @@ class ScreenFollowerBoundary implements FollowerBoundary {
   bool contains(Offset offset) => screenSize.contains(offset);
 
   @override
-  Offset constrain(Rect globalFollowerRect) {
+  Offset constrain(Rect globalFollowerRect, double followerScale) {
     //(LeaderLink link, RenderBox follower, Offset desiredOffset) {
     final xAdjustment = globalFollowerRect.left < 0
         ? -globalFollowerRect.left
@@ -230,10 +230,11 @@ class WidgetFollowerBoundary implements FollowerBoundary {
   }
 
   @override
-  Offset constrain(Rect globalFollowerRect) {
+  Offset constrain(Rect globalFollowerRect, double followerScale) {
     // (LeaderLink link, RenderBox follower, Offset desiredOffset) {
     if (boundaryKey == null) {
-      return globalFollowerRect.topLeft;
+      // return globalFollowerRect.topLeft;
+      return Offset.zero;
     }
 
     final boundaryBox = boundaryKey!.currentContext!.findRenderObject() as RenderBox;
@@ -251,7 +252,9 @@ class WidgetFollowerBoundary implements FollowerBoundary {
             ? boundaryGlobalRect.bottom - globalFollowerRect.bottom
             : 0.0;
 
-    return globalFollowerRect.translate(xAdjustment, yAdjustment).topLeft;
+    return Offset(xAdjustment, yAdjustment) / followerScale;
+
+    // return globalFollowerRect.translate(xAdjustment, yAdjustment).topLeft;
 
     // if (boundaryKey!.currentContext == null) {
     //   FtlLogs.follower.warning(
@@ -578,6 +581,7 @@ class RenderFollower extends RenderProxyBox {
         leaderAnchor: _leaderAnchor,
         followerGap: _gapFromLeaderInScreenSpace ?? Offset.zero,
         followerAnchor: _followerAnchor,
+        calculateGlobalFollowerRect: _calculateGlobalFollowerContentRect,
         aligner: _aligner,
         boundary: _boundary,
         linkedOffset: _followerOffsetFromLeader,
@@ -824,6 +828,7 @@ class FollowerLayer extends ContainerLayer {
     this.leaderAnchor,
     this.followerGap = Offset.zero,
     this.followerAnchor,
+    required this.calculateGlobalFollowerRect,
     this.aligner,
     this.boundary,
     this.unlinkedOffset = Offset.zero,
@@ -851,6 +856,8 @@ class FollowerLayer extends ContainerLayer {
   Offset followerGap;
 
   Alignment? followerAnchor;
+
+  Rect Function() calculateGlobalFollowerRect;
 
   FollowerAligner? aligner;
 
@@ -1185,7 +1192,7 @@ class FollowerLayer extends ContainerLayer {
     _lastTransform = focalPointToScreenTransform;
 
     // Make sure we don't display the Follower beyond the desired bounds.
-    _constrainFollowerOffsetToBounds(screenToFollowerTransform, followerScale);
+    _constrainFollowerOffsetToBounds(focalPointToScreenTransform, followerScale);
 
     _inverseDirty = true;
   }
@@ -1255,12 +1262,13 @@ class FollowerLayer extends ContainerLayer {
     print("Follower top left: $followerTopLeftVec");
     final followerBottomRightVec = transformInScreen.transform3(Vector3(followerSize!.width, followerSize!.height, 0));
     print("Follower bottom right: $followerBottomRightVec");
-    if (followerTopLeftVec.y < 400) {
-      // desiredTransform.translate(0.0, 400 - followerTopLeftVec.y);
-    }
 
-    // final globalFollowerRect = desiredFollowerOffset & followerSize!;
-    // return boundary!.constrain(globalFollowerRect);
+    print("Layer asking RenderFollower for global follower rect:");
+    final globalFollowerRect = calculateGlobalFollowerRect();
+    print(" - global rect: $globalFollowerRect");
+
+    final followerAdjustment = boundary!.constrain(globalFollowerRect, followerScale);
+    desiredTransform.translate(followerAdjustment.dx, followerAdjustment.dy);
   }
 
   /// Builds and returns a transform that goes from a layer-space to
