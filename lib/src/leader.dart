@@ -159,12 +159,8 @@ class RenderLeader extends RenderProxyBox {
     FtlLogs.leader.finer(" - scale: $scale");
 
     final leaderToScreenTransform = getTransformTo(null);
-    print("Leader to screen transform:");
-    print("$leaderToScreenTransform");
 
     final screenToLeaderTransform = getTransformTo(null)..invert();
-    print("Screen to leader transform:");
-    print("$screenToLeaderTransform");
 
     link
       ..screenToLeader = screenToLeaderTransform
@@ -312,7 +308,6 @@ class LeaderLayer extends ContainerLayer {
   //  suggest that ContainerLayer was given an API to serve a specific subclass.
   @override
   void applyTransform(Layer? child, Matrix4 transform) {
-    print("LeaderLayer applyTransform()");
     assert(_lastOffset != null);
     if (_lastOffset != Offset.zero) {
       transform.translate(_lastOffset!.dx, _lastOffset!.dy);

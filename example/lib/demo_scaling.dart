@@ -17,109 +17,38 @@ class _ScalingDemoState extends State<ScalingDemo> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: Container(
-            width: double.infinity,
-            height: double.infinity,
-            color: const Color(0xFF222222),
-            child: Column(
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      color: const Color(0xFF222222),
+      child: Column(
+        children: [
+          Expanded(
+            child: Row(
               children: [
+                // Spacer(),
                 Expanded(
-                  child: Row(
+                  child: _ScaleLeaderAndFollower(scale: _scale),
+                ),
+                Expanded(
+                  child: Column(
                     children: [
+                      Expanded(
+                        child: _ScaleLeaderButNotFollower(scale: _scale),
+                      ),
                       // Spacer(),
                       Expanded(
-                        child: _ScaleLeaderAndFollower(scale: _scale),
-                      ),
-                      Expanded(
-                        child: Column(
-                          children: [
-                            Expanded(
-                              child: _ScaleLeaderButNotFollower(scale: _scale),
-                            ),
-                            // Spacer(),
-                            Expanded(
-                              child: _ScaleFollowerButNotLeader(scale: _scale),
-                            ),
-                          ],
-                        ),
+                        child: _ScaleFollowerButNotLeader(scale: _scale),
                       ),
                     ],
                   ),
                 ),
-                _buildScaleSlider(),
               ],
             ),
           ),
-        ),
-        Positioned(
-          // top left - when scaled up to 3.6
-          left: 878,
-          top: 385,
-          child: Container(
-            width: 10,
-            height: 10,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.yellow,
-            ),
-          ),
-        ),
-        Positioned(
-          // bottom right - when scaled up to 3.6
-          left: 1014,
-          top: 447,
-          child: Container(
-            width: 15,
-            height: 15,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.yellow,
-            ),
-          ),
-        ),
-        Positioned(
-          // top left - when scaled down to 1.0
-          left: 878,
-          top: 361,
-          child: Container(
-            width: 10,
-            height: 10,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.green,
-            ),
-          ),
-        ),
-        Positioned(
-          // bottom right - when scaled down to 1.0
-          left: 1014,
-          top: 424,
-          child: Container(
-            width: 15,
-            height: 15,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.green,
-            ),
-          ),
-        ),
-        // Positioned(
-        //   // ???
-        //   left: ,
-        //   top: ,
-        //   child: Container(
-        //     width: 15,
-        //     height: 15,
-        //     decoration: const BoxDecoration(
-        //       shape: BoxShape.circle,
-        //       color: Colors.tealAccent,
-        //     ),
-        //   ),
-        // ),
-      ],
+          _buildScaleSlider(),
+        ],
+      ),
     );
   }
 
@@ -170,6 +99,7 @@ class _ScaleLeaderAndFollowerState extends State<_ScaleLeaderAndFollower> {
   @override
   Widget build(BuildContext context) {
     return Stack(
+      key: _boundsKey,
       children: [
         Positioned.fill(
           child: ClipRect(
@@ -187,10 +117,12 @@ class _ScaleLeaderAndFollowerState extends State<_ScaleLeaderAndFollower> {
                   Follower.withAligner(
                     link: _anchor,
                     aligner: _aligner,
+                    boundary: _viewportBoundary,
                     // leaderAnchor: Alignment.topCenter,
                     // followerAnchor: Alignment.bottomCenter,
                     // offset: Offset(0, -25),
                     repaintWhenLeaderChanges: true,
+                    showDebugPaint: false,
                     child: CupertinoPopoverToolbar(
                       focalPoint: _focalPoint,
                       children: [
@@ -272,33 +204,29 @@ class _ScaleLeaderButNotFollowerState extends State<_ScaleLeaderButNotFollower> 
             ),
           ),
         ),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.yellow),
-          ),
-          child: Follower.withAligner(
-            link: _anchor,
-            aligner: _aligner,
-            boundary: _viewportBoundary,
-            // leaderAnchor: Alignment.topCenter,
-            // followerAnchor: Alignment.bottomCenter,
-            // offset: Offset(0, -25),
-            repaintWhenLeaderChanges: true,
-            child: CupertinoPopoverToolbar(
-              focalPoint: _focalPoint,
-              children: [
-                TextButton(
-                  // ignore: avoid_print
-                  onPressed: () => print("one"),
-                  child: const Text("One", style: TextStyle(color: Colors.white)),
-                ),
-                TextButton(
-                  // ignore: avoid_print
-                  onPressed: () => print("two"),
-                  child: const Text("Two", style: TextStyle(color: Colors.white)),
-                ),
-              ],
-            ),
+        Follower.withAligner(
+          link: _anchor,
+          aligner: _aligner,
+          boundary: _viewportBoundary,
+          // leaderAnchor: Alignment.topCenter,
+          // followerAnchor: Alignment.bottomCenter,
+          // offset: Offset(0, -25),
+          repaintWhenLeaderChanges: true,
+          showDebugPaint: false,
+          child: CupertinoPopoverToolbar(
+            focalPoint: _focalPoint,
+            children: [
+              TextButton(
+                // ignore: avoid_print
+                onPressed: () => print("one"),
+                child: const Text("One", style: TextStyle(color: Colors.white)),
+              ),
+              TextButton(
+                // ignore: avoid_print
+                onPressed: () => print("two"),
+                child: const Text("Two", style: TextStyle(color: Colors.white)),
+              ),
+            ],
           ),
         ),
       ],
@@ -328,64 +256,55 @@ class _ScaleFollowerButNotLeaderState extends State<_ScaleFollowerButNotLeader> 
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.yellow),
-      ),
-      child: BuildInOrder(
-        key: _boundsKey,
-        children: [
-          Align(
-            alignment: const Alignment(0.0, 0.0),
-            child: Leader(
-              link: _anchor,
-              child: Container(width: 25, height: 25, color: Colors.red),
+    return BuildInOrder(
+      key: _boundsKey,
+      children: [
+        Align(
+          alignment: const Alignment(0.0, 0.0),
+          child: Leader(
+            link: _anchor,
+            child: Container(width: 25, height: 25, color: Colors.red),
+          ),
+        ),
+        Align(
+          alignment: const Alignment(0.0, 0.95),
+          child: Text(
+            "^ Scale Follower but NOT Leader ^",
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.25),
+              fontSize: 10,
             ),
           ),
-          Align(
-            alignment: const Alignment(0.0, 0.95),
-            child: Text(
-              "^ Scale Follower but NOT Leader ^",
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.25),
-                fontSize: 10,
-              ),
-            ),
-          ),
-          Transform.scale(
-            scale: widget.scale,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.purpleAccent),
-              ),
-              child: Follower.withAligner(
-                link: _anchor,
-                aligner: _aligner,
-                boundary: _viewportBoundary,
-                // leaderAnchor: Alignment.topCenter,
-                // followerAnchor: Alignment.bottomCenter,
-                // offset: Offset(0, -25),
-                repaintWhenLeaderChanges: true,
-                child: CupertinoPopoverToolbar(
-                  focalPoint: _focalPoint,
-                  children: [
-                    TextButton(
-                      // ignore: avoid_print
-                      onPressed: () => print("one"),
-                      child: const Text("One", style: TextStyle(color: Colors.white)),
-                    ),
-                    TextButton(
-                      // ignore: avoid_print
-                      onPressed: () => print("two"),
-                      child: const Text("Two", style: TextStyle(color: Colors.white)),
-                    ),
-                  ],
+        ),
+        Transform.scale(
+          scale: widget.scale,
+          child: Follower.withAligner(
+            link: _anchor,
+            aligner: _aligner,
+            boundary: _viewportBoundary,
+            // leaderAnchor: Alignment.topCenter,
+            // followerAnchor: Alignment.bottomCenter,
+            // offset: Offset(0, -25),
+            repaintWhenLeaderChanges: true,
+            showDebugPaint: false,
+            child: CupertinoPopoverToolbar(
+              focalPoint: _focalPoint,
+              children: [
+                TextButton(
+                  // ignore: avoid_print
+                  onPressed: () => print("one"),
+                  child: const Text("One", style: TextStyle(color: Colors.white)),
                 ),
-              ),
+                TextButton(
+                  // ignore: avoid_print
+                  onPressed: () => print("two"),
+                  child: const Text("Two", style: TextStyle(color: Colors.white)),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
