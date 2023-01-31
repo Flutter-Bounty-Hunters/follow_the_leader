@@ -1,7 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/rendering.dart' hide LeaderLayer;
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/widgets.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 import 'leader.dart';
@@ -85,24 +84,29 @@ class LeaderLink with ChangeNotifier {
       return null;
     }
 
-    print("getOffsetInLeader - _offset: $_offset, _leaderSize: $_leaderSize, _scale: $_scale");
-    print(" - answer: ${_offset! + alignment.alongSize(_leaderSize! * _scale!)}");
+    final leaderOriginOnScreenVec = leaderToScreen!.transform3(Vector3.zero());
+    final leaderOriginOnScreen = Offset(leaderOriginOnScreenVec.x, leaderOriginOnScreenVec.y);
+    final offsetInLeader = alignment.alongSize(leaderSize! * scale!);
+    return leaderOriginOnScreen + offsetInLeader;
 
-    Offset leaderOrigin = Offset.zero;
-    if (_leader!.lastOffset != null) {
-      final transform = Matrix4.identity();
-      _leader!.applyTransform(null, transform);
-      final leaderOriginVec = transform.transform3(Vector3(0, 0, 0));
-      leaderOrigin = Offset(leaderOriginVec.x, leaderOriginVec.y);
-      print(" - leader origin: $leaderOrigin");
-    } else {
-      leaderOrigin = Offset.zero; //Offset(560, 0);
-    }
-    print(" - offset in leader without leader origin: ${_offset! + alignment.alongSize(_leaderSize! * _scale!)}");
-    print(
-        " - offset in leader with leader origin: ${_offset! + alignment.alongSize(_leaderSize! * _scale!) + leaderOrigin}");
-
-    return _offset! + alignment.alongSize(_leaderSize! * _scale!) + leaderOrigin;
+    // FtlLogs.link.fine("getOffsetInLeader - _offset: $_offset, _leaderSize: $_leaderSize, _scale: $_scale");
+    // FtlLogs.link.fine(" - answer: ${_offset! + alignment.alongSize(_leaderSize! * _scale!)}");
+    //
+    // Offset leaderOrigin = Offset.zero;
+    // if (_leader!.lastOffset != null) {
+    //   final transform = Matrix4.identity();
+    //   _leader!.applyTransform(null, transform);
+    //   final leaderOriginVec = transform.transform3(Vector3(0, 0, 0));
+    //   leaderOrigin = Offset(leaderOriginVec.x, leaderOriginVec.y);
+    //   print(" - leader origin: $leaderOrigin");
+    // } else {
+    //   leaderOrigin = Offset.zero; //Offset(560, 0);
+    // }
+    // print(" - offset in leader without leader origin: ${_offset! + alignment.alongSize(_leaderSize! * _scale!)}");
+    // print(
+    //     " - offset in leader with leader origin: ${_offset! + alignment.alongSize(_leaderSize! * _scale!) + leaderOrigin}");
+    //
+    // return _offset! + alignment.alongSize(_leaderSize! * _scale!) + leaderOrigin;
   }
 
   bool get hasFollowers => _connectedFollowers > 0;

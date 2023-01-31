@@ -6,12 +6,18 @@ import 'package:logging/logging.dart' as logging;
 class LogNames {
   static const leader = 'leader';
   static const follower = 'follower';
+  static const link = 'link';
+  static const boundary = 'boundary';
+  static const widgetBoundary = 'boundary.widget';
 }
 
 /// Follow the Leader logging.
 class FtlLogs {
   static final leader = logging.Logger(LogNames.leader);
   static final follower = logging.Logger(LogNames.follower);
+  static final link = logging.Logger(LogNames.link);
+  static final boundary = logging.Logger(LogNames.boundary);
+  static final widgetBoundary = logging.Logger(LogNames.widgetBoundary);
 
   static final _activeLoggers = <logging.Logger>{};
 

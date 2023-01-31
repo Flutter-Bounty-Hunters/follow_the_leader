@@ -12,6 +12,8 @@ void main() {
   FtlLogs.initLoggers(Level.FINEST, {
     FtlLogs.leader,
     FtlLogs.follower,
+    // FtlLogs.link,
+    FtlLogs.boundary,
     // appLog,
   });
   runApp(const MyApp());
