@@ -7,7 +7,9 @@ import 'package:follow_the_leader/src/leader.dart';
 void main() {
   group('follow the leader', () {
     testWidgets('hit tests followers', (tester) async {
-      tester.binding.window.physicalSizeTestValue = const Size(400, 400);
+      tester.binding.window
+        ..physicalSizeTestValue = const Size(400, 400)
+        ..devicePixelRatioTestValue = 1.0;
 
       bool tapped = false;
       final _link = LeaderLink();
@@ -59,6 +61,9 @@ void main() {
       // Leader width + offset + half of the follower width.
       await tester.tapAt(const Offset(125, 125));
       await tester.pump();
+
+      // This golden matcher is available for easy verification if this test fails.
+      // await expectLater(find.byType(MaterialApp), matchesGoldenFile("deleteme.png"));
 
       // Ensure the callback was called.
       expect(tapped, isTrue);
