@@ -88,25 +88,6 @@ class LeaderLink with ChangeNotifier {
     final leaderOriginOnScreen = Offset(leaderOriginOnScreenVec.x, leaderOriginOnScreenVec.y);
     final offsetInLeader = alignment.alongSize(leaderSize! * scale!);
     return leaderOriginOnScreen + offsetInLeader;
-
-    // FtlLogs.link.fine("getOffsetInLeader - _offset: $_offset, _leaderSize: $_leaderSize, _scale: $_scale");
-    // FtlLogs.link.fine(" - answer: ${_offset! + alignment.alongSize(_leaderSize! * _scale!)}");
-    //
-    // Offset leaderOrigin = Offset.zero;
-    // if (_leader!.lastOffset != null) {
-    //   final transform = Matrix4.identity();
-    //   _leader!.applyTransform(null, transform);
-    //   final leaderOriginVec = transform.transform3(Vector3(0, 0, 0));
-    //   leaderOrigin = Offset(leaderOriginVec.x, leaderOriginVec.y);
-    //   print(" - leader origin: $leaderOrigin");
-    // } else {
-    //   leaderOrigin = Offset.zero; //Offset(560, 0);
-    // }
-    // print(" - offset in leader without leader origin: ${_offset! + alignment.alongSize(_leaderSize! * _scale!)}");
-    // print(
-    //     " - offset in leader with leader origin: ${_offset! + alignment.alongSize(_leaderSize! * _scale!) + leaderOrigin}");
-    //
-    // return _offset! + alignment.alongSize(_leaderSize! * _scale!) + leaderOrigin;
   }
 
   bool get hasFollowers => _connectedFollowers > 0;

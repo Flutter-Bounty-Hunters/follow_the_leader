@@ -182,7 +182,6 @@ class ScreenFollowerBoundary implements FollowerBoundary {
 
   @override
   Offset constrain(Rect globalFollowerRect, double followerScale) {
-    //(LeaderLink link, RenderBox follower, Offset desiredOffset) {
     final xAdjustment = globalFollowerRect.left < 0
         ? -globalFollowerRect.left
         : globalFollowerRect.right > screenSize.width
@@ -221,9 +220,7 @@ class WidgetFollowerBoundary implements FollowerBoundary {
 
   @override
   Offset constrain(Rect globalFollowerRect, double followerScale) {
-    // (LeaderLink link, RenderBox follower, Offset desiredOffset) {
     if (boundaryKey == null) {
-      // return globalFollowerRect.topLeft;
       return Offset.zero;
     }
 

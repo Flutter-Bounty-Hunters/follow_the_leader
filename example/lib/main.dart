@@ -10,10 +10,10 @@ import 'demo_orbiting_circles.dart';
 
 void main() {
   FtlLogs.initLoggers(Level.FINEST, {
-    FtlLogs.leader,
-    FtlLogs.follower,
+    // FtlLogs.leader,
+    // FtlLogs.follower,
     // FtlLogs.link,
-    FtlLogs.boundary,
+    // FtlLogs.boundary,
     // appLog,
   });
   runApp(const MyApp());
