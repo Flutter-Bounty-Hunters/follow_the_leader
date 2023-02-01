@@ -56,6 +56,10 @@ Future<void> _pumpBoundedFollowerScenario(
   LeaderLink? leaderLink,
   bool fadeOutBeyondBoundary = false,
 }) async {
+  widgetTester.binding.window
+    ..devicePixelRatioTestValue = 1.0
+    ..physicalSizeTestValue = const Size(500, 500);
+
   final link = leaderLink ?? LeaderLink();
   final boundsKey = GlobalKey();
   final widgetBoundary = WidgetFollowerBoundary(boundsKey);
