@@ -1,3 +1,8 @@
+# 0.0.4+2
+`Leader` and `Follower` scaling (January, 2023)
+
+ * Reworked `Follower` implementation to correctly handle scaling. Added bounds support for scaled `Leader`s and `Follower`s.
+
 # 0.0.4+1
 Fix Leader offset reporting (January, 2023)
 
