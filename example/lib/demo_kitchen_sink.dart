@@ -182,9 +182,9 @@ class _KitchenSinkDemoState extends State<KitchenSinkDemo> {
     if (_followerDirection != _FollowerDirection.automatic) {
       return Follower.withOffset(
         link: _pinLink,
-        offset: _followerDirection.toOffset(20),
-        leaderAnchor: _followerDirection.leaderAlignment,
-        followerAnchor: _followerDirection.followerAlignment,
+        offset: _followerDirection.toOffset(20) ?? Offset.zero,
+        leaderAnchor: _followerDirection.leaderAlignment!,
+        followerAnchor: _followerDirection.followerAlignment!,
         boundary: _boundary,
         repaintWhenLeaderChanges: true,
         child: menu,
@@ -192,7 +192,7 @@ class _KitchenSinkDemoState extends State<KitchenSinkDemo> {
     } else {
       return Follower.withAligner(
         link: _pinLink,
-        aligner: _aligner,
+        aligner: _aligner!,
         boundary: _boundary,
         repaintWhenLeaderChanges: true,
         child: menu,

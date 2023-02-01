@@ -117,10 +117,10 @@ class _ScaleLeaderAndFollowerState extends State<_ScaleLeaderAndFollower> {
                   Follower.withAligner(
                     link: _anchor,
                     aligner: _aligner,
-                    boundary: _viewportBoundary,
                     // leaderAnchor: Alignment.topCenter,
                     // followerAnchor: Alignment.bottomCenter,
-                    // offset: Offset(0, -25),
+                    // offset: const Offset(0, -25),
+                    boundary: _viewportBoundary,
                     repaintWhenLeaderChanges: true,
                     showDebugPaint: false,
                     child: CupertinoPopoverToolbar(
@@ -207,10 +207,10 @@ class _ScaleLeaderButNotFollowerState extends State<_ScaleLeaderButNotFollower> 
         Follower.withAligner(
           link: _anchor,
           aligner: _aligner,
-          boundary: _viewportBoundary,
           // leaderAnchor: Alignment.topCenter,
           // followerAnchor: Alignment.bottomCenter,
-          // offset: Offset(0, -25),
+          // offset: const Offset(0, -25),
+          boundary: _viewportBoundary,
           repaintWhenLeaderChanges: true,
           showDebugPaint: false,
           child: CupertinoPopoverToolbar(
@@ -281,10 +281,10 @@ class _ScaleFollowerButNotLeaderState extends State<_ScaleFollowerButNotLeader> 
           child: Follower.withAligner(
             link: _anchor,
             aligner: _aligner,
-            boundary: _viewportBoundary,
             // leaderAnchor: Alignment.topCenter,
             // followerAnchor: Alignment.bottomCenter,
-            // offset: Offset(0, -25),
+            // offset: const Offset(0, -25),
+            boundary: _viewportBoundary,
             repaintWhenLeaderChanges: true,
             showDebugPaint: false,
             child: CupertinoPopoverToolbar(

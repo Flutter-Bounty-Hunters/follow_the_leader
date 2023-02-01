@@ -10,18 +10,22 @@ import 'leader_link.dart';
 
 /// A widget that follows a [Leader].
 class Follower extends SingleChildRenderObjectWidget {
-  const Follower.withOffset({
+  Follower.withOffset({
     Key? key,
     required this.link,
-    this.offset = Offset.zero,
-    this.leaderAnchor = Alignment.topCenter,
-    this.followerAnchor = Alignment.bottomCenter,
+    Offset offset = Offset.zero,
+    Alignment leaderAnchor = Alignment.topCenter,
+    Alignment followerAnchor = Alignment.bottomCenter,
     this.boundary,
     this.showWhenUnlinked = true,
     this.repaintWhenLeaderChanges = false,
     this.showDebugPaint = false,
     Widget? child,
-  })  : aligner = null,
+  })  : aligner = StaticOffsetAligner(
+          offset: offset,
+          leaderAnchor: leaderAnchor,
+          followerAnchor: followerAnchor,
+        ),
         super(key: key, child: child);
 
   const Follower.withAligner({
@@ -33,10 +37,7 @@ class Follower extends SingleChildRenderObjectWidget {
     this.repaintWhenLeaderChanges = false,
     this.showDebugPaint = false,
     Widget? child,
-  })  : leaderAnchor = null,
-        followerAnchor = null,
-        offset = null,
-        super(key: key, child: child);
+  }) : super(key: key, child: child);
 
   /// The link object that connects this [CompositedTransformFollower] with a
   /// [CompositedTransformTarget].
@@ -50,36 +51,7 @@ class Follower extends SingleChildRenderObjectWidget {
   /// If [boundary] is `null` then the follower isn't constrained at all.
   final FollowerBoundary? boundary;
 
-  final FollowerAligner? aligner;
-
-  /// The anchor point on the linked [CompositedTransformTarget] that
-  /// [followerAnchor] will line up with.
-  ///
-  /// {@template flutter.widgets.CompositedTransformFollower.targetAnchor}
-  /// For example, when [leaderAnchor] and [followerAnchor] are both
-  /// [Alignment.topLeft], this widget will be top left aligned with the linked
-  /// [CompositedTransformTarget]. When [leaderAnchor] is
-  /// [Alignment.bottomLeft] and [followerAnchor] is [Alignment.topLeft], this
-  /// widget will be left aligned with the linked [CompositedTransformTarget],
-  /// and its top edge will line up with the [CompositedTransformTarget]'s
-  /// bottom edge.
-  /// {@endtemplate}
-  ///
-  /// Defaults to [Alignment.topLeft].
-  final Alignment? leaderAnchor;
-
-  /// The anchor point on this widget that will line up with [followerAnchor] on
-  /// the linked [CompositedTransformTarget].
-  ///
-  /// {@macro flutter.widgets.CompositedTransformFollower.targetAnchor}
-  ///
-  /// Defaults to [Alignment.topLeft].
-  final Alignment? followerAnchor;
-
-  /// The additional offset to apply to the [leaderAnchor] of the linked
-  /// [CompositedTransformTarget] to obtain this widget's [followerAnchor]
-  /// position.
-  final Offset? offset;
+  final FollowerAligner aligner;
 
   /// Whether to show the widget's contents when there is no corresponding
   /// [Leader] with the same [link].
@@ -107,9 +79,6 @@ class Follower extends SingleChildRenderObjectWidget {
   RenderFollower createRenderObject(BuildContext context) {
     return RenderFollower(
       link: link,
-      offset: offset,
-      leaderAnchor: leaderAnchor,
-      followerAnchor: followerAnchor,
       aligner: aligner,
       boundary: boundary,
       showWhenUnlinked: showWhenUnlinked,
@@ -122,9 +91,6 @@ class Follower extends SingleChildRenderObjectWidget {
   void updateRenderObject(BuildContext context, RenderFollower renderObject) {
     renderObject
       ..link = link
-      ..offset = offset
-      ..leaderAnchor = leaderAnchor
-      ..followerAnchor = followerAnchor
       ..aligner = aligner
       ..boundary = boundary
       ..showWhenUnlinked = showWhenUnlinked
@@ -135,6 +101,29 @@ class Follower extends SingleChildRenderObjectWidget {
 
 abstract class FollowerAligner {
   FollowerAlignment align(Rect globalLeaderRect, Size followerSize);
+}
+
+class StaticOffsetAligner implements FollowerAligner {
+  const StaticOffsetAligner({
+    required Offset offset,
+    required Alignment leaderAnchor,
+    required Alignment followerAnchor,
+  })  : _offset = offset,
+        _leaderAnchor = leaderAnchor,
+        _followerAnchor = followerAnchor;
+
+  final Offset _offset;
+  final Alignment _leaderAnchor;
+  final Alignment _followerAnchor;
+
+  @override
+  FollowerAlignment align(Rect globalLeaderRect, Size followerSize) {
+    return FollowerAlignment(
+      followerOffset: _offset,
+      leaderAnchor: _leaderAnchor,
+      followerAnchor: _followerAnchor,
+    );
+  }
 }
 
 class FollowerAlignment {
@@ -261,18 +250,14 @@ class RenderFollower extends RenderProxyBox {
   RenderFollower({
     required LeaderLink link,
     FollowerBoundary? boundary,
-    FollowerAligner? aligner,
+    required FollowerAligner aligner,
     Alignment? leaderAnchor = Alignment.topLeft,
     Alignment? followerAnchor = Alignment.topLeft,
-    Offset? offset = Offset.zero,
     bool showWhenUnlinked = true,
     bool repaintWhenLeaderChanges = false,
     bool showDebugPaint = false,
     RenderBox? child,
   })  : _link = link,
-        _gapFromLeaderInScreenSpace = offset,
-        _leaderAnchor = leaderAnchor,
-        _followerAnchor = followerAnchor,
         _aligner = aligner,
         _boundary = boundary,
         _showWhenUnlinked = showWhenUnlinked,
@@ -344,61 +329,14 @@ class RenderFollower extends RenderProxyBox {
     markNeedsPaint();
   }
 
-  FollowerAligner? get aligner => _aligner;
-  FollowerAligner? _aligner;
-  set aligner(FollowerAligner? newAligner) {
+  FollowerAligner get aligner => _aligner;
+  FollowerAligner _aligner;
+  set aligner(FollowerAligner newAligner) {
     if (newAligner == _aligner) {
       return;
     }
 
     _aligner = newAligner;
-    markNeedsPaint();
-  }
-
-  /// The offset to apply to the origin of the linked [RenderLeaderLayer] to
-  /// obtain this render object's origin.
-  Offset? get offset => _gapFromLeaderInScreenSpace;
-  Offset? _gapFromLeaderInScreenSpace;
-  set offset(Offset? value) {
-    if (_gapFromLeaderInScreenSpace == value) return;
-    FtlLogs.follower.fine("Setting new follower offset");
-    _gapFromLeaderInScreenSpace = value;
-    markNeedsPaint();
-  }
-
-  /// The anchor point on the linked [RenderLeaderLayer] that [followerAnchor]
-  /// will line up with.
-  ///
-  /// {@template flutter.rendering.RenderFollowerLayer.leaderAnchor}
-  /// For example, when [leaderAnchor] and [followerAnchor] are both
-  /// [Alignment.topLeft], this [RenderFollower] will be top left aligned
-  /// with the linked [RenderLeaderLayer]. When [leaderAnchor] is
-  /// [Alignment.bottomLeft] and [followerAnchor] is [Alignment.topLeft], this
-  /// [RenderFollower] will be left aligned with the linked
-  /// [RenderLeaderLayer], and its top edge will line up with the
-  /// [RenderLeaderLayer]'s bottom edge.
-  /// {@endtemplate}
-  ///
-  /// Defaults to [Alignment.topLeft].
-  Alignment? get leaderAnchor => _leaderAnchor;
-  Alignment? _leaderAnchor;
-  set leaderAnchor(Alignment? value) {
-    if (_leaderAnchor == value) return;
-    _leaderAnchor = value;
-    markNeedsPaint();
-  }
-
-  /// The anchor point on this [RenderFollower] that will line up with
-  /// [followerAnchor] on the linked [RenderLeaderLayer].
-  ///
-  /// {@macro flutter.rendering.RenderFollowerLayer.leaderAnchor}
-  ///
-  /// Defaults to [Alignment.topLeft].
-  Alignment? get followerAnchor => _followerAnchor;
-  Alignment? _followerAnchor;
-  set followerAnchor(Alignment? value) {
-    if (_followerAnchor == value) return;
-    _followerAnchor = value;
     markNeedsPaint();
   }
 
@@ -536,9 +474,6 @@ class RenderFollower extends RenderProxyBox {
         link: link,
         showWhenUnlinked: showWhenUnlinked,
         followerOffsetFromScreenOrigin: offset,
-        leaderAnchor: _leaderAnchor,
-        followerGap: _gapFromLeaderInScreenSpace ?? Offset.zero,
-        followerAnchor: _followerAnchor,
         calculateGlobalFollowerRect: _calculateGlobalFollowerContentRect,
         aligner: _aligner,
         boundary: _boundary,
@@ -551,9 +486,6 @@ class RenderFollower extends RenderProxyBox {
         ?..link = link
         ..showWhenUnlinked = showWhenUnlinked
         ..followerOffsetFromScreenOrigin = offset
-        ..leaderAnchor = _leaderAnchor
-        ..followerGap = _gapFromLeaderInScreenSpace ?? Offset.zero
-        ..followerAnchor = _followerAnchor
         ..aligner = _aligner
         ..boundary = _boundary
         ..linkedOffset = _followerOffsetFromLeader
@@ -666,21 +598,15 @@ class RenderFollower extends RenderProxyBox {
     // assemble the global rectangle for the follower child's bounds.
     final childTopLeftInScreen = followerOriginInScreenSpace + followerToChildDeltaInScreenSpace;
     final childBottomRightInScreen = childTopLeftInScreen + childSizeInScreenSpace.bottomRight(Offset.zero);
-    return Rect.fromPoints(
+    final globalRect = Rect.fromPoints(
       childTopLeftInScreen,
       childBottomRightInScreen,
     );
+
+    return globalRect;
   }
 
   void _calculateFollowerOffset() {
-    if (aligner != null) {
-      _calculateFollowerOffsetWithAligner();
-    } else {
-      _calculateFollowerOffsetWithStaticValue();
-    }
-  }
-
-  void _calculateFollowerOffsetWithAligner() {
     FtlLogs.follower.finer("Calculating Follower offset using an aligner.");
 
     final globalLeaderTopLeftVec = link.leaderToScreen!.transform3(
@@ -697,7 +623,7 @@ class RenderFollower extends RenderProxyBox {
     FtlLogs.follower.finer(" - Leader size: $leaderSize");
     FtlLogs.follower.finer(" - Leader layer offset: ${link.leader!.offset}");
 
-    final followerAlignment = aligner!.align(globalLeaderRect, child!.size);
+    final followerAlignment = aligner.align(globalLeaderRect, child!.size);
     final leaderAnchor = followerAlignment.leaderAnchor;
     final followerAnchor = followerAlignment.followerAnchor;
 
@@ -713,28 +639,9 @@ class RenderFollower extends RenderProxyBox {
             ? Offset.zero
             : leaderAnchor.alongSize(leaderSize) - followerAnchor.alongSize(followerSize)) +
         followerAlignment.followerOffset;
-    FtlLogs.follower.finer(" - (Non-constrained) Follower offset relative to leader: $followerOffsetRelativeToLeader");
 
     _followerOffsetFromLeader = followerOffsetRelativeToLeader;
-    FtlLogs.follower.finer(" - (Constrained) Follower offset relative to leader: $_followerOffsetFromLeader");
-  }
-
-  void _calculateFollowerOffsetWithStaticValue() {
-    FtlLogs.follower.fine("Calculating Follower offset using a static Leader displacement.");
-    FtlLogs.follower.finer("Leader global offset: ${link.offset}");
-    FtlLogs.follower.finer("Leader local offset: ${link.leader!.offset}");
-    FtlLogs.follower
-        .finer("Leader anchor point: ${link.leaderSize != null ? leaderAnchor!.alongSize(link.leaderSize!) : null}");
-    FtlLogs.follower.finer("Follower anchor point: ${followerAnchor!.alongSize(child!.size)}");
-
-    final gap = _gapFromLeaderInScreenSpace ?? Offset.zero;
-    final Offset desiredFollowerOffsetFromLeader = (link.leaderSize == null
-        ? gap
-        : leaderAnchor!.alongSize(link.leaderSize!) - followerAnchor!.alongSize(child!.size) + gap);
-    FtlLogs.follower.finer("(Non-constrained) Follower offset: $desiredFollowerOffsetFromLeader");
-
-    _followerOffsetFromLeader = desiredFollowerOffsetFromLeader;
-    FtlLogs.follower.finer("(Constrained) Follower offset: $_followerOffsetFromLeader");
+    FtlLogs.follower.finer(" - (Non-constrained) Follower offset relative to leader: $_followerOffsetFromLeader");
   }
 
   // This is what's used by localToGlobal() and globalToLocal()
@@ -772,7 +679,6 @@ class RenderFollower extends RenderProxyBox {
     super.debugFillProperties(properties);
     properties.add(DiagnosticsProperty<LeaderLink>('link', link));
     properties.add(DiagnosticsProperty<bool>('showWhenUnlinked', showWhenUnlinked));
-    properties.add(DiagnosticsProperty<Offset>('offset', offset));
     properties.add(TransformProperty('current transform matrix', _getCurrentTransform()));
   }
 }
@@ -796,11 +702,9 @@ class FollowerLayer extends ContainerLayer {
     //       like this value is the RenderFollower paint `offset`. That
     //       would seem to suggest that the info isn't limited to RenderFollower.
     required this.followerOffsetFromScreenOrigin,
-    this.leaderAnchor,
     this.followerGap = Offset.zero,
-    this.followerAnchor,
     required this.calculateGlobalFollowerRect,
-    this.aligner,
+    required this.aligner,
     this.boundary,
     this.unlinkedOffset = Offset.zero,
     this.linkedOffset = Offset.zero,
@@ -822,15 +726,11 @@ class FollowerLayer extends ContainerLayer {
     _link = value;
   }
 
-  Alignment? leaderAnchor;
-
   Offset followerGap;
-
-  Alignment? followerAnchor;
 
   Rect Function() calculateGlobalFollowerRect;
 
-  FollowerAligner? aligner;
+  FollowerAligner aligner;
 
   FollowerBoundary? boundary;
 
@@ -1095,16 +995,11 @@ class FollowerLayer extends ContainerLayer {
     final leaderSize = _link.leaderSize! * leaderScale;
     FtlLogs.follower.finest(" - leader size: $leaderSize");
 
-    final anchorMetrics = aligner != null
-        ? _calculateAlignerAnchorMetrics(
-            leaderSize: leaderSize,
-            followerSize: followerSize!,
-            followerScale: followerScale,
-          )
-        : _calculateStaticAnchorMetrics(
-            leaderSize: leaderSize,
-            followerSize: followerSize!,
-          );
+    final anchorMetrics = _calculateAlignerAnchorMetrics(
+      leaderSize: leaderSize,
+      followerSize: followerSize!,
+      followerScale: followerScale,
+    );
 
     // Build the full transform to get from follower-space to
     // screen-space, such that the Follower is aligned in the
@@ -1146,31 +1041,12 @@ class FollowerLayer extends ContainerLayer {
     final leaderOriginOnScreen = Offset(leaderOriginOnScreenVec.x, leaderOriginOnScreenVec.y);
     final leaderGlobalRect = leaderOriginOnScreen & leaderSize;
 
-    final alignment = aligner!.align(leaderGlobalRect, followerSize);
+    final alignment = aligner.align(leaderGlobalRect, followerSize);
 
     return _AnchorMetrics(
       leaderAnchorInScreenSpace: alignment.leaderAnchor.alongSize(leaderSize),
       followerGapInScreenSpace: alignment.followerOffset,
       followerAnchorInFollowerSpace: -alignment.followerAnchor.alongSize(followerSize * followerScale),
-    );
-  }
-
-  _AnchorMetrics _calculateStaticAnchorMetrics({
-    required Size leaderSize,
-    required Size followerSize,
-  }) {
-    FtlLogs.follower.finest(" - leader anchor alignment: $leaderAnchor");
-    final leaderAnchorAlignment = leaderAnchor ?? Alignment.bottomCenter;
-    final leaderAnchorOffset = leaderAnchorAlignment.alongSize(leaderSize);
-
-    FtlLogs.follower.finest(" - follower anchor alignment: $followerAnchor");
-    final followerAnchorAlignment = followerAnchor ?? Alignment.topCenter;
-    final followerAnchorOffset = -followerAnchorAlignment.alongSize(followerSize);
-
-    return _AnchorMetrics(
-      leaderAnchorInScreenSpace: leaderAnchorOffset,
-      followerGapInScreenSpace: followerGap,
-      followerAnchorInFollowerSpace: followerAnchorOffset,
     );
   }
 
