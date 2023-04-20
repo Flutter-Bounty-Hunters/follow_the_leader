@@ -108,7 +108,7 @@ class _ScaleLeaderAndFollowerState extends State<_ScaleLeaderAndFollower> {
               child: BuildInOrder(
                 children: [
                   Align(
-                    alignment: const Alignment(0.0, 0.2),
+                    alignment: const Alignment(0.0, 0.0),
                     child: Leader(
                       link: _anchor,
                       child: Container(width: 25, height: 25, color: Colors.red),

@@ -182,7 +182,9 @@ class ScreenFollowerBoundary implements FollowerBoundary {
             ? screenSize.height - globalFollowerRect.bottom
             : 0.0;
 
-    return Offset(xAdjustment, yAdjustment);
+    // TODO: figure out why we need "/ 2" to avoid drift, then add a comment
+    return Offset(xAdjustment, yAdjustment) /
+        (followerScale / 2); // don't know why "/ 2" makes it work, but it seems to;
   }
 }
 
@@ -228,7 +230,9 @@ class WidgetFollowerBoundary implements FollowerBoundary {
             ? boundaryGlobalRect.bottom - globalFollowerRect.bottom
             : 0.0;
 
-    return Offset(xAdjustment, yAdjustment) / followerScale;
+    // TODO: figure out why we need "/ 2" to avoid drift, then add a comment
+    return Offset(xAdjustment, yAdjustment) /
+        (followerScale / 2); // don't know why "/ 2" makes it work, but it seems to
   }
 }
 
