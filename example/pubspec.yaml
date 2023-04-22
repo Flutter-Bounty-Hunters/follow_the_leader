@@ -35,13 +35,12 @@ dependencies:
   follow_the_leader:
     git:
       url: https://github.com/Flutter-Bounty-Hunters/follow_the_leader
-      ref: main
 
   overlord: ^0.0.3+2
 
   page_list_viewport:
     git:
-      url: git@github.com:Flutter-Bounty-Hunters/page_list_viewport.git
+      url: https://github.com/Flutter-Bounty-Hunters/page_list_viewport
 
 dependency_overrides:
   follow_the_leader:
