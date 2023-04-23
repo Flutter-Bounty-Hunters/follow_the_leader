@@ -1,5 +1,7 @@
 import 'package:example/demo_hover.dart';
+import 'package:example/demo_interactive_viewer.dart';
 import 'package:example/demo_kitchen_sink.dart';
+import 'package:example/demo_page_list_viewport.dart';
 import 'package:example/demo_scaling.dart';
 import 'package:example/demo_scrollables.dart';
 import 'package:flutter/material.dart';
@@ -101,6 +103,14 @@ final _items = [
   _MenuItem(
     title: 'Follow the Leader',
     pageBuilder: (context) => const KitchenSinkDemo(),
+  ),
+  _MenuItem(
+    title: 'Page List Viewport',
+    pageBuilder: (context) => const PageListViewportDemo(),
+  ),
+  _MenuItem(
+    title: 'Interactive Viewer',
+    pageBuilder: (context) => const InteractiveViewerDemo(),
   ),
   _MenuItem(
     title: 'Hover',

@@ -44,6 +44,7 @@ class FollowerFadeOutBeyondBoundary extends StatelessWidget {
     return AnimatedBuilder(
       animation: link,
       builder: (context, value) {
+        // TODO: add follower bounds to the link so that we can check for full bounds visibility instead of just top-left.
         final isContentVisible = boundary == null || (link.offset != null && boundary!.contains(link.offset!));
         return AnimatedOpacity(
           opacity: isContentVisible || !enabled ? 1.0 : 0.0,

@@ -182,7 +182,8 @@ class ScreenFollowerBoundary implements FollowerBoundary {
             ? screenSize.height - globalFollowerRect.bottom
             : 0.0;
 
-    return Offset(xAdjustment, yAdjustment);
+    final devicePixelRatio = WidgetsBinding.instance.window.devicePixelRatio;
+    return Offset(xAdjustment, yAdjustment) / (followerScale / devicePixelRatio);
   }
 }
 
@@ -228,7 +229,8 @@ class WidgetFollowerBoundary implements FollowerBoundary {
             ? boundaryGlobalRect.bottom - globalFollowerRect.bottom
             : 0.0;
 
-    return Offset(xAdjustment, yAdjustment) / followerScale;
+    final devicePixelRatio = WidgetsBinding.instance.window.devicePixelRatio;
+    return Offset(xAdjustment, yAdjustment) / (followerScale / devicePixelRatio);
   }
 }
 
@@ -444,7 +446,7 @@ class RenderFollower extends RenderProxyBox {
     }
 
     if (!link.leaderConnected && _followerOffsetFromLeader == null) {
-      FtlLogs.follower.fine("The leader isn't connected and there's no cached offset. Not painting anything.");
+      FtlLogs.follower.finer("The leader isn't connected and there's no cached offset. Not painting anything.");
       if (!_firstPaintOfCurrentLink) {
         // We already painted and we still don't have a leader connected.
         // Avoid subsequent paint requests.
@@ -464,12 +466,17 @@ class RenderFollower extends RenderProxyBox {
       return;
     }
 
+    FtlLogs.follower
+        .finer("Is leader connected? ${link.leaderConnected}, follower offset from leader: $_followerOffsetFromLeader");
+
     if (link.leaderConnected) {
+      FtlLogs.follower.finer("Calculating follower offset");
       _calculateFollowerOffset();
     }
     FtlLogs.follower.fine("Final follower offset relative to leader: $_followerOffsetFromLeader");
 
     if (layer == null) {
+      FtlLogs.follower.finer("Creating new FollowerLayer");
       layer = FollowerLayer(
         link: link,
         showWhenUnlinked: showWhenUnlinked,
@@ -482,6 +489,7 @@ class RenderFollower extends RenderProxyBox {
         followerSize: child!.size,
       );
     } else {
+      FtlLogs.follower.finer("Updating existing FollowerLayer");
       layer
         ?..link = link
         ..showWhenUnlinked = showWhenUnlinked
@@ -493,6 +501,7 @@ class RenderFollower extends RenderProxyBox {
         ..followerSize = child!.size;
     }
 
+    FtlLogs.follower.finer("Pushing FollowerLayer");
     context.pushLayer(
       layer!,
       (context, offset) {
@@ -797,7 +806,6 @@ class FollowerLayer extends ContainerLayer {
     _leaderHandle = null;
   }
 
-  Offset? _lastOffset;
   Matrix4? _lastTransform;
   Matrix4? _invertedTransform;
   bool _inverseDirty = true;
@@ -823,7 +831,7 @@ class FollowerLayer extends ContainerLayer {
       if (lastTransform == null) {
         return null;
       }
-      _invertedTransform = Matrix4.tryInvert(getLastTransform()!);
+      _invertedTransform = Matrix4.tryInvert(lastTransform);
       _inverseDirty = false;
     }
     if (_invertedTransform == null) {
@@ -845,7 +853,7 @@ class FollowerLayer extends ContainerLayer {
       return null;
     }
 
-    final lastOffset = _lastOffset ?? Offset.zero;
+    final unlinkedOffset = this.unlinkedOffset ?? Offset.zero;
     final result = Matrix4.translationValues(
       // Because we're a Layer, we're responsible for reporting our
       // offset from our parent.
@@ -853,8 +861,8 @@ class FollowerLayer extends ContainerLayer {
       //       screen origin, or whether it's our offset from our
       //       parent layer. If parent layer, rename from
       //       "followerOffsetFromScreenOrigin" to "followerOffsetFromParent"
-      -followerOffsetFromScreenOrigin.dx - lastOffset.dx,
-      -followerOffsetFromScreenOrigin.dy - lastOffset.dy,
+      -followerOffsetFromScreenOrigin.dx - unlinkedOffset.dx,
+      -followerOffsetFromScreenOrigin.dy - unlinkedOffset.dy,
       0.0,
     );
 
@@ -886,7 +894,6 @@ class FollowerLayer extends ContainerLayer {
     assert(showWhenUnlinked != null);
     if (_leaderHandle!.leader == null && !showWhenUnlinked!) {
       _lastTransform = null;
-      _lastOffset = null;
       _inverseDirty = true;
       engineLayer = null;
       return;
@@ -899,9 +906,7 @@ class FollowerLayer extends ContainerLayer {
       );
       addChildrenToScene(builder);
       builder.pop();
-      _lastOffset = unlinkedOffset;
     } else {
-      _lastOffset = null;
       final Matrix4 matrix = Matrix4.translationValues(unlinkedOffset!.dx, unlinkedOffset!.dy, .0);
       engineLayer = builder.pushTransform(
         matrix.storage,

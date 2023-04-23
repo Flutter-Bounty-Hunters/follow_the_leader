@@ -35,9 +35,12 @@ dependencies:
   follow_the_leader:
     git:
       url: https://github.com/Flutter-Bounty-Hunters/follow_the_leader
-      ref: main
 
-  overlord: ^0.0.2+1
+  overlord: ^0.0.3+2
+
+  page_list_viewport:
+    git:
+      url: https://github.com/Flutter-Bounty-Hunters/page_list_viewport
 
 dependency_overrides:
   follow_the_leader:
@@ -72,9 +75,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/images/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
