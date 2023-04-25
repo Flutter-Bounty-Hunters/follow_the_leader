@@ -153,11 +153,25 @@ class FollowerAlignment {
 abstract class FollowerBoundary {
   /// Returns `true` if the given [offset] sits within this boundary,
   /// or `false` if it sits outside.
-  bool contains(Offset offset);
+  bool containsOffset(Offset offset);
+
+  /// Returns `true` if the given [rect] sits entirely within this boundary,
+  /// or `false` if it sits partially, or entirely outside.
+  bool containsRect(Rect rect, [FollowerBoundaryOverlapMode overlapMode = FollowerBoundaryOverlapMode.partial]);
 
   /// Constrains the given [desiredOffset] to a legal [Offset] for this
   /// boundary.
   Offset constrain(Rect globalFollowerRect, double followerScale);
+}
+
+enum FollowerBoundaryOverlapMode {
+  /// A boundary is considered to "contain" a follower when the boundary partially
+  /// overlaps the follower.
+  partial,
+
+  /// A boundary is considered to "contain" a follower when the boundary completely
+  /// contains the follower.
+  full,
 }
 
 /// A [FollowerBoundary] that keeps the follower within the screen bounds.
@@ -167,7 +181,13 @@ class ScreenFollowerBoundary implements FollowerBoundary {
   final Size screenSize;
 
   @override
-  bool contains(Offset offset) => screenSize.contains(offset);
+  bool containsOffset(Offset offset) => screenSize.contains(offset);
+
+  @override
+  bool containsRect(Rect rect, [FollowerBoundaryOverlapMode overlapMode = FollowerBoundaryOverlapMode.partial]) =>
+      overlapMode == FollowerBoundaryOverlapMode.full
+          ? rect.intersect(Offset.zero & screenSize) == rect
+          : rect.overlaps(Offset.zero & screenSize);
 
   @override
   Offset constrain(Rect globalFollowerRect, double followerScale) {
@@ -195,9 +215,17 @@ class WidgetFollowerBoundary implements FollowerBoundary {
   final GlobalKey? boundaryKey;
 
   @override
-  bool contains(Offset offset) {
+  bool containsOffset(Offset offset) => _calculateBoundaryRect()?.contains(offset) ?? false;
+
+  @override
+  bool containsRect(Rect rect, [FollowerBoundaryOverlapMode overlapMode = FollowerBoundaryOverlapMode.partial]) =>
+      overlapMode == FollowerBoundaryOverlapMode.full
+          ? rect.intersect(_calculateBoundaryRect() ?? Rect.zero) == rect
+          : rect.overlaps(_calculateBoundaryRect() ?? Rect.zero);
+
+  Rect? _calculateBoundaryRect() {
     if (boundaryKey == null || boundaryKey!.currentContext == null) {
-      return false;
+      return null;
     }
 
     final boundaryBox = boundaryKey!.currentContext!.findRenderObject() as RenderBox;
@@ -205,7 +233,7 @@ class WidgetFollowerBoundary implements FollowerBoundary {
       boundaryBox.localToGlobal(Offset.zero),
       boundaryBox.localToGlobal(boundaryBox.size.bottomRight(Offset.zero)),
     );
-    return boundaryRect.contains(offset);
+    return boundaryRect;
   }
 
   @override

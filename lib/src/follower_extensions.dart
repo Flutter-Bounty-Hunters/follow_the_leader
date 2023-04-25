@@ -44,15 +44,28 @@ class FollowerFadeOutBeyondBoundary extends StatelessWidget {
     return AnimatedBuilder(
       animation: link,
       builder: (context, value) {
-        // TODO: add follower bounds to the link so that we can check for full bounds visibility instead of just top-left.
-        final isContentVisible = boundary == null || (link.offset != null && boundary!.contains(link.offset!));
         return AnimatedOpacity(
-          opacity: isContentVisible || !enabled ? 1.0 : 0.0,
+          opacity: _isContentVisible() || !enabled ? 1.0 : 0.0,
           duration: duration,
           curve: curve,
           child: child,
         );
       },
     );
+  }
+
+  bool _isContentVisible() {
+    if (boundary == null) {
+      return true;
+    }
+
+    if (link.offset == null) {
+      return false;
+    }
+    if (link.leaderSize == null) {
+      return false;
+    }
+
+    return boundary!.containsRect(link.offset! & (link.leaderSize! * (link.scale ?? 1.0)));
   }
 }

@@ -25,6 +25,7 @@ class _KitchenSinkDemoState extends State<KitchenSinkDemo> {
   GlobalKey? _boundaryKey;
   FollowerBoundary? _boundary;
   FollowerAligner? _aligner;
+  bool _fadeBeyondBoundary = false;
 
   void _onPanUpdate(DragUpdateDetails details) {
     _pinOffset.value = _pinOffset.value! + details.delta;
@@ -54,6 +55,12 @@ class _KitchenSinkDemoState extends State<KitchenSinkDemo> {
       _boundaryKey = _innerBoundsKey;
       _boundary = WidgetFollowerBoundary(_innerBoundsKey);
       _configureToolbarAligner(_followerDirection);
+    });
+  }
+
+  void _toggleFadeBeyondBoundary() {
+    setState(() {
+      _fadeBeyondBoundary = !_fadeBeyondBoundary;
     });
   }
 
@@ -179,8 +186,9 @@ class _KitchenSinkDemoState extends State<KitchenSinkDemo> {
   Widget _buildMenuFollower() {
     final menu = _buildMenu();
 
+    late Widget follower;
     if (_followerDirection != _FollowerDirection.automatic) {
-      return Follower.withOffset(
+      follower = Follower.withOffset(
         link: _pinLink,
         offset: _followerDirection.toOffset(20) ?? Offset.zero,
         leaderAnchor: _followerDirection.leaderAlignment!,
@@ -190,7 +198,7 @@ class _KitchenSinkDemoState extends State<KitchenSinkDemo> {
         child: menu,
       );
     } else {
-      return Follower.withAligner(
+      follower = Follower.withAligner(
         link: _pinLink,
         aligner: _aligner!,
         boundary: _boundary,
@@ -198,6 +206,13 @@ class _KitchenSinkDemoState extends State<KitchenSinkDemo> {
         child: menu,
       );
     }
+
+    return FollowerFadeOutBeyondBoundary(
+      link: _pinLink,
+      boundary: _boundary,
+      enabled: _fadeBeyondBoundary,
+      child: follower,
+    );
   }
 
   Widget _buildMenu() {
@@ -209,32 +224,24 @@ class _KitchenSinkDemoState extends State<KitchenSinkDemo> {
           color: Colors.red,
         );
       case _MenuType.iOSToolbar:
-        return FollowerFadeOutBeyondBoundary(
-          link: _pinLink,
-          boundary: _boundary,
-          child: CupertinoPopoverToolbar(
-            focalPoint: LeaderMenuFocalPoint(link: _pinLink),
-            children: _toolbarMenuItems,
-          ),
+        return CupertinoPopoverToolbar(
+          focalPoint: LeaderMenuFocalPoint(link: _pinLink),
+          children: _toolbarMenuItems,
         );
       case _MenuType.iOSMenu:
-        return FollowerFadeOutBeyondBoundary(
-          link: _pinLink,
-          boundary: _boundary,
-          child: CupertinoPopoverMenu(
-            focalPoint: LeaderMenuFocalPoint(link: _pinLink),
-            padding: const EdgeInsets.all(12.0),
-            child: const SizedBox(
-              width: 100,
-              height: 54,
-              child: Center(
-                child: Text(
-                  'Popover Content',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                  ),
+        return CupertinoPopoverMenu(
+          focalPoint: LeaderMenuFocalPoint(link: _pinLink),
+          padding: const EdgeInsets.all(12.0),
+          child: const SizedBox(
+            width: 100,
+            height: 54,
+            child: Center(
+              child: Text(
+                'Popover Content',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
                 ),
               ),
             ),
@@ -256,6 +263,8 @@ class _KitchenSinkDemoState extends State<KitchenSinkDemo> {
             const Spacer(),
             _buildDirectionPad(),
             const Spacer(),
+            _buildVisabilityOptions(),
+            const Spacer(),
             _buildMenuTypes(),
             const Spacer(),
           ],
@@ -270,21 +279,21 @@ class _KitchenSinkDemoState extends State<KitchenSinkDemo> {
       child: Row(
         children: [
           const Spacer(),
-          _CircleButton(
+          _CircleRadioButton(
             isActive: _followerConstraints != _FollowerConstraint.none,
             icon: Icons.settings_overscan,
             tooltip: "No Restrictions",
             onPressed: _onNoLimitsTap,
           ),
           const Spacer(),
-          _CircleButton(
+          _CircleRadioButton(
             isActive: _followerConstraints != _FollowerConstraint.screen,
             icon: Icons.check_box_outline_blank,
             tooltip: "Restrict to Screen",
             onPressed: _onScreenBoundsTap,
           ),
           const Spacer(),
-          _CircleButton(
+          _CircleRadioButton(
             isActive: _followerConstraints != _FollowerConstraint.bounds,
             icon: Icons.picture_in_picture,
             tooltip: "Restrict to Bounds",
@@ -296,27 +305,36 @@ class _KitchenSinkDemoState extends State<KitchenSinkDemo> {
     );
   }
 
+  Widget _buildVisabilityOptions() {
+    return _CircleButton(
+      isActive: !_fadeBeyondBoundary,
+      icon: Icons.account_circle,
+      tooltip: _fadeBeyondBoundary ? "Don't fade at boundary" : "Fade at boundary",
+      onPressed: _toggleFadeBeyondBoundary,
+    );
+  }
+
   Widget _buildMenuTypes() {
     return SizedBox(
       width: 200,
       child: Row(
         children: [
           const Spacer(),
-          _CircleButton(
+          _CircleRadioButton(
             isActive: _menuType != _MenuType.smallPopover,
             icon: Icons.person_pin,
             tooltip: "Small Popover",
             onPressed: _onGenericMenuTap,
           ),
           const Spacer(),
-          _CircleButton(
+          _CircleRadioButton(
             isActive: _menuType != _MenuType.iOSToolbar,
             icon: Icons.call_to_action_outlined,
             tooltip: "iOS Toolbar",
             onPressed: _onIOSToolbarTap,
           ),
           const Spacer(),
-          _CircleButton(
+          _CircleRadioButton(
             isActive: _menuType != _MenuType.iOSMenu,
             icon: Icons.filter_frames,
             tooltip: "iOS Popover",
@@ -451,7 +469,7 @@ class _DirectionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _CircleButton(
+    return _CircleRadioButton(
       isActive: _isActive,
       icon: _icon,
       onPressed: () => onPressed(buttonDirection),
@@ -461,6 +479,40 @@ class _DirectionButton extends StatelessWidget {
 
 class _CircleButton extends StatelessWidget {
   const _CircleButton({
+    Key? key,
+    required this.isActive,
+    required this.icon,
+    this.tooltip,
+    required this.onPressed,
+  }) : super(key: key);
+
+  final bool isActive;
+  final IconData icon;
+  final String? tooltip;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 36,
+      height: 36,
+      child: FloatingActionButton(
+        mini: true,
+        backgroundColor: isActive ? Colors.white.withOpacity(0.2) : Colors.white.withOpacity(0.1),
+        tooltip: tooltip,
+        onPressed: onPressed,
+        child: Icon(
+          icon,
+          color: isActive ? Colors.white : Colors.white.withOpacity(0.4),
+          size: 18,
+        ),
+      ),
+    );
+  }
+}
+
+class _CircleRadioButton extends StatelessWidget {
+  const _CircleRadioButton({
     Key? key,
     required this.isActive,
     required this.icon,
