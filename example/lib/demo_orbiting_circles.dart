@@ -83,7 +83,10 @@ class _OrbitingCirclesDemoState extends State<OrbitingCirclesDemo> {
           radius * cos(radians),
           radius * sin(radians),
         ),
-        boundary: ScreenFollowerBoundary(MediaQuery.of(context).size),
+        boundary: ScreenFollowerBoundary(
+          screenSize: MediaQuery.of(context).size,
+          devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
+        ),
         leaderAnchor: Alignment.center,
         followerAnchor: Alignment.center,
         child: Container(

@@ -7,9 +7,9 @@ import 'package:follow_the_leader/src/leader.dart';
 void main() {
   group('follow the leader', () {
     testWidgets('hit tests followers', (tester) async {
-      tester.binding.window
-        ..physicalSizeTestValue = const Size(400, 400)
-        ..devicePixelRatioTestValue = 1.0;
+      tester.view
+        ..physicalSize = const Size(400, 400)
+        ..devicePixelRatio = 1.0;
 
       bool tapped = false;
       final _link = LeaderLink();
@@ -33,7 +33,10 @@ void main() {
                     left: 0,
                     child: Follower.withOffset(
                       link: _link,
-                      boundary: ScreenFollowerBoundary(MediaQuery.of(context).size),
+                      boundary: ScreenFollowerBoundary(
+                        screenSize: MediaQuery.of(context).size,
+                        devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
+                      ),
                       leaderAnchor: Alignment.bottomRight,
                       followerAnchor: Alignment.topLeft,
                       offset: const Offset(50, 50),

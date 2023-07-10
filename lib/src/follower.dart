@@ -176,9 +176,13 @@ enum FollowerBoundaryOverlapMode {
 
 /// A [FollowerBoundary] that keeps the follower within the screen bounds.
 class ScreenFollowerBoundary implements FollowerBoundary {
-  const ScreenFollowerBoundary(this.screenSize);
+  const ScreenFollowerBoundary({
+    required this.screenSize,
+    required this.devicePixelRatio,
+  });
 
   final Size screenSize;
+  final double devicePixelRatio;
 
   @override
   bool containsOffset(Offset offset) => screenSize.contains(offset);
@@ -202,7 +206,6 @@ class ScreenFollowerBoundary implements FollowerBoundary {
             ? screenSize.height - globalFollowerRect.bottom
             : 0.0;
 
-    final devicePixelRatio = WidgetsBinding.instance.window.devicePixelRatio;
     return Offset(xAdjustment, yAdjustment) / (followerScale / devicePixelRatio);
   }
 }
@@ -210,9 +213,13 @@ class ScreenFollowerBoundary implements FollowerBoundary {
 /// A [FollowerBoundary] that keeps the follower within the bounds of the widget
 /// attached to the given [boundaryKey].
 class WidgetFollowerBoundary implements FollowerBoundary {
-  const WidgetFollowerBoundary(this.boundaryKey);
+  const WidgetFollowerBoundary({
+    this.boundaryKey,
+    required this.devicePixelRatio,
+  });
 
   final GlobalKey? boundaryKey;
+  final double devicePixelRatio;
 
   @override
   bool containsOffset(Offset offset) => _calculateBoundaryRect()?.contains(offset) ?? false;
@@ -257,7 +264,6 @@ class WidgetFollowerBoundary implements FollowerBoundary {
             ? boundaryGlobalRect.bottom - globalFollowerRect.bottom
             : 0.0;
 
-    final devicePixelRatio = WidgetsBinding.instance.window.devicePixelRatio;
     return Offset(xAdjustment, yAdjustment) / (followerScale / devicePixelRatio);
   }
 }

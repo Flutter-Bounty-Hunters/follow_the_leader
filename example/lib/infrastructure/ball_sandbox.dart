@@ -274,7 +274,10 @@ class _BallSandboxState extends State<BallSandbox> {
         key: widget.followerKey,
         link: _leaderLink,
         aligner: widget.followerAligner,
-        boundary: WidgetFollowerBoundary(widget.boundsKey),
+        boundary: WidgetFollowerBoundary(
+          devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
+          boundaryKey: widget.boundsKey,
+        ),
         child: widget.follower,
       ),
     );

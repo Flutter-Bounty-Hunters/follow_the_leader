@@ -19,13 +19,13 @@ class _ScrollablesDemoState extends State<ScrollablesDemo> {
       width: double.infinity,
       height: double.infinity,
       color: const Color(0xFF222222),
-      child: SafeArea(
+      child: const SafeArea(
         child: Row(
           children: [
-            const Expanded(child: _VerticalList()),
+            Expanded(child: _VerticalList()),
             Expanded(
               child: Column(
-                children: const [
+                children: [
                   Expanded(child: _HorizontalList()),
                   Spacer(),
                 ],
@@ -221,8 +221,17 @@ class _LeaderAndFollowerListItemState extends State<_LeaderAndFollowerListItem> 
   void initState() {
     super.initState();
 
-    _viewportBoundary = WidgetFollowerBoundary(widget.boundsKey);
     _aligner = CupertinoPopoverToolbarAligner(widget.boundsKey);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    _viewportBoundary = WidgetFollowerBoundary(
+      devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
+      boundaryKey: widget.boundsKey,
+    );
   }
 
   @override
@@ -230,7 +239,10 @@ class _LeaderAndFollowerListItemState extends State<_LeaderAndFollowerListItem> 
     super.didUpdateWidget(oldWidget);
 
     if (widget.boundsKey != oldWidget.boundsKey) {
-      _viewportBoundary = WidgetFollowerBoundary(widget.boundsKey);
+      _viewportBoundary = WidgetFollowerBoundary(
+        devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
+        boundaryKey: widget.boundsKey,
+      );
       _aligner = CupertinoPopoverToolbarAligner(widget.boundsKey);
     }
   }

@@ -79,13 +79,16 @@ Future<void> _pumpBoundedFollowerScenario(
   bool fadeOutBeyondBoundary = false,
   bool constrainFollowerToBoundary = false,
 }) async {
-  widgetTester.binding.window
-    ..devicePixelRatioTestValue = 1.0
-    ..physicalSizeTestValue = const Size(500, 500);
+  widgetTester.view
+    ..devicePixelRatio = 1.0
+    ..physicalSize = const Size(500, 500);
 
   final link = leaderLink ?? LeaderLink();
   final boundsKey = GlobalKey();
-  final widgetBoundary = WidgetFollowerBoundary(boundsKey);
+  final widgetBoundary = WidgetFollowerBoundary(
+    devicePixelRatio: 1.0,
+    boundaryKey: boundsKey,
+  );
 
   await _pumpScaffold(
     widgetTester: widgetTester,
@@ -222,6 +225,7 @@ Future<void> _pumpScaffold({
       home: Scaffold(
         body: child,
       ),
+      debugShowCheckedModeBanner: false,
     ),
   );
 }
