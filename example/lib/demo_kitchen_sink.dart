@@ -44,7 +44,10 @@ class _KitchenSinkDemoState extends State<KitchenSinkDemo> {
     setState(() {
       _followerConstraints = _FollowerConstraint.screen;
       _boundaryKey = _screenBoundsKey;
-      _boundary = ScreenFollowerBoundary(MediaQuery.of(context).size);
+      _boundary = ScreenFollowerBoundary(
+        screenSize: MediaQuery.of(context).size,
+        devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
+      );
       _configureToolbarAligner(_followerDirection);
     });
   }
@@ -53,7 +56,10 @@ class _KitchenSinkDemoState extends State<KitchenSinkDemo> {
     setState(() {
       _followerConstraints = _FollowerConstraint.bounds;
       _boundaryKey = _innerBoundsKey;
-      _boundary = WidgetFollowerBoundary(_innerBoundsKey);
+      _boundary = WidgetFollowerBoundary(
+        devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
+        boundaryKey: _innerBoundsKey,
+      );
       _configureToolbarAligner(_followerDirection);
     });
   }

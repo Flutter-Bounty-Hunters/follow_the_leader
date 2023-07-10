@@ -10,7 +10,7 @@ import 'package:flutter/rendering.dart';
 /// this widget tells the reader that there's no intended layout behavior. Instead,
 /// the only detail that matters is the build order of the children.
 class BuildInOrder extends MultiChildRenderObjectWidget {
-  BuildInOrder({
+  const BuildInOrder({
     Key? key,
     required List<Widget> children,
   }) : super(key: key, children: children);

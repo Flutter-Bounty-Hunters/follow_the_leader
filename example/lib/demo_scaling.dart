@@ -92,9 +92,18 @@ class _ScaleLeaderAndFollowerState extends State<_ScaleLeaderAndFollower> {
   final _anchor = LeaderLink();
   final _boundsKey = GlobalKey();
 
-  late final _viewportBoundary = WidgetFollowerBoundary(_boundsKey);
+  late WidgetFollowerBoundary _viewportBoundary;
   late final _aligner = CupertinoPopoverToolbarAligner(_boundsKey);
   late final _focalPoint = LeaderMenuFocalPoint(link: _anchor);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _viewportBoundary = WidgetFollowerBoundary(
+      devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
+      boundaryKey: _boundsKey,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -175,9 +184,18 @@ class _ScaleLeaderButNotFollowerState extends State<_ScaleLeaderButNotFollower> 
   final _anchor = LeaderLink();
   final _boundsKey = GlobalKey();
 
-  late final _viewportBoundary = WidgetFollowerBoundary(_boundsKey);
+  late WidgetFollowerBoundary _viewportBoundary;
   late final _aligner = CupertinoPopoverToolbarAligner(_boundsKey);
   late final _focalPoint = LeaderMenuFocalPoint(link: _anchor);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _viewportBoundary = WidgetFollowerBoundary(
+      devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
+      boundaryKey: _boundsKey,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -250,9 +268,18 @@ class _ScaleFollowerButNotLeaderState extends State<_ScaleFollowerButNotLeader> 
   final _anchor = LeaderLink();
   final _boundsKey = GlobalKey();
 
-  late final _viewportBoundary = WidgetFollowerBoundary(_boundsKey);
+  late WidgetFollowerBoundary _viewportBoundary;
   late final _aligner = CupertinoPopoverToolbarAligner();
   late final _focalPoint = LeaderMenuFocalPoint(link: _anchor);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _viewportBoundary = WidgetFollowerBoundary(
+      devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
+      boundaryKey: _boundsKey,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
