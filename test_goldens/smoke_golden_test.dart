@@ -225,6 +225,7 @@ Future<void> _pumpScaffold({
       home: Scaffold(
         body: child,
       ),
+      debugShowCheckedModeBanner: false,
     ),
   );
 }
