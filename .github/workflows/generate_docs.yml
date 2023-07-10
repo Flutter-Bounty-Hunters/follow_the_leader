@@ -6,8 +6,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      working-directory: ./docs
+    defaults:
+      run:
+        working-directory: ./docs
     steps:
       # Checkout the repository
       - uses: actions/checkout@v3
