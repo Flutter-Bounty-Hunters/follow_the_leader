@@ -1,3 +1,10 @@
+# 0.0.4+3
+Fixes and adjustments (July, 2023)
+
+ * FIX: Follower no longer drifts when it hits a boundary
+ * CHANGE: Follower doesn't fade until the entire Leader leaves the boundary
+ * Supports Dart 3
+
 # 0.0.4+2
 `Leader` and `Follower` scaling (January, 2023)
 

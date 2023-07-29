@@ -3,10 +3,10 @@ description: Widgets that follow other widgets.
 homepage: https://github.com/Flutter-Bounty-Hunters/follow_the_leader
 repository: https://github.com/Flutter-Bounty-Hunters/follow_the_leader
 
-version: 0.0.4+2
+version: 0.0.4+3
 
 environment:
-  sdk: ">=2.15.0 <3.0.0"
+  sdk: ">=2.15.0 <4.0.0"
 
 dependencies:
   flutter:
