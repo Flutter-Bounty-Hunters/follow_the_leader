@@ -80,13 +80,16 @@ class LeaderLink with ChangeNotifier {
   }
 
   Offset? getOffsetInLeader(Alignment alignment) {
+    print("getOffsetInLeader() for alignment: $alignment");
     if (_offset == null || _leaderSize == null || _scale == null) {
+      print(" - offset is null, or leader size is null, or scale is null, returning null");
       return null;
     }
 
     final leaderOriginOnScreenVec = leaderToScreen!.transform3(Vector3.zero());
     final leaderOriginOnScreen = Offset(leaderOriginOnScreenVec.x, leaderOriginOnScreenVec.y);
     final offsetInLeader = alignment.alongSize(leaderSize! * scale!);
+    print(" - leader global origin: $leaderOriginOnScreen, offset in leader: $offsetInLeader");
     return leaderOriginOnScreen + offsetInLeader;
   }
 
@@ -119,6 +122,37 @@ class LeaderLink with ChangeNotifier {
 
     // We're not in a layout/paint phase. Immediately notify listeners.
     super.notifyListeners();
+  }
+
+  final _onFollowerTransformChangeListeners = <VoidCallback>{};
+
+  /// Adds a listener that's notified when the [FollowerLayer]'s transform changes.
+  ///
+  /// The [FollowerLayer] might change its transform without any intervention or
+  /// knowledge of the owning `RenderObject`, because the transform depends upon the
+  /// scene of layers, which Flutter might re-compose on its own. Therefore, if
+  /// an object needs to know any time that the [FollowerLayer] changes its transform,
+  /// it can register a listener.
+  ///
+  /// This listener system was originally added so that the [RenderFollower] `RenderObject`
+  /// repaints whenever its [FollowerLayer] moves. This solves, for example, a bug where
+  /// the first frame of an iOS toolbar pointed its arrow towards the wrong offset.
+  void addFollowerLayerTransformChangeListener(VoidCallback listener) {
+    _onFollowerTransformChangeListeners.add(listener);
+  }
+
+  /// Removes a listener that was previously added by [addFollowerLayerTransformChangeListener].
+  void removeFollowerLayerTransformChangeListener(VoidCallback listener) {
+    _onFollowerTransformChangeListeners.remove(listener);
+  }
+
+  /// Notify listeners that the [FollowerLayer]'s transform has changed - this should
+  /// only be called by the [FollowerLayer] when it recognizes that its transform
+  /// has changed from one value to a different value.
+  void notifyListenersOfFollowerLayerTransformChange() {
+    for (final listener in _onFollowerTransformChangeListeners) {
+      listener();
+    }
   }
 
   @override
