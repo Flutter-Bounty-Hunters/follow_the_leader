@@ -80,16 +80,13 @@ class LeaderLink with ChangeNotifier {
   }
 
   Offset? getOffsetInLeader(Alignment alignment) {
-    print("getOffsetInLeader() for alignment: $alignment");
     if (_offset == null || _leaderSize == null || _scale == null) {
-      print(" - offset is null, or leader size is null, or scale is null, returning null");
       return null;
     }
 
     final leaderOriginOnScreenVec = leaderToScreen!.transform3(Vector3.zero());
     final leaderOriginOnScreen = Offset(leaderOriginOnScreenVec.x, leaderOriginOnScreenVec.y);
     final offsetInLeader = alignment.alongSize(leaderSize! * scale!);
-    print(" - leader global origin: $leaderOriginOnScreen, offset in leader: $offsetInLeader");
     return leaderOriginOnScreen + offsetInLeader;
   }
 
