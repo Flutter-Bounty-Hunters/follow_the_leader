@@ -121,6 +121,37 @@ class LeaderLink with ChangeNotifier {
     super.notifyListeners();
   }
 
+  final _onFollowerTransformChangeListeners = <VoidCallback>{};
+
+  /// Adds a listener that's notified when the [FollowerLayer]'s transform changes.
+  ///
+  /// The [FollowerLayer] might change its transform without any intervention or
+  /// knowledge of the owning `RenderObject`, because the transform depends upon the
+  /// scene of layers, which Flutter might re-compose on its own. Therefore, if
+  /// an object needs to know any time that the [FollowerLayer] changes its transform,
+  /// it can register a listener.
+  ///
+  /// This listener system was originally added so that the [RenderFollower] `RenderObject`
+  /// repaints whenever its [FollowerLayer] moves. This solves, for example, a bug where
+  /// the first frame of an iOS toolbar pointed its arrow towards the wrong offset.
+  void addFollowerLayerTransformChangeListener(VoidCallback listener) {
+    _onFollowerTransformChangeListeners.add(listener);
+  }
+
+  /// Removes a listener that was previously added by [addFollowerLayerTransformChangeListener].
+  void removeFollowerLayerTransformChangeListener(VoidCallback listener) {
+    _onFollowerTransformChangeListeners.remove(listener);
+  }
+
+  /// Notify listeners that the [FollowerLayer]'s transform has changed - this should
+  /// only be called by the [FollowerLayer] when it recognizes that its transform
+  /// has changed from one value to a different value.
+  void notifyListenersOfFollowerLayerTransformChange() {
+    for (final listener in _onFollowerTransformChangeListeners) {
+      listener();
+    }
+  }
+
   @override
   String toString() => '${describeIdentity(this)}(${leader != null ? "<linked>" : "<dangling>"})';
 }

@@ -304,6 +304,21 @@ class RenderFollower extends RenderProxyBox {
   @override
   void attach(PipelineOwner owner) {
     super.attach(owner);
+
+    // We repaint whenever the `FollowerLayer` changes its transform. This is why.
+    //
+    // We had a bug where the initial layout of an iOS toolbar wasn't positioning
+    // its arrow in the expected place. It was found that the `FollowerLayer` was
+    // running `_establishTransform()` after this `RenderFollower` was done with
+    // layout and paint. The `FollowerLayer` wasn't settling on its final transform
+    // until after this `RenderFollower` was done doing all of its work, which meant
+    // that content within a `Follower` never got a chance to react to the final
+    // `Follower` offset, leading to the wrong arrow position.
+    //
+    // By running another paint pass whenever the `FollowerLayer` changes its
+    // transform, `Follower`s like the iOS toolbar can correctly position its
+    // content at least within 1 frame of the desired moment.
+    _link.addFollowerLayerTransformChangeListener(markNeedsPaint);
     if (repaintWhenLeaderChanges) {
       _link.addListener(_onLinkChange);
     }
@@ -311,10 +326,13 @@ class RenderFollower extends RenderProxyBox {
 
   @override
   void detach() {
+    _link.removeFollowerLayerTransformChangeListener(markNeedsPaint);
     if (repaintWhenLeaderChanges) {
       _link.removeListener(_onLinkChange);
     }
+
     layer = null;
+
     super.detach();
   }
 
@@ -329,12 +347,14 @@ class RenderFollower extends RenderProxyBox {
 
     FtlLogs.follower.fine("Setting new link - $value");
 
+    _link.removeFollowerLayerTransformChangeListener(markNeedsPaint);
     if (repaintWhenLeaderChanges) {
       _link.removeListener(_onLinkChange);
     }
 
     _link = value;
 
+    _link.addFollowerLayerTransformChangeListener(markNeedsPaint);
     if (repaintWhenLeaderChanges) {
       _link.addListener(_onLinkChange);
     }
@@ -956,6 +976,7 @@ class FollowerLayer extends ContainerLayer {
   void _establishTransform() {
     FtlLogs.follower.finest("Establishing FollowerLayer transform");
     FtlLogs.follower.finest(" - follower linked offset: $linkedOffset");
+    final previousTransform = _lastTransform;
     _lastTransform = null;
     final LeaderLayer? leader = _leaderHandle!.leader;
     // Check to see if we are linked.
@@ -1064,6 +1085,19 @@ class FollowerLayer extends ContainerLayer {
       ..scale(followerScale);
 
     _lastTransform = focalPointToScreenTransform;
+    if (focalPointToScreenTransform != previousTransform) {
+      // This layer's transform has changed.
+      //
+      // We notify listeners because it was found experimentally that this transform
+      // might change purely at the layer composition level, without the RenderObject
+      // knowing about it. As a result, we were seeing situations in the iOS toolbar
+      // where the toolbar arrow wasn't pointing where it should, because the
+      // RenderObject wasn't aware of the latest `FollowerLayer` transform.
+      //
+      // This notification lets the `RenderFollower`, and any other relevant object,
+      // to listen for this hidden `FollowerLayer` transform changes.
+      _link.notifyListenersOfFollowerLayerTransformChange();
+    }
 
     // Make sure we don't display the Follower beyond the desired bounds.
     _constrainFollowerOffsetToBounds(_lastTransform!, followerScale);
