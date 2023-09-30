@@ -1,3 +1,6 @@
+# 0.0.4+5 - Sept, 2023
+More fixes for `Follower` content alignment, e.g., iOS popovers. This fix schedules an extra paint frame if it tries to paint a `Follower` when the `FollowerLayer` isn't attached.
+
 # 0.0.4+4 - Sept, 2023
 Adjusted `Follower` internal transform management to solve iOS toolbar arrow alignment issues on
 first frame, and when focal point moves.
