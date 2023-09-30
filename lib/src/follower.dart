@@ -531,21 +531,20 @@ class RenderFollower extends RenderProxyBox {
 
     if (layer == null) {
       FtlLogs.follower.finer("Creating new FollowerLayer");
-      layer = FollowerLayer(
-        link: link,
-        showWhenUnlinked: showWhenUnlinked,
-        followerOffsetFromScreenOrigin: offset,
-        calculateGlobalFollowerRect: _calculateGlobalFollowerContentRect,
-        aligner: _aligner,
-        boundary: _boundary,
-        linkedOffset: _followerOffsetFromLeader,
-        unlinkedOffset: _followerOffsetFromLeader,
-        followerSize: child!.size,
-      );
+      layer = FollowerLayer()
+        ..link = link
+        ..showWhenUnlinked = showWhenUnlinked
+        ..followerOffsetFromScreenOrigin = offset
+        ..calculateGlobalFollowerRect = _calculateGlobalFollowerContentRect
+        ..aligner = _aligner
+        ..boundary = _boundary
+        ..linkedOffset = _followerOffsetFromLeader
+        ..unlinkedOffset = _followerOffsetFromLeader
+        ..followerSize = child!.size;
     } else {
       FtlLogs.follower.finer("Updating existing FollowerLayer");
-      layer
-        ?..link = link
+      layer!
+        ..link = link
         ..showWhenUnlinked = showWhenUnlinked
         ..followerOffsetFromScreenOrigin = offset
         ..aligner = _aligner
@@ -567,6 +566,25 @@ class RenderFollower extends RenderProxyBox {
       // We don't know where we'll end up, so we have no idea what our cull rect should be.
       childPaintBounds: Rect.largest,
     );
+
+    // We painted the follower content, but the follower layer isn't attached to the
+    // Scene yet, which means coordinate mapping was either unavailable, or wrong.
+    // Schedule a second paint frame, at which point the follower layer will be
+    // attached to the Scene, and report its correct orientation.
+    //
+    // For cases in which a Follower needs to disappear and reappear, there's an
+    // optimization that can be made. Making a Follower disappear by removing it
+    // from the widget tree, and then adding it back later, will trigger this extra
+    // frame situation every time the Follower is put back in the widget
+    // tree. However, if the Follower remains in the widget tree, and is painted,
+    // but is painted with zero opacity, then this extra frame won't be needed
+    // when bringing the opacity back to 100%, because the FollowerLayer was never
+    // detached from the Scene.
+    if (!layer!.attached) {
+      WidgetsBinding.instance.scheduleFrameCallback((timeStamp) {
+        markNeedsPaint();
+      });
+    }
   }
 
   void _paintDebugVisuals(PaintingContext context) {
@@ -758,16 +776,16 @@ class RenderFollower extends RenderProxyBox {
 /// layer at a distance rather than directly overlapping it.
 class FollowerLayer extends ContainerLayer {
   FollowerLayer({
-    required LeaderLink link,
+    LeaderLink? link,
     this.showWhenUnlinked = true,
     // TODO: find out if we really need this passed to us. Is this same
     //       information not available through our parent layers? It looks
     //       like this value is the RenderFollower paint `offset`. That
     //       would seem to suggest that the info isn't limited to RenderFollower.
-    required this.followerOffsetFromScreenOrigin,
+    this.followerOffsetFromScreenOrigin,
     this.followerGap = Offset.zero,
-    required this.calculateGlobalFollowerRect,
-    required this.aligner,
+    this.calculateGlobalFollowerRect,
+    this.aligner,
     this.boundary,
     this.unlinkedOffset = Offset.zero,
     this.linkedOffset = Offset.zero,
@@ -779,21 +797,29 @@ class FollowerLayer extends ContainerLayer {
   /// The same object should be provided to a [LeaderLayer] that is earlier in
   /// the layer tree. When this layer is composited, it will apply a transform
   /// that moves its children to match the position of the [LeaderLayer].
-  LeaderLink get link => _link;
-  LeaderLink _link;
-  set link(LeaderLink value) {
-    if (value != _link && _leaderHandle != null) {
-      _leaderHandle!.dispose();
-      _leaderHandle = value.registerFollower();
+  LeaderLink? get link => _link;
+  LeaderLink? _link;
+  set link(LeaderLink? newLink) {
+    if (_link == newLink) {
+      return;
     }
-    _link = value;
+
+    if (_leaderHandle != null) {
+      _leaderHandle!.dispose();
+
+      if (newLink != null) {
+        _leaderHandle = newLink.registerFollower();
+      }
+    }
+
+    _link = newLink;
   }
 
   Offset followerGap;
 
-  Rect Function() calculateGlobalFollowerRect;
+  Rect Function()? calculateGlobalFollowerRect;
 
-  FollowerAligner aligner;
+  FollowerAligner? aligner;
 
   FollowerBoundary? boundary;
 
@@ -839,7 +865,7 @@ class FollowerLayer extends ContainerLayer {
   ///  * [unlinkedOffset], for when the layer is not linked.
   Offset? linkedOffset;
 
-  Offset followerOffsetFromScreenOrigin;
+  Offset? followerOffsetFromScreenOrigin;
 
   Size? followerSize;
 
@@ -849,7 +875,7 @@ class FollowerLayer extends ContainerLayer {
   void attach(Object owner) {
     FtlLogs.follower.finer("Attaching FollowerLayer to owner: $owner");
     super.attach(owner);
-    _leaderHandle = _link.registerFollower();
+    _leaderHandle = _link!.registerFollower();
   }
 
   @override
@@ -915,8 +941,8 @@ class FollowerLayer extends ContainerLayer {
       //       screen origin, or whether it's our offset from our
       //       parent layer. If parent layer, rename from
       //       "followerOffsetFromScreenOrigin" to "followerOffsetFromParent"
-      -followerOffsetFromScreenOrigin.dx - unlinkedOffset.dx,
-      -followerOffsetFromScreenOrigin.dy - unlinkedOffset.dy,
+      -followerOffsetFromScreenOrigin!.dx - unlinkedOffset.dx,
+      -followerOffsetFromScreenOrigin!.dy - unlinkedOffset.dy,
       0.0,
     );
 
@@ -974,6 +1000,10 @@ class FollowerLayer extends ContainerLayer {
 
   /// Populate [_lastTransform] given the current state of the tree.
   void _establishTransform() {
+    if (_leaderHandle == null) {
+      return;
+    }
+
     FtlLogs.follower.finest("Establishing FollowerLayer transform");
     FtlLogs.follower.finest(" - follower linked offset: $linkedOffset");
     final previousTransform = _lastTransform;
@@ -1052,7 +1082,7 @@ class FollowerLayer extends ContainerLayer {
     final leaderOffset = Offset(leaderOffsetVector.x, leaderOffsetVector.y);
     FtlLogs.follower.finest(" - Leader origin in screen space: $leaderOffset");
 
-    final leaderSize = _link.leaderSize! * leaderScale;
+    final leaderSize = _link!.leaderSize! * leaderScale;
     FtlLogs.follower.finest(" - leader size: $leaderSize");
 
     final anchorMetrics = _calculateAlignerAnchorMetrics(
@@ -1085,6 +1115,12 @@ class FollowerLayer extends ContainerLayer {
       ..scale(followerScale);
 
     _lastTransform = focalPointToScreenTransform;
+
+    // Make sure we don't display the Follower beyond the desired bounds.
+    _constrainFollowerOffsetToBounds(_lastTransform!, followerScale);
+
+    _inverseDirty = true;
+
     if (focalPointToScreenTransform != previousTransform) {
       // This layer's transform has changed.
       //
@@ -1096,13 +1132,8 @@ class FollowerLayer extends ContainerLayer {
       //
       // This notification lets the `RenderFollower`, and any other relevant object,
       // to listen for this hidden `FollowerLayer` transform changes.
-      _link.notifyListenersOfFollowerLayerTransformChange();
+      _link!.notifyListenersOfFollowerLayerTransformChange();
     }
-
-    // Make sure we don't display the Follower beyond the desired bounds.
-    _constrainFollowerOffsetToBounds(_lastTransform!, followerScale);
-
-    _inverseDirty = true;
   }
 
   _AnchorMetrics _calculateAlignerAnchorMetrics({
@@ -1110,11 +1141,11 @@ class FollowerLayer extends ContainerLayer {
     required Size followerSize,
     required double followerScale,
   }) {
-    final leaderOriginOnScreenVec = _link.leaderToScreen!.transform3(Vector3.zero());
+    final leaderOriginOnScreenVec = _link!.leaderToScreen!.transform3(Vector3.zero());
     final leaderOriginOnScreen = Offset(leaderOriginOnScreenVec.x, leaderOriginOnScreenVec.y);
     final leaderGlobalRect = leaderOriginOnScreen & leaderSize;
 
-    final alignment = aligner.align(leaderGlobalRect, followerSize);
+    final alignment = aligner!.align(leaderGlobalRect, followerSize);
 
     return _AnchorMetrics(
       leaderAnchorInScreenSpace: alignment.leaderAnchor.alongSize(leaderSize),
@@ -1129,7 +1160,7 @@ class FollowerLayer extends ContainerLayer {
     }
 
     FtlLogs.follower.finest("Layer asking RenderFollower for global follower rect:");
-    final globalFollowerRect = calculateGlobalFollowerRect();
+    final globalFollowerRect = calculateGlobalFollowerRect!();
     FtlLogs.follower.finest(" - global rect: $globalFollowerRect");
 
     final followerAdjustment = boundary!.constrain(globalFollowerRect, followerScale);
