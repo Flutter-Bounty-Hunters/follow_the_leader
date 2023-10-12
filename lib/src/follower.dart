@@ -591,8 +591,11 @@ class RenderFollower extends RenderProxyBox {
   void markNeedsPaint() {
     super.markNeedsPaint();
 
-    // Immediately schedule a new frame to avoid being in a dirty in the cases
-    // where markNeedsPaint and there are no other frames scheduled.
+    // markNeedsPaint is called whenever the LeaderLink we are attached to changes its transform.
+    // It could happen during a build/layout/paint pipeline with no other frames scheduled,
+    // leaving us in a dirty state.
+    //
+    // Immediately schedule a new frame to avoid that.
     WidgetsBinding.instance.scheduleFrame();
   }
 
