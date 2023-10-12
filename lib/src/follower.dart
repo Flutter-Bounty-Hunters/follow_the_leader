@@ -305,20 +305,7 @@ class RenderFollower extends RenderProxyBox {
   void attach(PipelineOwner owner) {
     super.attach(owner);
 
-    // We repaint whenever the `FollowerLayer` changes its transform. This is why.
-    //
-    // We had a bug where the initial layout of an iOS toolbar wasn't positioning
-    // its arrow in the expected place. It was found that the `FollowerLayer` was
-    // running `_establishTransform()` after this `RenderFollower` was done with
-    // layout and paint. The `FollowerLayer` wasn't settling on its final transform
-    // until after this `RenderFollower` was done doing all of its work, which meant
-    // that content within a `Follower` never got a chance to react to the final
-    // `Follower` offset, leading to the wrong arrow position.
-    //
-    // By running another paint pass whenever the `FollowerLayer` changes its
-    // transform, `Follower`s like the iOS toolbar can correctly position its
-    // content at least within 1 frame of the desired moment.
-    _link.addFollowerLayerTransformChangeListener(markNeedsPaint);
+    _link.addFollowerLayerTransformChangeListener(_followerLayerTransformChanged);
     if (repaintWhenLeaderChanges) {
       _link.addListener(_onLinkChange);
     }
@@ -326,7 +313,7 @@ class RenderFollower extends RenderProxyBox {
 
   @override
   void detach() {
-    _link.removeFollowerLayerTransformChangeListener(markNeedsPaint);
+    _link.removeFollowerLayerTransformChangeListener(_followerLayerTransformChanged);
     if (repaintWhenLeaderChanges) {
       _link.removeListener(_onLinkChange);
     }
@@ -347,14 +334,14 @@ class RenderFollower extends RenderProxyBox {
 
     FtlLogs.follower.fine("Setting new link - $value");
 
-    _link.removeFollowerLayerTransformChangeListener(markNeedsPaint);
+    _link.removeFollowerLayerTransformChangeListener(_followerLayerTransformChanged);
     if (repaintWhenLeaderChanges) {
       _link.removeListener(_onLinkChange);
     }
 
     _link = value;
 
-    _link.addFollowerLayerTransformChangeListener(markNeedsPaint);
+    _link.addFollowerLayerTransformChangeListener(_followerLayerTransformChanged);
     if (repaintWhenLeaderChanges) {
       _link.addListener(_onLinkChange);
     }
@@ -761,6 +748,29 @@ class RenderFollower extends RenderProxyBox {
     properties.add(DiagnosticsProperty<LeaderLink>('link', link));
     properties.add(DiagnosticsProperty<bool>('showWhenUnlinked', showWhenUnlinked));
     properties.add(TransformProperty('current transform matrix', _getCurrentTransform()));
+  }
+
+  void _followerLayerTransformChanged() {
+    // We repaint whenever the `FollowerLayer` changes its transform. This is why.
+    //
+    // We had a bug where the initial layout of an iOS toolbar wasn't positioning
+    // its arrow in the expected place. It was found that the `FollowerLayer` was
+    // running `_establishTransform()` after this `RenderFollower` was done with
+    // layout and paint. The `FollowerLayer` wasn't settling on its final transform
+    // until after this `RenderFollower` was done doing all of its work, which meant
+    // that content within a `Follower` never got a chance to react to the final
+    // `Follower` offset, leading to the wrong arrow position.
+    //
+    // By running another paint pass whenever the `FollowerLayer` changes its
+    // transform, `Follower`s like the iOS toolbar can correctly position its
+    // content at least within 1 frame of the desired moment.
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      if (!attached) {
+        return;
+      }
+
+      markNeedsPaint();
+    });
   }
 }
 
