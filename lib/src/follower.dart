@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' hide LeaderLayer;
-import 'package:flutter/scheduler.dart';
 import 'package:follow_the_leader/src/logging.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
