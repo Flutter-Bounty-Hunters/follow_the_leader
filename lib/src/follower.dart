@@ -1,7 +1,10 @@
 import 'dart:ui' as ui;
+import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' hide LeaderLayer;
+import 'package:flutter/scheduler.dart';
 import 'package:follow_the_leader/src/logging.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
@@ -591,12 +594,20 @@ class RenderFollower extends RenderProxyBox {
   void markNeedsPaint() {
     super.markNeedsPaint();
 
-    // markNeedsPaint is called whenever the LeaderLink we are attached to changes its transform.
-    // It could happen during a build/layout/paint pipeline with no other frames scheduled,
-    // leaving us in a dirty state.
-    //
-    // Immediately schedule a new frame to avoid that.
-    WidgetsBinding.instance.scheduleFrame();
+    if (kDebugMode &&
+        !kIsWeb &&
+        Platform.isLinux &&
+        Platform.environment.containsKey('FLUTTER_TEST') &&
+        !WidgetsBinding.instance.hasScheduledFrame) {
+      // We are running on a linux test and we don't have a scheduled frame.
+      //
+      // We ran into an issue in some golden tests, on linux only, where `debugNeedsPaint`
+      // is `true` after the build/layout/phase pipeline. This causes the tests to fail,
+      // because trying to capture the image of a `RenderObject` throws an assertion failure
+      // if `debugNeedsPaint` is `true`. To avoid that, immediately schedule a new frame,
+      // so Flutter pipeline runs again before we try to capture the image.
+      WidgetsBinding.instance.scheduleFrame();
+    }
   }
 
   void _paintDebugVisuals(PaintingContext context) {
