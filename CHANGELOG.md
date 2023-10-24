@@ -1,3 +1,6 @@
+# 0.0.4+6 - Oct, 2023
+Fix dirty paint state for `Follower`s in Linux golden tests.
+
 # 0.0.4+5 - Sept, 2023
 More fixes for `Follower` content alignment, e.g., iOS popovers. This fix schedules an extra paint frame if it tries to paint a `Follower` when the `FollowerLayer` isn't attached.
 
