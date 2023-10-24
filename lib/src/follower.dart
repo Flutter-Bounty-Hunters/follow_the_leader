@@ -1,5 +1,7 @@
 import 'dart:ui' as ui;
+import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' hide LeaderLayer;
 import 'package:follow_the_leader/src/logging.dart';
@@ -584,6 +586,26 @@ class RenderFollower extends RenderProxyBox {
       WidgetsBinding.instance.scheduleFrameCallback((timeStamp) {
         markNeedsPaint();
       });
+    }
+  }
+
+  @override
+  void markNeedsPaint() {
+    super.markNeedsPaint();
+
+    if (kDebugMode &&
+        !kIsWeb &&
+        Platform.isLinux &&
+        Platform.environment.containsKey('FLUTTER_TEST') &&
+        !WidgetsBinding.instance.hasScheduledFrame) {
+      // We are running on a linux test and we don't have a scheduled frame.
+      //
+      // We ran into an issue in some golden tests, on linux only, where `debugNeedsPaint`
+      // is `true` after the build/layout/phase pipeline. This causes the tests to fail,
+      // because trying to capture the image of a `RenderObject` throws an assertion failure
+      // if `debugNeedsPaint` is `true`. To avoid that, immediately schedule a new frame,
+      // so Flutter pipeline runs again before we try to capture the image.
+      WidgetsBinding.instance.scheduleFrame();
     }
   }
 
