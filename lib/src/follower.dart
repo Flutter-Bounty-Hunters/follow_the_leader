@@ -128,6 +128,21 @@ class StaticOffsetAligner implements FollowerAligner {
   }
 }
 
+/// A [FollowerAligner] that delegates to a callback function.
+class FunctionalAligner implements FollowerAligner {
+  FunctionalAligner({
+    required this.delegate,
+  });
+
+  /// Called to determine the position of the [Follower].
+  final FollowerAlignment Function(Rect globalLeaderRect, Size followerSize) delegate;
+
+  @override
+  FollowerAlignment align(Rect globalLeaderRect, Size followerSize) {
+    return delegate(globalLeaderRect, followerSize);
+  }
+}
+
 class FollowerAlignment {
   const FollowerAlignment({
     required this.leaderAnchor,
