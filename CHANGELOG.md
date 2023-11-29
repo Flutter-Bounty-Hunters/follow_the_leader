@@ -1,3 +1,6 @@
+# 0.0.4+7 - Nov, 2023
+Added a `FunctionalAligner` for easier aligner implementations.
+
 # 0.0.4+6 - Oct, 2023
 Fix dirty paint state for `Follower`s in Linux golden tests.
 
