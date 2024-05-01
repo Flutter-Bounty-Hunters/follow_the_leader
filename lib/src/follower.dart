@@ -610,7 +610,6 @@ class RenderFollower extends RenderProxyBox {
 
     if (kDebugMode &&
         !kIsWeb &&
-        Platform.isLinux &&
         Platform.environment.containsKey('FLUTTER_TEST') &&
         !WidgetsBinding.instance.hasScheduledFrame) {
       // We are running on a linux test and we don't have a scheduled frame.
