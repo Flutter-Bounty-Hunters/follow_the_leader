@@ -1,3 +1,6 @@
+# 0.0.4+8 - May, 2024
+Hacked around a bug in tests related to render objects still being dirty after the test finishes.
+
 # 0.0.4+7 - Nov, 2023
 Added a `FunctionalAligner` for easier aligner implementations.
 
