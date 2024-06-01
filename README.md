@@ -1,10 +1,12 @@
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/7259036/185768696-91623193-943c-4d62-aa72-18fb05eee8eb.png" width="300" alt="Follow the Leader"><br>
-  <span><b>Widgets following widgets.</b></span><br><br>
+  <img src="https://github.com/Flutter-Bounty-Hunters/follow_the_leader/assets/7259036/fbf53127-4d2b-4e8e-901c-340dcd75c4a5" alt="Follow the Leader - Widgets following widgets">
 </p>
 
-
-> This project is a Flutter Bounty Hunters [proof-of-concept](http://policies.flutterbountyhunters.com/proof-of-concept). Want more following features? [Fund a milestone](http://policies.flutterbountyhunters.com/fund-milestone) today!!
+<p align="center">
+  <a href="https://flutterbountyhunters.com" target="_blank">
+    <img src="https://github.com/Flutter-Bounty-Hunters/flutter_test_robots/assets/7259036/1b19720d-3dad-4ade-ac76-74313b67a898" alt="Built by the Flutter Bounty Hunters">
+  </a>
+</p>
 
 ---
 
