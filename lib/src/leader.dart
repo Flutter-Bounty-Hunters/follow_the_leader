@@ -137,9 +137,9 @@ class RenderLeader extends RenderProxyBox {
 
   @override
   void performLayout() {
-    FtlLogs.leader.finer("Laying out Leader - $hashCode");
+    FtlLogs.leader.finer(() => "Laying out Leader - $hashCode");
     super.performLayout();
-    FtlLogs.leader.finer(" - leader size: $size");
+    FtlLogs.leader.finer(() => " - leader size: $size");
     _previousLayoutSize = size;
     link.leaderSize = size;
   }
@@ -255,7 +255,7 @@ class LeaderLayer extends ContainerLayer {
 
   @override
   void attach(Object owner) {
-    FtlLogs.leader.finer("Attaching LeaderLayer to owner: $owner");
+    FtlLogs.leader.finer(() => "Attaching LeaderLayer to owner: $owner");
     super.attach(owner);
     _lastOffset = null;
     link.leader = this;
@@ -263,7 +263,7 @@ class LeaderLayer extends ContainerLayer {
 
   @override
   void detach() {
-    FtlLogs.leader.finer("Detaching LeaderLayer from owner");
+    FtlLogs.leader.finer(() => "Detaching LeaderLayer from owner");
     link.leader = null;
     _lastOffset = null;
     super.detach();
@@ -284,7 +284,7 @@ class LeaderLayer extends ContainerLayer {
 
   @override
   void addToScene(ui.SceneBuilder builder) {
-    FtlLogs.leader.finer("Adding LeaderLayer to scene. Offset: $offset");
+    FtlLogs.leader.finer(() => "Adding LeaderLayer to scene. Offset: $offset");
     _lastOffset = offset;
     if (offset != Offset.zero) {
       engineLayer = builder.pushTransform(

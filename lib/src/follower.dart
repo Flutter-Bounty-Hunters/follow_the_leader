@@ -387,7 +387,8 @@ class RenderFollower extends RenderProxyBox {
       return;
     }
 
-    FtlLogs.follower.finest("Follower's LeaderLink reported a change: $_link. Requesting Follower child repaint.");
+    FtlLogs.follower
+        .finest(() => "Follower's LeaderLink reported a change: $_link. Requesting Follower child repaint.");
     child?.markNeedsPaint();
   }
 
@@ -505,13 +506,13 @@ class RenderFollower extends RenderProxyBox {
     } else {
       size = child!.size;
     }
-    FtlLogs.follower.finer(" - Follower bounds layout size: $size");
-    FtlLogs.follower.finer(" - Follower content size: ${child?.size}");
+    FtlLogs.follower.finer(() => " - Follower bounds layout size: $size");
+    FtlLogs.follower.finer(() => " - Follower content size: ${child?.size}");
   }
 
   @override
   void paint(PaintingContext context, Offset offset) {
-    FtlLogs.follower.finer("Painting Follower - paint offset: $offset");
+    FtlLogs.follower.finer(() => "Painting Follower - paint offset: $offset");
     if (child == null) {
       return;
     }
@@ -537,14 +538,14 @@ class RenderFollower extends RenderProxyBox {
       return;
     }
 
-    FtlLogs.follower
-        .finer("Is leader connected? ${link.leaderConnected}, follower offset from leader: $_followerOffsetFromLeader");
+    FtlLogs.follower.finer(
+        () => "Is leader connected? ${link.leaderConnected}, follower offset from leader: $_followerOffsetFromLeader");
 
     if (link.leaderConnected) {
       FtlLogs.follower.finer("Calculating follower offset");
       _calculateFollowerOffset();
     }
-    FtlLogs.follower.fine("Final follower offset relative to leader: $_followerOffsetFromLeader");
+    FtlLogs.follower.fine(() => "Final follower offset relative to leader: $_followerOffsetFromLeader");
 
     if (layer == null) {
       FtlLogs.follower.finer("Creating new FollowerLayer");
@@ -734,11 +735,11 @@ class RenderFollower extends RenderProxyBox {
       Offset(globalLeaderTopLeftVec.x, globalLeaderTopLeftVec.y),
       Offset(globalLeaderBottomRightVec.x, globalLeaderBottomRightVec.y),
     );
-    FtlLogs.follower.finer(" - Global leader rect: $globalLeaderRect");
+    FtlLogs.follower.finer(() => " - Global leader rect: $globalLeaderRect");
 
     final Size? leaderSize = link.leaderSize;
-    FtlLogs.follower.finer(" - Leader size: $leaderSize");
-    FtlLogs.follower.finer(" - Leader layer offset: ${link.leader!.offset}");
+    FtlLogs.follower.finer(() => " - Leader size: $leaderSize");
+    FtlLogs.follower.finer(() => " - Leader layer offset: ${link.leader!.offset}");
 
     final followerAlignment = aligner.align(globalLeaderRect, child!.size);
     final leaderAnchor = followerAlignment.leaderAnchor;
@@ -750,7 +751,7 @@ class RenderFollower extends RenderProxyBox {
     final followerScale =
         (followerTransform.transform3(Vector3(1, 0, 0)) - followerTransform.transform3(Vector3.zero())).x;
     final followerSize = child!.size * followerScale;
-    FtlLogs.follower.finer(" - Follower size: $followerSize ($followerScale scale)");
+    FtlLogs.follower.finer(() => " - Follower size: $followerSize ($followerScale scale)");
 
     final followerOffsetRelativeToLeader = (leaderSize == null
             ? Offset.zero
@@ -758,7 +759,7 @@ class RenderFollower extends RenderProxyBox {
         followerAlignment.followerOffset;
 
     _followerOffsetFromLeader = followerOffsetRelativeToLeader;
-    FtlLogs.follower.finer(" - (Non-constrained) Follower offset relative to leader: $_followerOffsetFromLeader");
+    FtlLogs.follower.finer(() => " - (Non-constrained) Follower offset relative to leader: $_followerOffsetFromLeader");
   }
 
   // This is what's used by localToGlobal() and globalToLocal()
@@ -775,13 +776,13 @@ class RenderFollower extends RenderProxyBox {
   /// [Matrix4.identity].
   Matrix4 _getCurrentTransform() {
     FtlLogs.follower.finest("RenderFollower - getCurrentTransform()");
-    FtlLogs.follower
-        .finest(" - has FollowerLayer? ${layer != null}, has existing transform? ${layer?.getLastTransform() != null}");
-    FtlLogs.follower
-        .finest(" - follower origin in screen-space (according to localToGlobal): ${localToGlobal(Offset.zero)}");
     FtlLogs.follower.finest(
+        () => " - has FollowerLayer? ${layer != null}, has existing transform? ${layer?.getLastTransform() != null}");
+    FtlLogs.follower
+        .finest(() => " - follower origin in screen-space (according to localToGlobal): ${localToGlobal(Offset.zero)}");
+    FtlLogs.follower.finest(() =>
         " - delta from follower content to follower origin (according to FollowerLayer): ${layer?._transformOffset(Offset.zero)}");
-    FtlLogs.follower.finest(" - follower offset from leader: $_followerOffsetFromLeader");
+    FtlLogs.follower.finest(() => " - follower offset from leader: $_followerOffsetFromLeader");
     final transform = layer?.getLastTransform() ?? Matrix4.identity();
 
     if (_followerOffsetFromLeader != null) {
@@ -1224,7 +1225,7 @@ class FollowerLayer extends ContainerLayer {
     // Apply each layer to the matrix in turn, starting from the last layer,
     // and providing the previous layer as the child.
     for (int index = layers.length - 1; index > 0; index -= 1) {
-      FtlLogs.follower.finest("Calling applyTransform() on layer: ${layers[index]}");
+      FtlLogs.follower.finest(() => "Calling applyTransform() on layer: ${layers[index]}");
       layers[index]?.applyTransform(layers[index - 1], result);
     }
     return result;
