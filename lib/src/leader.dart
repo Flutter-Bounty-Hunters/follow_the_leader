@@ -149,18 +149,14 @@ class RenderLeader extends RenderProxyBox {
     FtlLogs.leader.finer(() => "Painting Leader ($hashCode)");
 
     final globalOffset = localToGlobal(Offset.zero);
-    final scale =
-        (localToGlobal(const Offset(1, 0)) - localToGlobal(Offset.zero)).dx;
-    final halfChildSize = child != null
-        ? Offset(child!.size.width / 2, child!.size.height / 2)
-        : Offset.zero;
+    final scale = (localToGlobal(const Offset(1, 0)) - localToGlobal(Offset.zero)).dx;
+    final halfChildSize = child != null ? Offset(child!.size.width / 2, child!.size.height / 2) : Offset.zero;
     final scaledOffset = offset + halfChildSize - (halfChildSize * scale);
     FtlLogs.leader.finer(() => " - paint offset: $offset");
     FtlLogs.leader.finer(() => " - child: $child");
     FtlLogs.leader.finer(() => " - scaled paint offset: $scaledOffset");
     FtlLogs.leader.finer(() => " - global offset: $globalOffset");
-    FtlLogs.leader
-        .finer(() => " - follower content size (unscaled): ${child?.size}");
+    FtlLogs.leader.finer(() => " - follower content size (unscaled): ${child?.size}");
     FtlLogs.leader.finer(() => " - scale: $scale");
 
     final leaderToScreenTransform = getTransformTo(null);
@@ -171,9 +167,7 @@ class RenderLeader extends RenderProxyBox {
       ..screenToLeader = screenToLeaderTransform
       ..leaderToScreen = leaderToScreenTransform
       ..leaderContentBoundsInLeaderSpace = child != null
-          ? Offset.zero &
-              child!
-                  .size // TODO: query the actual child offset for cases where its not zero
+          ? Offset.zero & child!.size // TODO: query the actual child offset for cases where its not zero
           : Rect.zero
       ..offset = globalOffset
       ..scale = scale;
@@ -191,8 +185,7 @@ class RenderLeader extends RenderProxyBox {
     }
 
     context.pushLayer(layer!, (paintContext, offset) {
-      FtlLogs.leader.finer(() =>
-          "Painting leader content within LeaderLayer. Paint offset: $offset");
+      FtlLogs.leader.finer(() => "Painting leader content within LeaderLayer. Paint offset: $offset");
       super.paint(paintContext, offset);
     }, Offset.zero);
     assert(layer != null);
@@ -285,11 +278,8 @@ class LeaderLayer extends ContainerLayer {
   Offset? _lastOffset;
 
   @override
-  bool findAnnotations<S extends Object>(
-      AnnotationResult<S> result, Offset localPosition,
-      {required bool onlyFirst}) {
-    return super.findAnnotations<S>(result, localPosition - offset,
-        onlyFirst: onlyFirst);
+  bool findAnnotations<S extends Object>(AnnotationResult<S> result, Offset localPosition, {required bool onlyFirst}) {
+    return super.findAnnotations<S>(result, localPosition - offset, onlyFirst: onlyFirst);
   }
 
   @override

@@ -135,8 +135,7 @@ class FunctionalAligner implements FollowerAligner {
   });
 
   /// Called to determine the position of the [Follower].
-  final FollowerAlignment Function(Rect globalLeaderRect, Size followerSize)
-      delegate;
+  final FollowerAlignment Function(Rect globalLeaderRect, Size followerSize) delegate;
 
   @override
   FollowerAlignment align(Rect globalLeaderRect, Size followerSize) {
@@ -175,9 +174,7 @@ abstract class FollowerBoundary {
 
   /// Returns `true` if the given [rect] sits entirely within this boundary,
   /// or `false` if it sits partially, or entirely outside.
-  bool containsRect(Rect rect,
-      [FollowerBoundaryOverlapMode overlapMode =
-          FollowerBoundaryOverlapMode.partial]);
+  bool containsRect(Rect rect, [FollowerBoundaryOverlapMode overlapMode = FollowerBoundaryOverlapMode.partial]);
 
   /// Constrains the given [desiredOffset] to a legal [Offset] for this
   /// boundary.
@@ -208,9 +205,7 @@ class ScreenFollowerBoundary implements FollowerBoundary {
   bool containsOffset(Offset offset) => screenSize.contains(offset);
 
   @override
-  bool containsRect(Rect rect,
-          [FollowerBoundaryOverlapMode overlapMode =
-              FollowerBoundaryOverlapMode.partial]) =>
+  bool containsRect(Rect rect, [FollowerBoundaryOverlapMode overlapMode = FollowerBoundaryOverlapMode.partial]) =>
       overlapMode == FollowerBoundaryOverlapMode.full
           ? rect.intersect(Offset.zero & screenSize) == rect
           : rect.overlaps(Offset.zero & screenSize);
@@ -228,8 +223,7 @@ class ScreenFollowerBoundary implements FollowerBoundary {
             ? screenSize.height - globalFollowerRect.bottom
             : 0.0;
 
-    return Offset(xAdjustment, yAdjustment) /
-        (followerScale / devicePixelRatio);
+    return Offset(xAdjustment, yAdjustment) / (followerScale / devicePixelRatio);
   }
 }
 
@@ -245,13 +239,10 @@ class WidgetFollowerBoundary implements FollowerBoundary {
   final double devicePixelRatio;
 
   @override
-  bool containsOffset(Offset offset) =>
-      _calculateBoundaryRect()?.contains(offset) ?? false;
+  bool containsOffset(Offset offset) => _calculateBoundaryRect()?.contains(offset) ?? false;
 
   @override
-  bool containsRect(Rect rect,
-          [FollowerBoundaryOverlapMode overlapMode =
-              FollowerBoundaryOverlapMode.partial]) =>
+  bool containsRect(Rect rect, [FollowerBoundaryOverlapMode overlapMode = FollowerBoundaryOverlapMode.partial]) =>
       overlapMode == FollowerBoundaryOverlapMode.full
           ? rect.intersect(_calculateBoundaryRect() ?? Rect.zero) == rect
           : rect.overlaps(_calculateBoundaryRect() ?? Rect.zero);
@@ -261,8 +252,7 @@ class WidgetFollowerBoundary implements FollowerBoundary {
       return null;
     }
 
-    final boundaryBox =
-        boundaryKey!.currentContext!.findRenderObject() as RenderBox;
+    final boundaryBox = boundaryKey!.currentContext!.findRenderObject() as RenderBox;
     final boundaryRect = Rect.fromPoints(
       boundaryBox.localToGlobal(Offset.zero),
       boundaryBox.localToGlobal(boundaryBox.size.bottomRight(Offset.zero)),
@@ -276,8 +266,7 @@ class WidgetFollowerBoundary implements FollowerBoundary {
       return Offset.zero;
     }
 
-    final boundaryBox =
-        boundaryKey!.currentContext!.findRenderObject() as RenderBox;
+    final boundaryBox = boundaryKey!.currentContext!.findRenderObject() as RenderBox;
     final boundaryGlobalOrigin = boundaryBox.localToGlobal(Offset.zero);
     final boundaryGlobalRect = boundaryGlobalOrigin & boundaryBox.size;
 
@@ -292,8 +281,7 @@ class WidgetFollowerBoundary implements FollowerBoundary {
             ? boundaryGlobalRect.bottom - globalFollowerRect.bottom
             : 0.0;
 
-    return Offset(xAdjustment, yAdjustment) /
-        (followerScale / devicePixelRatio);
+    return Offset(xAdjustment, yAdjustment) / (followerScale / devicePixelRatio);
   }
 }
 
@@ -307,9 +295,7 @@ extension on RenderBox {
   /// rectangle, but on the screen it appears 200x200. That's a scale
   /// of 2.0.
   double get scaleInScreenSpace {
-    return (localToGlobal(const Offset(1, 0)) -
-            localToGlobal(const Offset(0, 0)))
-        .dx;
+    return (localToGlobal(const Offset(1, 0)) - localToGlobal(const Offset(0, 0))).dx;
   }
 }
 
@@ -401,8 +387,7 @@ class RenderFollower extends RenderProxyBox {
       return;
     }
 
-    FtlLogs.follower.finest(
-        "Follower's LeaderLink reported a change: $_link. Requesting Follower child repaint.");
+    FtlLogs.follower.finest("Follower's LeaderLink reported a change: $_link. Requesting Follower child repaint.");
     child?.markNeedsPaint();
   }
 
@@ -483,8 +468,7 @@ class RenderFollower extends RenderProxyBox {
   @override
   bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
     final followerOffset = _followerOffsetFromLeader ?? Offset.zero;
-    final transform = layer?.getLastTransform()
-      ?..translate(followerOffset.dx, followerOffset.dy);
+    final transform = layer?.getLastTransform()?..translate(followerOffset.dx, followerOffset.dy);
 
     return result.addWithPaintTransform(
       transform: transform,
@@ -533,8 +517,7 @@ class RenderFollower extends RenderProxyBox {
     }
 
     if (!link.leaderConnected && _followerOffsetFromLeader == null) {
-      FtlLogs.follower.finer(
-          "The leader isn't connected and there's no cached offset. Not painting anything.");
+      FtlLogs.follower.finer("The leader isn't connected and there's no cached offset. Not painting anything.");
       if (!_firstPaintOfCurrentLink) {
         // We already painted and we still don't have a leader connected.
         // Avoid subsequent paint requests.
@@ -554,15 +537,14 @@ class RenderFollower extends RenderProxyBox {
       return;
     }
 
-    FtlLogs.follower.finer(
-        "Is leader connected? ${link.leaderConnected}, follower offset from leader: $_followerOffsetFromLeader");
+    FtlLogs.follower
+        .finer("Is leader connected? ${link.leaderConnected}, follower offset from leader: $_followerOffsetFromLeader");
 
     if (link.leaderConnected) {
       FtlLogs.follower.finer("Calculating follower offset");
       _calculateFollowerOffset();
     }
-    FtlLogs.follower.fine(
-        "Final follower offset relative to leader: $_followerOffsetFromLeader");
+    FtlLogs.follower.fine("Final follower offset relative to leader: $_followerOffsetFromLeader");
 
     if (layer == null) {
       FtlLogs.follower.finer("Creating new FollowerLayer");
@@ -593,8 +575,7 @@ class RenderFollower extends RenderProxyBox {
     context.pushLayer(
       layer!,
       (context, offset) {
-        FtlLogs.follower.finer(
-            "Painting follower content in Follower's Layer. Painting offset: $offset");
+        FtlLogs.follower.finer("Painting follower content in Follower's Layer. Painting offset: $offset");
         super.paint(context, offset);
         _paintDebugVisuals(context);
       },
@@ -651,16 +632,13 @@ class RenderFollower extends RenderProxyBox {
     final childTransform = Matrix4.identity();
     applyPaintTransform(child!, childTransform);
     final childOriginInFollowerVec = childTransform.transform3(Vector3.zero());
-    final childOriginInFollower =
-        Offset(childOriginInFollowerVec.x, childOriginInFollowerVec.y);
+    final childOriginInFollower = Offset(childOriginInFollowerVec.x, childOriginInFollowerVec.y);
     final childGlobalRect = _calculateGlobalFollowerContentRect();
 
     final followerOriginInScreenSpace = localToGlobal(Offset.zero);
     final screenOriginInFollowerSpace = globalToLocal(Offset.zero);
-    FtlLogs.follower.finer(
-        "Follower origin in screen space (paint): $followerOriginInScreenSpace");
-    FtlLogs.follower.finer(
-        "Screen origin in follower space (paint): $screenOriginInFollowerSpace");
+    FtlLogs.follower.finer("Follower origin in screen space (paint): $followerOriginInScreenSpace");
+    FtlLogs.follower.finer("Screen origin in follower space (paint): $screenOriginInFollowerSpace");
 
     // Paint the debug visuals. Red represents visuals in Follower-space.
     // Green represents visuals in screen-space.
@@ -680,18 +658,15 @@ class RenderFollower extends RenderProxyBox {
       ..save()
       //----- ^ save offset -----
       // Top-left corner of the screen (scaled in follower space)
-      ..translate(
-          screenOriginInFollowerSpace.dx, screenOriginInFollowerSpace.dy)
+      ..translate(screenOriginInFollowerSpace.dx, screenOriginInFollowerSpace.dy)
       ..drawCircle(Offset.zero, 20, Paint()..color = Colors.red)
       // Scale to screen space (instead of follower space)
       ..scale(1 / scaleInScreenSpace)
       // Top-left corner of follower bounds (not follower content)
-      ..translate(
-          followerOriginInScreenSpace.dx, followerOriginInScreenSpace.dy)
+      ..translate(followerOriginInScreenSpace.dx, followerOriginInScreenSpace.dy)
       ..drawCircle(Offset.zero, 10, Paint()..color = Colors.lightGreenAccent)
       // Top-left and bottom-right of follower content bounds
-      ..translate(childOriginInFollower.dx * scaleInScreenSpace,
-          childOriginInFollower.dy * scaleInScreenSpace)
+      ..translate(childOriginInFollower.dx * scaleInScreenSpace, childOriginInFollower.dy * scaleInScreenSpace)
       ..drawCircle(Offset.zero, 2, Paint()..color = Colors.lightGreenAccent)
       ..translate(child!.size.width * scaleInScreenSpace, 0)
       ..drawCircle(Offset.zero, 4, Paint()..color = Colors.lightGreenAccent)
@@ -702,8 +677,7 @@ class RenderFollower extends RenderProxyBox {
       ..restore()
       //----- ^ restore offset -------
       // Translate the painting origin to the screen origin
-      ..translate(
-          screenOriginInFollowerSpace.dx, screenOriginInFollowerSpace.dy)
+      ..translate(screenOriginInFollowerSpace.dx, screenOriginInFollowerSpace.dy)
       ..scale(1 / scaleInScreenSpace)
       // Paint the bounds of the follower content from the global screen perspective.
       ..drawRect(
@@ -733,17 +707,14 @@ class RenderFollower extends RenderProxyBox {
     // represent that same distance in screen-space.
     final childOriginInFollowerVec = childTransform.transform3(Vector3.zero());
     final followerToChildDeltaInScreenSpace =
-        Offset(childOriginInFollowerVec.x, childOriginInFollowerVec.y) *
-            scaleInScreenSpace;
+        Offset(childOriginInFollowerVec.x, childOriginInFollowerVec.y) * scaleInScreenSpace;
 
     final childSizeInScreenSpace = child!.size * scaleInScreenSpace;
 
     // With all the relevant coordinates and offsets in screen space,
     // assemble the global rectangle for the follower child's bounds.
-    final childTopLeftInScreen =
-        followerOriginInScreenSpace + followerToChildDeltaInScreenSpace;
-    final childBottomRightInScreen =
-        childTopLeftInScreen + childSizeInScreenSpace.bottomRight(Offset.zero);
+    final childTopLeftInScreen = followerOriginInScreenSpace + followerToChildDeltaInScreenSpace;
+    final childBottomRightInScreen = childTopLeftInScreen + childSizeInScreenSpace.bottomRight(Offset.zero);
     final globalRect = Rect.fromPoints(
       childTopLeftInScreen,
       childBottomRightInScreen,
@@ -755,14 +726,10 @@ class RenderFollower extends RenderProxyBox {
   void _calculateFollowerOffset() {
     FtlLogs.follower.finer("Calculating Follower offset using an aligner.");
 
-    final globalLeaderTopLeftVec = link.leaderToScreen!.transform3(Vector3(
-        link.leaderContentBoundsInLeaderSpace!.left,
-        link.leaderContentBoundsInLeaderSpace!.top,
-        0));
-    final globalLeaderBottomRightVec = link.leaderToScreen!.transform3(Vector3(
-        link.leaderContentBoundsInLeaderSpace!.right,
-        link.leaderContentBoundsInLeaderSpace!.bottom,
-        0));
+    final globalLeaderTopLeftVec = link.leaderToScreen!.transform3(
+        Vector3(link.leaderContentBoundsInLeaderSpace!.left, link.leaderContentBoundsInLeaderSpace!.top, 0));
+    final globalLeaderBottomRightVec = link.leaderToScreen!.transform3(
+        Vector3(link.leaderContentBoundsInLeaderSpace!.right, link.leaderContentBoundsInLeaderSpace!.bottom, 0));
     final globalLeaderRect = Rect.fromPoints(
       Offset(globalLeaderTopLeftVec.x, globalLeaderTopLeftVec.y),
       Offset(globalLeaderBottomRightVec.x, globalLeaderBottomRightVec.y),
@@ -780,22 +747,18 @@ class RenderFollower extends RenderProxyBox {
     final followerTransform = Matrix4.identity();
     applyPaintTransform(child!, followerTransform);
 
-    final followerScale = (followerTransform.transform3(Vector3(1, 0, 0)) -
-            followerTransform.transform3(Vector3.zero()))
-        .x;
+    final followerScale =
+        (followerTransform.transform3(Vector3(1, 0, 0)) - followerTransform.transform3(Vector3.zero())).x;
     final followerSize = child!.size * followerScale;
-    FtlLogs.follower
-        .finer(" - Follower size: $followerSize ($followerScale scale)");
+    FtlLogs.follower.finer(" - Follower size: $followerSize ($followerScale scale)");
 
     final followerOffsetRelativeToLeader = (leaderSize == null
             ? Offset.zero
-            : leaderAnchor.alongSize(leaderSize) -
-                followerAnchor.alongSize(followerSize)) +
+            : leaderAnchor.alongSize(leaderSize) - followerAnchor.alongSize(followerSize)) +
         followerAlignment.followerOffset;
 
     _followerOffsetFromLeader = followerOffsetRelativeToLeader;
-    FtlLogs.follower.finer(
-        " - (Non-constrained) Follower offset relative to leader: $_followerOffsetFromLeader");
+    FtlLogs.follower.finer(" - (Non-constrained) Follower offset relative to leader: $_followerOffsetFromLeader");
   }
 
   // This is what's used by localToGlobal() and globalToLocal()
@@ -812,19 +775,17 @@ class RenderFollower extends RenderProxyBox {
   /// [Matrix4.identity].
   Matrix4 _getCurrentTransform() {
     FtlLogs.follower.finest("RenderFollower - getCurrentTransform()");
-    FtlLogs.follower.finest(
-        " - has FollowerLayer? ${layer != null}, has existing transform? ${layer?.getLastTransform() != null}");
-    FtlLogs.follower.finest(
-        " - follower origin in screen-space (according to localToGlobal): ${localToGlobal(Offset.zero)}");
+    FtlLogs.follower
+        .finest(" - has FollowerLayer? ${layer != null}, has existing transform? ${layer?.getLastTransform() != null}");
+    FtlLogs.follower
+        .finest(" - follower origin in screen-space (according to localToGlobal): ${localToGlobal(Offset.zero)}");
     FtlLogs.follower.finest(
         " - delta from follower content to follower origin (according to FollowerLayer): ${layer?._transformOffset(Offset.zero)}");
-    FtlLogs.follower
-        .finest(" - follower offset from leader: $_followerOffsetFromLeader");
+    FtlLogs.follower.finest(" - follower offset from leader: $_followerOffsetFromLeader");
     final transform = layer?.getLastTransform() ?? Matrix4.identity();
 
     if (_followerOffsetFromLeader != null) {
-      transform.translate(
-          _followerOffsetFromLeader!.dx, _followerOffsetFromLeader!.dy);
+      transform.translate(_followerOffsetFromLeader!.dx, _followerOffsetFromLeader!.dy);
     }
 
     return transform;
@@ -834,10 +795,8 @@ class RenderFollower extends RenderProxyBox {
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
     properties.add(DiagnosticsProperty<LeaderLink>('link', link));
-    properties
-        .add(DiagnosticsProperty<bool>('showWhenUnlinked', showWhenUnlinked));
-    properties.add(
-        TransformProperty('current transform matrix', _getCurrentTransform()));
+    properties.add(DiagnosticsProperty<bool>('showWhenUnlinked', showWhenUnlinked));
+    properties.add(TransformProperty('current transform matrix', _getCurrentTransform()));
   }
 }
 
@@ -968,13 +927,10 @@ class FollowerLayer extends ContainerLayer {
   bool _inverseDirty = true;
 
   @override
-  bool findAnnotations<S extends Object>(
-      AnnotationResult<S> result, Offset localPosition,
-      {required bool onlyFirst}) {
+  bool findAnnotations<S extends Object>(AnnotationResult<S> result, Offset localPosition, {required bool onlyFirst}) {
     if (_leaderHandle!.leader == null) {
       if (showWhenUnlinked!) {
-        return super.findAnnotations(result, localPosition - unlinkedOffset!,
-            onlyFirst: onlyFirst);
+        return super.findAnnotations(result, localPosition - unlinkedOffset!, onlyFirst: onlyFirst);
       }
       return false;
     }
@@ -982,8 +938,7 @@ class FollowerLayer extends ContainerLayer {
     if (transformedOffset == null) {
       return false;
     }
-    return super
-        .findAnnotations<S>(result, transformedOffset, onlyFirst: onlyFirst);
+    return super.findAnnotations<S>(result, transformedOffset, onlyFirst: onlyFirst);
   }
 
   Offset? _transformOffset(Offset localPosition) {
@@ -998,8 +953,7 @@ class FollowerLayer extends ContainerLayer {
     if (_invertedTransform == null) {
       return null;
     }
-    final Vector4 vector =
-        Vector4(localPosition.dx, localPosition.dy, 0.0, 1.0);
+    final Vector4 vector = Vector4(localPosition.dx, localPosition.dy, 0.0, 1.0);
     final Vector4 result = _invertedTransform!.transform(vector);
     return Offset(result[0], result[1]);
   }
@@ -1069,8 +1023,7 @@ class FollowerLayer extends ContainerLayer {
       addChildrenToScene(builder);
       builder.pop();
     } else {
-      final Matrix4 matrix =
-          Matrix4.translationValues(unlinkedOffset!.dx, unlinkedOffset!.dy, .0);
+      final Matrix4 matrix = Matrix4.translationValues(unlinkedOffset!.dx, unlinkedOffset!.dy, .0);
       engineLayer = builder.pushTransform(
         matrix.storage,
         oldLayer: engineLayer as ui.TransformEngineLayer?,
@@ -1107,13 +1060,9 @@ class FollowerLayer extends ContainerLayer {
     );
 
     // Stores [leader, ..., root] after calling _pathToRoot.
-    final List<ContainerLayer?> leaderToAncestorLayers = <ContainerLayer>[
-      leader
-    ];
+    final List<ContainerLayer?> leaderToAncestorLayers = <ContainerLayer>[leader];
     // Stores [this (follower), ..., root] after calling _pathToRoot
-    final List<ContainerLayer?> followerToAncestorLayers = <ContainerLayer>[
-      this
-    ];
+    final List<ContainerLayer?> followerToAncestorLayers = <ContainerLayer>[this];
 
     _pathToRoot(
       leader,
@@ -1133,50 +1082,41 @@ class FollowerLayer extends ContainerLayer {
       FtlLogs.follower.finest(() => "   - $layer");
     }
 
-    final Matrix4 leaderTransform =
-        _collectTransformForLayerChain(leaderToAncestorLayers);
+    final Matrix4 leaderTransform = _collectTransformForLayerChain(leaderToAncestorLayers);
     // Further transforms the coordinate system to a hypothetical child (null)
     // of the leader layer, to account for the leader's additional paint offset
     // and layer offset (LeaderLayer._lastOffset). In other words, leaderTransform
     // up above gets us to the top-left of the LeaderLayer, but we want
     // leaderTransform to get us to the top-left of the content inside the LeaderLayer.
     leader.applyTransform(null, leaderTransform);
-    FtlLogs.follower
-        .finest(() => " - Leader transform to screen-space \n$leaderTransform");
+    FtlLogs.follower.finest(() => " - Leader transform to screen-space \n$leaderTransform");
 
-    final Matrix4 screenToFollowerTransform =
-        _collectTransformForLayerChain(followerToAncestorLayers);
+    final Matrix4 screenToFollowerTransform = _collectTransformForLayerChain(followerToAncestorLayers);
     if (screenToFollowerTransform.invert() == 0.0) {
       // We are in a degenerate transform, so there's not much we can do.
       return;
     }
-    FtlLogs.follower.finest(() =>
-        " - Follower transform to screen-space \n$screenToFollowerTransform");
+    FtlLogs.follower.finest(() => " - Follower transform to screen-space \n$screenToFollowerTransform");
 
     // Calculate the leader and follower scale so that we can un-apply the
     // leader scale, and add the follower scale. We do this because we don't
     // want to force the follower to always be the scale of the leader.
-    final leaderScale = (leaderTransform.transform3(Vector3(1, 0, 0)) -
-            leaderTransform.transform3(Vector3.zero()))
-        .x;
+    final leaderScale = (leaderTransform.transform3(Vector3(1, 0, 0)) - leaderTransform.transform3(Vector3.zero())).x;
     FtlLogs.follower.finest(() => " - Leader scale: $leaderScale");
     final followerScale = 1 /
-        (screenToFollowerTransform.transform3(Vector3(1, 0, 0)) -
-                screenToFollowerTransform.transform3(Vector3.zero()))
+        (screenToFollowerTransform.transform3(Vector3(1, 0, 0)) - screenToFollowerTransform.transform3(Vector3.zero()))
             .x; // We invert the scale because the transform is an inverse
     FtlLogs.follower.finest(() => " - Follower scale: $followerScale");
 
     // Put follower transform into leader space. This operation would be all
     // we need, if we didn't want to undo the leader's scale factor.
-    final screenToLeaderTransform = screenToFollowerTransform.clone()
-      ..multiply(leaderTransform);
+    final screenToLeaderTransform = screenToFollowerTransform.clone()..multiply(leaderTransform);
 
     // final followerOffsetVector = screenToFollowerTransform.transform3(Vector3.zero());
     // final followerOffset = Offset(followerOffsetVector.x, followerOffsetVector.y);
     final leaderOffsetVector = leaderTransform.transform3(Vector3.zero());
     final leaderOffset = Offset(leaderOffsetVector.x, leaderOffsetVector.y);
-    FtlLogs.follower
-        .finest(() => " - Leader origin in screen space: $leaderOffset");
+    FtlLogs.follower.finest(() => " - Leader origin in screen space: $leaderOffset");
 
     final leaderSize = _link!.leaderSize! * leaderScale;
     FtlLogs.follower.finest(() => " - leader size: $leaderSize");
@@ -1193,21 +1133,17 @@ class FollowerLayer extends ContainerLayer {
     final focalPointToScreenTransform = screenToLeaderTransform
       // Scale from leader-space to screen-space. After the scale, the
       // origin will sit at the top-left corner of the leader, in screen-space.
-      ..scale(1 /
-          leaderScale) // <- inverted because we want to undo the Leader scale
+      ..scale(1 / leaderScale) // <- inverted because we want to undo the Leader scale
       // Move the origin to the point on the Leader where we want to anchor
       // the Follower. This offset is in screen-space.
-      ..translate(anchorMetrics.leaderAnchorInScreenSpace.dx,
-          anchorMetrics.leaderAnchorInScreenSpace.dy)
+      ..translate(anchorMetrics.leaderAnchorInScreenSpace.dx, anchorMetrics.leaderAnchorInScreenSpace.dy)
       // Move the origin away from the Leader in the direction of the desired gap, which
       // adds space between the Leader and the Follower.
-      ..translate(anchorMetrics.followerGapInScreenSpace.dx,
-          anchorMetrics.followerGapInScreenSpace.dy)
+      ..translate(anchorMetrics.followerGapInScreenSpace.dx, anchorMetrics.followerGapInScreenSpace.dy)
       // Move the origin such that when the Follower is painted, the
       // Follower's desired anchor point (bottom-center, top-center, etc)
       // sits at the gap point that we moved to above.
-      ..translate(anchorMetrics.followerAnchorInFollowerSpace.dx,
-          anchorMetrics.followerAnchorInFollowerSpace.dy)
+      ..translate(anchorMetrics.followerAnchorInFollowerSpace.dx, anchorMetrics.followerAnchorInFollowerSpace.dy)
       // Scale from screen-space to follower-space. After this scale, the
       // origin remains in the same place, sitting a gap distance from the
       // Leader, but all further translations will be scaled based on the
@@ -1241,10 +1177,8 @@ class FollowerLayer extends ContainerLayer {
     required Size followerSize,
     required double followerScale,
   }) {
-    final leaderOriginOnScreenVec =
-        _link!.leaderToScreen!.transform3(Vector3.zero());
-    final leaderOriginOnScreen =
-        Offset(leaderOriginOnScreenVec.x, leaderOriginOnScreenVec.y);
+    final leaderOriginOnScreenVec = _link!.leaderToScreen!.transform3(Vector3.zero());
+    final leaderOriginOnScreen = Offset(leaderOriginOnScreenVec.x, leaderOriginOnScreenVec.y);
     final leaderGlobalRect = leaderOriginOnScreen & leaderSize;
 
     final alignment = aligner!.align(leaderGlobalRect, followerSize);
@@ -1252,24 +1186,20 @@ class FollowerLayer extends ContainerLayer {
     return _AnchorMetrics(
       leaderAnchorInScreenSpace: alignment.leaderAnchor.alongSize(leaderSize),
       followerGapInScreenSpace: alignment.followerOffset,
-      followerAnchorInFollowerSpace:
-          -alignment.followerAnchor.alongSize(followerSize * followerScale),
+      followerAnchorInFollowerSpace: -alignment.followerAnchor.alongSize(followerSize * followerScale),
     );
   }
 
-  void _constrainFollowerOffsetToBounds(
-      Matrix4 desiredTransform, double followerScale) {
+  void _constrainFollowerOffsetToBounds(Matrix4 desiredTransform, double followerScale) {
     if (boundary == null) {
       return;
     }
 
-    FtlLogs.follower
-        .finest("Layer asking RenderFollower for global follower rect:");
+    FtlLogs.follower.finest("Layer asking RenderFollower for global follower rect:");
     final globalFollowerRect = calculateGlobalFollowerRect!();
     FtlLogs.follower.finest(" - global rect: $globalFollowerRect");
 
-    final followerAdjustment =
-        boundary!.constrain(globalFollowerRect, followerScale);
+    final followerAdjustment = boundary!.constrain(globalFollowerRect, followerScale);
     desiredTransform.translate(followerAdjustment.dx, followerAdjustment.dy);
   }
 
@@ -1294,8 +1224,7 @@ class FollowerLayer extends ContainerLayer {
     // Apply each layer to the matrix in turn, starting from the last layer,
     // and providing the previous layer as the child.
     for (int index = layers.length - 1; index > 0; index -= 1) {
-      FtlLogs.follower
-          .finest("Calling applyTransform() on layer: ${layers[index]}");
+      FtlLogs.follower.finest("Calling applyTransform() on layer: ${layers[index]}");
       layers[index]?.applyTransform(layers[index - 1], result);
     }
     return result;
@@ -1374,8 +1303,7 @@ class FollowerLayer extends ContainerLayer {
     if (_lastTransform != null) {
       transform.multiply(_lastTransform!);
     } else {
-      transform.multiply(
-          Matrix4.translationValues(unlinkedOffset!.dx, unlinkedOffset!.dy, 0));
+      transform.multiply(Matrix4.translationValues(unlinkedOffset!.dx, unlinkedOffset!.dy, 0));
     }
 
     FtlLogs.follower.finest("Transform after translation: \n$transform");
@@ -1385,8 +1313,7 @@ class FollowerLayer extends ContainerLayer {
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
     properties.add(DiagnosticsProperty<LeaderLink>('link', link));
-    properties.add(
-        TransformProperty('transform', getLastTransform(), defaultValue: null));
+    properties.add(TransformProperty('transform', getLastTransform(), defaultValue: null));
   }
 }
 
