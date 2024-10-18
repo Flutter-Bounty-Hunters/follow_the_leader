@@ -2,7 +2,6 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:follow_the_leader/follow_the_leader.dart';
-import 'package:follow_the_leader/src/sliver_hybrid_stack.dart';
 import 'package:logging/logging.dart';
 
 /// Widget that displays [content] above a number of [underlays], and beneath a number of
