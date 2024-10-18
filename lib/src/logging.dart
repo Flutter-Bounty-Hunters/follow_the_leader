@@ -9,6 +9,7 @@ class LogNames {
   static const link = 'link';
   static const boundary = 'boundary';
   static const widgetBoundary = 'boundary.widget';
+  static const contentLayers = 'contentLayers';
 }
 
 /// Follow the Leader logging.
@@ -18,6 +19,7 @@ class FtlLogs {
   static final link = logging.Logger(LogNames.link);
   static final boundary = logging.Logger(LogNames.boundary);
   static final widgetBoundary = logging.Logger(LogNames.widgetBoundary);
+  static final contentLayers = logging.Logger(LogNames.contentLayers);
 
   static final _activeLoggers = <logging.Logger>{};
 
