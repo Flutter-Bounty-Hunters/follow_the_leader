@@ -6,7 +6,7 @@ repository: https://github.com/Flutter-Bounty-Hunters/follow_the_leader
 version: 0.0.4+8
 
 environment:
-  sdk: ">=2.15.0 <4.0.0"
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
