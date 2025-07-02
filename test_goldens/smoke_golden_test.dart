@@ -86,7 +86,6 @@ Future<void> _pumpBoundedFollowerScenario(
   final link = leaderLink ?? LeaderLink();
   final boundsKey = GlobalKey();
   final widgetBoundary = WidgetFollowerBoundary(
-    devicePixelRatio: 1.0,
     boundaryKey: boundsKey,
   );
 
@@ -112,7 +111,7 @@ Future<void> _pumpBoundedFollowerScenario(
             key: boundsKey,
             width: 300,
             height: 300,
-            color: Colors.green.withOpacity(0.2),
+            color: Colors.green.withValues(alpha: 0.2),
           ),
         ),
         FollowerFadeOutBeyondBoundary(

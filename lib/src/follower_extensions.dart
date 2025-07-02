@@ -45,7 +45,7 @@ class FollowerFadeOutBeyondBoundary extends StatelessWidget {
       animation: link,
       builder: (context, value) {
         return AnimatedOpacity(
-          opacity: _isContentVisible() || !enabled ? 1.0 : 0.0,
+          opacity: _isContentVisible(context) || !enabled ? 1.0 : 0.0,
           duration: duration,
           curve: curve,
           child: child,
@@ -54,7 +54,7 @@ class FollowerFadeOutBeyondBoundary extends StatelessWidget {
     );
   }
 
-  bool _isContentVisible() {
+  bool _isContentVisible(BuildContext context) {
     if (boundary == null) {
       return true;
     }
@@ -66,6 +66,6 @@ class FollowerFadeOutBeyondBoundary extends StatelessWidget {
       return false;
     }
 
-    return boundary!.containsRect(link.offset! & (link.leaderSize! * (link.scale ?? 1.0)));
+    return boundary!.containsRect(context, link.offset! & (link.leaderSize! * (link.scale ?? 1.0)));
   }
 }

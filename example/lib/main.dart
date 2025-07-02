@@ -1,6 +1,6 @@
 import 'package:example/demo_hover.dart';
 import 'package:example/demo_interactive_viewer.dart';
-import 'package:example/demo_kitchen_sink.dart';
+import 'package:example/kitchen_sink/demo_kitchen_sink.dart';
 import 'package:example/demo_page_list_viewport.dart';
 import 'package:example/demo_scaling.dart';
 import 'package:example/demo_scrollables.dart';
@@ -55,6 +55,8 @@ class _ExampleAppState extends State<ExampleApp> {
 
   @override
   Widget build(BuildContext context) {
+    print("Bottom insets from main.dart: ${MediaQuery.viewInsetsOf(context).bottom}");
+
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
@@ -65,6 +67,7 @@ class _ExampleAppState extends State<ExampleApp> {
       body: Builder(builder: (bodyContext) {
         // Use an intermediate Builder so that the BuildContext that we
         // give to the pageBuilder has finite layout bounds.
+        print("Bottom insets from main Builder: ${MediaQuery.viewInsetsOf(bodyContext).bottom}");
         return _selectedMenu.pageBuilder(bodyContext);
       }),
       drawer: _buildDrawer(),
@@ -102,7 +105,10 @@ class _ExampleAppState extends State<ExampleApp> {
 final _items = [
   _MenuItem(
     title: 'Follow the Leader',
-    pageBuilder: (context) => const KitchenSinkDemo(),
+    pageBuilder: (context) {
+      print("Bottom insets from kitchen sink pageBuilder: ${MediaQuery.viewInsetsOf(context).bottom}");
+      return const KitchenSinkDemo();
+    },
   ),
   _MenuItem(
     title: 'Page List Viewport',

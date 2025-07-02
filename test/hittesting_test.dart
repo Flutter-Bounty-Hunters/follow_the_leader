@@ -33,10 +33,7 @@ void main() {
                     left: 0,
                     child: Follower.withOffset(
                       link: _link,
-                      boundary: ScreenFollowerBoundary(
-                        screenSize: MediaQuery.of(context).size,
-                        devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
-                      ),
+                      boundary: const ScreenFollowerBoundary(),
                       leaderAnchor: Alignment.bottomRight,
                       followerAnchor: Alignment.topLeft,
                       offset: const Offset(50, 50),

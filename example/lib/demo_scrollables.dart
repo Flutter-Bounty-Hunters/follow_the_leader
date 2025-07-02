@@ -90,7 +90,7 @@ class _VerticalListState extends State<_VerticalList> {
               child: DecoratedBox(
                 key: _boundsKey,
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.10),
+                  color: Colors.green.withValues(alpha: 0.10),
                 ),
               ),
             ),
@@ -156,7 +156,7 @@ class _HorizontalListState extends State<_HorizontalList> {
               child: DecoratedBox(
                 key: _boundsKey,
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.10),
+                  color: Colors.green.withValues(alpha: 0.10),
                 ),
               ),
             ),
@@ -184,7 +184,7 @@ class _EmptyListItem extends StatelessWidget {
       height: height ?? double.infinity,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.05),
+          color: Colors.black.withValues(alpha: 0.05),
           border: Border.all(color: Colors.black, width: 1),
         ),
       ),
@@ -228,10 +228,7 @@ class _LeaderAndFollowerListItemState extends State<_LeaderAndFollowerListItem> 
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    _viewportBoundary = WidgetFollowerBoundary(
-      devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
-      boundaryKey: widget.boundsKey,
-    );
+    _viewportBoundary = WidgetFollowerBoundary(boundaryKey: widget.boundsKey);
   }
 
   @override
@@ -239,10 +236,7 @@ class _LeaderAndFollowerListItemState extends State<_LeaderAndFollowerListItem> 
     super.didUpdateWidget(oldWidget);
 
     if (widget.boundsKey != oldWidget.boundsKey) {
-      _viewportBoundary = WidgetFollowerBoundary(
-        devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
-        boundaryKey: widget.boundsKey,
-      );
+      _viewportBoundary = WidgetFollowerBoundary(boundaryKey: widget.boundsKey);
       _aligner = CupertinoPopoverToolbarAligner(widget.boundsKey);
     }
   }
