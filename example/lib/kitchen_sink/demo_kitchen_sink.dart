@@ -166,6 +166,14 @@ class KitchenSinkDemoController {
     configureToolbarAligner(config.value.followerDirection);
   }
 
+  void useAndroidSpellcheck() {
+    config.value = config.value.copyWith(
+      followerMenuType: FollowerMenuType.androidSpellcheck,
+    );
+
+    configureToolbarAligner(config.value.followerDirection);
+  }
+
   void configureToolbarAligner(FollowerDirection direction) {
     if (direction == FollowerDirection.automatic) {
       switch (config.value.followerMenuType) {
@@ -182,11 +190,61 @@ class KitchenSinkDemoController {
             aligner: CupertinoPopoverMenuAligner(config.value.boundaryKey),
           );
           break;
+        case FollowerMenuType.androidSpellcheck:
+          config.value = config.value.copyWith(
+            followerDirection: direction,
+            aligner: AndroidSpellcheckPopoverMenuAligner(),
+          );
+          break;
       }
     } else {
       config.value = config.value.copyWith(
         followerDirection: direction,
       )..clearAligner();
     }
+  }
+}
+
+class AndroidSpellcheckPopoverMenuAligner implements FollowerAligner {
+  AndroidSpellcheckPopoverMenuAligner();
+
+  @override
+  FollowerAlignment align(Rect globalLeaderRect, Size followerSize, [Rect? globalBounds]) {
+    print(
+        "Android toolbar alignment - follower bottom: ${globalLeaderRect.bottom + followerSize.height + 20}, bounds bottom: ${globalBounds?.bottom}");
+
+    late FollowerAlignment alignment;
+    // if (globalLeaderRect.right + followerSize.width + _popoverMenuMinimumDistanceFromEdge >= bounds.right) {
+    //   // The follower hit the minimum distance. Invert the follower position.
+    //   alignment = const FollowerAlignment(
+    //     leaderAnchor: Alignment.centerLeft,
+    //     followerAnchor: Alignment.centerRight,
+    //     followerOffset: Offset(-20, 0),
+    //   );
+    // } else if (globalLeaderRect.left - followerSize.width - _popoverMenuMinimumDistanceFromEdge < bounds.left) {
+    //   // The follower hit the minimum distance. Invert the follower position.
+    //   alignment = const FollowerAlignment(
+    //     leaderAnchor: Alignment.centerRight,
+    //     followerAnchor: Alignment.centerLeft,
+    //     followerOffset: Offset(20, 0),
+    //   );
+    // } else {
+    if (globalBounds != null && globalLeaderRect.bottom + followerSize.height + 20 >= globalBounds.bottom) {
+      // The follower hit the minimum distance. Invert the follower position.
+      alignment = const FollowerAlignment(
+        leaderAnchor: Alignment.topCenter,
+        followerAnchor: Alignment.bottomCenter,
+        followerOffset: Offset(0, -20),
+      );
+    } else {
+      // The follower can fit below. Use the standard orientation.
+      alignment = const FollowerAlignment(
+        leaderAnchor: Alignment.bottomCenter,
+        followerAnchor: Alignment.topCenter,
+        followerOffset: Offset(0, 20),
+      );
+    }
+
+    return alignment;
   }
 }

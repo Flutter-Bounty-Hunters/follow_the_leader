@@ -105,7 +105,7 @@ class Follower extends SingleChildRenderObjectWidget {
 }
 
 abstract class FollowerAligner {
-  FollowerAlignment align(Rect globalLeaderRect, Size followerSize);
+  FollowerAlignment align(Rect globalLeaderRect, Size followerSize, [Rect? globalBounds]);
 }
 
 class StaticOffsetAligner implements FollowerAligner {
@@ -122,7 +122,7 @@ class StaticOffsetAligner implements FollowerAligner {
   final Alignment _followerAnchor;
 
   @override
-  FollowerAlignment align(Rect globalLeaderRect, Size followerSize) {
+  FollowerAlignment align(Rect globalLeaderRect, Size followerSize, [Rect? globalBounds]) {
     return FollowerAlignment(
       followerOffset: _offset,
       leaderAnchor: _leaderAnchor,
@@ -138,11 +138,11 @@ class FunctionalAligner implements FollowerAligner {
   });
 
   /// Called to determine the position of the [Follower].
-  final FollowerAlignment Function(Rect globalLeaderRect, Size followerSize) delegate;
+  final FollowerAlignment Function(Rect globalLeaderRect, Size followerSize, [Rect? globalBounds]) delegate;
 
   @override
-  FollowerAlignment align(Rect globalLeaderRect, Size followerSize) {
-    return delegate(globalLeaderRect, followerSize);
+  FollowerAlignment align(Rect globalLeaderRect, Size followerSize, [Rect? globalBounds]) {
+    return delegate(globalLeaderRect, followerSize, globalBounds);
   }
 }
 
@@ -171,18 +171,20 @@ class FollowerAlignment {
 
 /// A boundary that determines where a [Follower] is allowed to appear.
 abstract class FollowerBoundary {
-  /// Returns `true` if the given [offset] sits within this boundary,
-  /// or `false` if it sits outside.
-  bool containsOffset(BuildContext context, Offset offset);
+  Rect calculateGlobalBounds(BuildContext context);
 
-  /// Returns `true` if the given [rect] sits entirely within this boundary,
-  /// or `false` if it sits partially, or entirely outside.
-  bool containsRect(BuildContext context, Rect rect,
-      [FollowerBoundaryOverlapMode overlapMode = FollowerBoundaryOverlapMode.partial]);
-
-  /// Constrains the given [desiredOffset] to a legal [Offset] for this
-  /// boundary.
-  Offset constrain(BuildContext context, Rect globalFollowerRect, double followerScale);
+  // /// Returns `true` if the given [offset] sits within this boundary,
+  // /// or `false` if it sits outside.
+  // bool containsOffset(BuildContext context, Offset offset);
+  //
+  // /// Returns `true` if the given [rect] sits entirely within this boundary,
+  // /// or `false` if it sits partially, or entirely outside.
+  // bool containsRect(BuildContext context, Rect rect,
+  //     [FollowerBoundaryOverlapMode overlapMode = FollowerBoundaryOverlapMode.partial]);
+  //
+  // /// Constrains the given [desiredOffset] to a legal [Offset] for this
+  // /// boundary.
+  // Offset constrain(BuildContext context, Rect globalFollowerRect, double followerScale);
 }
 
 enum FollowerBoundaryOverlapMode {
@@ -200,36 +202,42 @@ class ScreenFollowerBoundary implements FollowerBoundary {
   const ScreenFollowerBoundary();
 
   @override
-  bool containsOffset(BuildContext context, Offset offset) => MediaQuery.sizeOf(context).contains(offset);
-
-  @override
-  bool containsRect(BuildContext context, Rect rect,
-      [FollowerBoundaryOverlapMode overlapMode = FollowerBoundaryOverlapMode.partial]) {
+  Rect calculateGlobalBounds(BuildContext context) {
     final screenSize = MediaQuery.sizeOf(context);
-
-    return overlapMode == FollowerBoundaryOverlapMode.full
-        ? rect.intersect(Offset.zero & screenSize) == rect
-        : rect.overlaps(Offset.zero & screenSize);
+    return Offset.zero & screenSize;
   }
 
-  @override
-  Offset constrain(BuildContext context, Rect globalFollowerRect, double followerScale) {
-    final screenSize = MediaQuery.sizeOf(context);
-    final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
-
-    final xAdjustment = globalFollowerRect.left < 0
-        ? -globalFollowerRect.left
-        : globalFollowerRect.right > screenSize.width
-            ? screenSize.width - globalFollowerRect.right
-            : 0.0;
-    final yAdjustment = globalFollowerRect.top < 0
-        ? -globalFollowerRect.top
-        : globalFollowerRect.bottom > screenSize.height
-            ? screenSize.height - globalFollowerRect.bottom
-            : 0.0;
-
-    return Offset(xAdjustment, yAdjustment) / (followerScale / devicePixelRatio);
-  }
+  // @override
+  // bool containsOffset(BuildContext context, Offset offset) => MediaQuery.sizeOf(context).contains(offset);
+  //
+  // @override
+  // bool containsRect(BuildContext context, Rect rect,
+  //     [FollowerBoundaryOverlapMode overlapMode = FollowerBoundaryOverlapMode.partial]) {
+  //   final screenSize = MediaQuery.sizeOf(context);
+  //
+  //   return overlapMode == FollowerBoundaryOverlapMode.full
+  //       ? rect.intersect(Offset.zero & screenSize) == rect
+  //       : rect.overlaps(Offset.zero & screenSize);
+  // }
+  //
+  // @override
+  // Offset constrain(BuildContext context, Rect globalFollowerRect, double followerScale) {
+  //   final screenSize = MediaQuery.sizeOf(context);
+  //   final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
+  //
+  //   final xAdjustment = globalFollowerRect.left < 0
+  //       ? -globalFollowerRect.left
+  //       : globalFollowerRect.right > screenSize.width
+  //           ? screenSize.width - globalFollowerRect.right
+  //           : 0.0;
+  //   final yAdjustment = globalFollowerRect.top < 0
+  //       ? -globalFollowerRect.top
+  //       : globalFollowerRect.bottom > screenSize.height
+  //           ? screenSize.height - globalFollowerRect.bottom
+  //           : 0.0;
+  //
+  //   return Offset(xAdjustment, yAdjustment) / (followerScale / devicePixelRatio);
+  // }
 }
 
 /// A [FollowerBoundary] that keeps the follower within the bounds of the safe area, as described
@@ -238,43 +246,51 @@ class SafeAreaFollowerBoundary implements FollowerBoundary {
   const SafeAreaFollowerBoundary();
 
   @override
-  bool containsOffset(BuildContext context, Offset offset) => _calculateSafeAreaRect(context).contains(offset);
-
-  @override
-  bool containsRect(
-    BuildContext context,
-    Rect rect, [
-    FollowerBoundaryOverlapMode overlapMode = FollowerBoundaryOverlapMode.partial,
-  ]) =>
-      overlapMode == FollowerBoundaryOverlapMode.full
-          ? rect.intersect(_calculateSafeAreaRect(context)) == rect
-          : rect.overlaps(_calculateSafeAreaRect(context));
-
-  @override
-  Offset constrain(BuildContext context, Rect globalFollowerRect, double followerScale) {
-    final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
-    final boundaryGlobalRect = _calculateSafeAreaRect(context);
-
-    final xAdjustment = globalFollowerRect.left < boundaryGlobalRect.left
-        ? boundaryGlobalRect.left - globalFollowerRect.left
-        : globalFollowerRect.right > boundaryGlobalRect.right
-            ? boundaryGlobalRect.right - globalFollowerRect.right
-            : 0.0;
-    final yAdjustment = globalFollowerRect.top < boundaryGlobalRect.top
-        ? boundaryGlobalRect.top - globalFollowerRect.top
-        : globalFollowerRect.bottom > boundaryGlobalRect.bottom
-            ? boundaryGlobalRect.bottom - globalFollowerRect.bottom
-            : 0.0;
-
-    return Offset(xAdjustment, yAdjustment) / (followerScale / devicePixelRatio);
-  }
-
-  Rect _calculateSafeAreaRect(BuildContext context) {
+  Rect calculateGlobalBounds(BuildContext context) {
     final safeArea = MediaQuery.paddingOf(context);
     final screenRect = Offset.zero & MediaQuery.sizeOf(context);
     final safeRect = safeArea.deflateRect(screenRect);
     return safeRect;
   }
+
+  // @override
+  // bool containsOffset(BuildContext context, Offset offset) => _calculateSafeAreaRect(context).contains(offset);
+  //
+  // @override
+  // bool containsRect(
+  //   BuildContext context,
+  //   Rect rect, [
+  //   FollowerBoundaryOverlapMode overlapMode = FollowerBoundaryOverlapMode.partial,
+  // ]) =>
+  //     overlapMode == FollowerBoundaryOverlapMode.full
+  //         ? rect.intersect(_calculateSafeAreaRect(context)) == rect
+  //         : rect.overlaps(_calculateSafeAreaRect(context));
+  //
+  // @override
+  // Offset constrain(BuildContext context, Rect globalFollowerRect, double followerScale) {
+  //   final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
+  //   final boundaryGlobalRect = _calculateSafeAreaRect(context);
+  //
+  //   final xAdjustment = globalFollowerRect.left < boundaryGlobalRect.left
+  //       ? boundaryGlobalRect.left - globalFollowerRect.left
+  //       : globalFollowerRect.right > boundaryGlobalRect.right
+  //           ? boundaryGlobalRect.right - globalFollowerRect.right
+  //           : 0.0;
+  //   final yAdjustment = globalFollowerRect.top < boundaryGlobalRect.top
+  //       ? boundaryGlobalRect.top - globalFollowerRect.top
+  //       : globalFollowerRect.bottom > boundaryGlobalRect.bottom
+  //           ? boundaryGlobalRect.bottom - globalFollowerRect.bottom
+  //           : 0.0;
+  //
+  //   return Offset(xAdjustment, yAdjustment) / (followerScale / devicePixelRatio);
+  // }
+  //
+  // Rect _calculateSafeAreaRect(BuildContext context) {
+  //   final safeArea = MediaQuery.paddingOf(context);
+  //   final screenRect = Offset.zero & MediaQuery.sizeOf(context);
+  //   final safeRect = safeArea.deflateRect(screenRect);
+  //   return safeRect;
+  // }
 }
 
 /// A [FollowerBoundary] that keeps the follower above the software keyboard.
@@ -288,38 +304,7 @@ class KeyboardFollowerBoundary implements FollowerBoundary {
   final bool keepWithinScreen;
 
   @override
-  bool containsOffset(BuildContext context, Offset offset) => _calculateBoundaryRect(context).contains(offset);
-
-  @override
-  bool containsRect(
-    BuildContext context,
-    Rect rect, [
-    FollowerBoundaryOverlapMode overlapMode = FollowerBoundaryOverlapMode.partial,
-  ]) =>
-      overlapMode == FollowerBoundaryOverlapMode.full
-          ? rect.intersect(_calculateBoundaryRect(context)) == rect
-          : rect.overlaps(_calculateBoundaryRect(context));
-
-  @override
-  Offset constrain(BuildContext context, Rect globalFollowerRect, double followerScale) {
-    final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
-    final boundaryGlobalRect = _calculateBoundaryRect(context);
-
-    final xAdjustment = globalFollowerRect.left < boundaryGlobalRect.left
-        ? boundaryGlobalRect.left - globalFollowerRect.left
-        : globalFollowerRect.right > boundaryGlobalRect.right
-            ? boundaryGlobalRect.right - globalFollowerRect.right
-            : 0.0;
-    final yAdjustment = globalFollowerRect.top < boundaryGlobalRect.top
-        ? boundaryGlobalRect.top - globalFollowerRect.top
-        : globalFollowerRect.bottom > boundaryGlobalRect.bottom
-            ? boundaryGlobalRect.bottom - globalFollowerRect.bottom
-            : 0.0;
-
-    return Offset(xAdjustment, yAdjustment) / (followerScale / devicePixelRatio);
-  }
-
-  Rect _calculateBoundaryRect(BuildContext context) {
+  Rect calculateGlobalBounds(BuildContext context) {
     final screenRect = Offset.zero & MediaQuery.sizeOf(context);
     final keyboardHeight = SuperKeyboard.instance.mobileGeometry.value.keyboardHeight ?? 0;
     final boundRect = keepWithinScreen //
@@ -338,6 +323,58 @@ class KeyboardFollowerBoundary implements FollowerBoundary {
 
     return boundRect;
   }
+
+  // @override
+  // bool containsOffset(BuildContext context, Offset offset) => _calculateBoundaryRect(context).contains(offset);
+  //
+  // @override
+  // bool containsRect(
+  //   BuildContext context,
+  //   Rect rect, [
+  //   FollowerBoundaryOverlapMode overlapMode = FollowerBoundaryOverlapMode.partial,
+  // ]) =>
+  //     overlapMode == FollowerBoundaryOverlapMode.full
+  //         ? rect.intersect(_calculateBoundaryRect(context)) == rect
+  //         : rect.overlaps(_calculateBoundaryRect(context));
+  //
+  // @override
+  // Offset constrain(BuildContext context, Rect globalFollowerRect, double followerScale) {
+  //   final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
+  //   final boundaryGlobalRect = _calculateBoundaryRect(context);
+  //
+  //   final xAdjustment = globalFollowerRect.left < boundaryGlobalRect.left
+  //       ? boundaryGlobalRect.left - globalFollowerRect.left
+  //       : globalFollowerRect.right > boundaryGlobalRect.right
+  //           ? boundaryGlobalRect.right - globalFollowerRect.right
+  //           : 0.0;
+  //   final yAdjustment = globalFollowerRect.top < boundaryGlobalRect.top
+  //       ? boundaryGlobalRect.top - globalFollowerRect.top
+  //       : globalFollowerRect.bottom > boundaryGlobalRect.bottom
+  //           ? boundaryGlobalRect.bottom - globalFollowerRect.bottom
+  //           : 0.0;
+  //
+  //   return Offset(xAdjustment, yAdjustment) / (followerScale / devicePixelRatio);
+  // }
+  //
+  // Rect _calculateBoundaryRect(BuildContext context) {
+  //   final screenRect = Offset.zero & MediaQuery.sizeOf(context);
+  //   final keyboardHeight = SuperKeyboard.instance.mobileGeometry.value.keyboardHeight ?? 0;
+  //   final boundRect = keepWithinScreen //
+  //       ? Rect.fromLTWH(
+  //           screenRect.left,
+  //           screenRect.top,
+  //           screenRect.width,
+  //           screenRect.height - keyboardHeight,
+  //         )
+  //       : Rect.fromLTRB(
+  //           double.negativeInfinity,
+  //           double.negativeInfinity,
+  //           double.infinity,
+  //           screenRect.height - keyboardHeight,
+  //         );
+  //
+  //   return boundRect;
+  // }
 }
 
 /// A [FollowerBoundary] that keeps the follower within the bounds of the widget
@@ -350,18 +387,9 @@ class WidgetFollowerBoundary implements FollowerBoundary {
   final GlobalKey? boundaryKey;
 
   @override
-  bool containsOffset(BuildContext context, Offset offset) => _calculateBoundaryRect()?.contains(offset) ?? false;
-
-  @override
-  bool containsRect(BuildContext context, Rect rect,
-          [FollowerBoundaryOverlapMode overlapMode = FollowerBoundaryOverlapMode.partial]) =>
-      overlapMode == FollowerBoundaryOverlapMode.full
-          ? rect.intersect(_calculateBoundaryRect() ?? Rect.zero) == rect
-          : rect.overlaps(_calculateBoundaryRect() ?? Rect.zero);
-
-  Rect? _calculateBoundaryRect() {
+  Rect calculateGlobalBounds(BuildContext context) {
     if (boundaryKey == null || boundaryKey!.currentContext == null) {
-      return null;
+      return Rect.largest;
     }
 
     final boundaryBox = boundaryKey!.currentContext!.findRenderObject() as RenderBox;
@@ -372,30 +400,53 @@ class WidgetFollowerBoundary implements FollowerBoundary {
     return boundaryRect;
   }
 
-  @override
-  Offset constrain(BuildContext context, Rect globalFollowerRect, double followerScale) {
-    if (boundaryKey == null) {
-      return Offset.zero;
-    }
-
-    final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
-    final boundaryBox = boundaryKey!.currentContext!.findRenderObject() as RenderBox;
-    final boundaryGlobalOrigin = boundaryBox.localToGlobal(Offset.zero);
-    final boundaryGlobalRect = boundaryGlobalOrigin & boundaryBox.size;
-
-    final xAdjustment = globalFollowerRect.left < boundaryGlobalRect.left
-        ? boundaryGlobalRect.left - globalFollowerRect.left
-        : globalFollowerRect.right > boundaryGlobalRect.right
-            ? boundaryGlobalRect.right - globalFollowerRect.right
-            : 0.0;
-    final yAdjustment = globalFollowerRect.top < boundaryGlobalRect.top
-        ? boundaryGlobalRect.top - globalFollowerRect.top
-        : globalFollowerRect.bottom > boundaryGlobalRect.bottom
-            ? boundaryGlobalRect.bottom - globalFollowerRect.bottom
-            : 0.0;
-
-    return Offset(xAdjustment, yAdjustment) / (followerScale / devicePixelRatio);
-  }
+  // @override
+  // bool containsOffset(BuildContext context, Offset offset) => _calculateBoundaryRect()?.contains(offset) ?? false;
+  //
+  // @override
+  // bool containsRect(BuildContext context, Rect rect,
+  //         [FollowerBoundaryOverlapMode overlapMode = FollowerBoundaryOverlapMode.partial]) =>
+  //     overlapMode == FollowerBoundaryOverlapMode.full
+  //         ? rect.intersect(_calculateBoundaryRect() ?? Rect.zero) == rect
+  //         : rect.overlaps(_calculateBoundaryRect() ?? Rect.zero);
+  //
+  // Rect? _calculateBoundaryRect() {
+  //   if (boundaryKey == null || boundaryKey!.currentContext == null) {
+  //     return null;
+  //   }
+  //
+  //   final boundaryBox = boundaryKey!.currentContext!.findRenderObject() as RenderBox;
+  //   final boundaryRect = Rect.fromPoints(
+  //     boundaryBox.localToGlobal(Offset.zero),
+  //     boundaryBox.localToGlobal(boundaryBox.size.bottomRight(Offset.zero)),
+  //   );
+  //   return boundaryRect;
+  // }
+  //
+  // @override
+  // Offset constrain(BuildContext context, Rect globalFollowerRect, double followerScale) {
+  //   if (boundaryKey == null) {
+  //     return Offset.zero;
+  //   }
+  //
+  //   final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
+  //   final boundaryBox = boundaryKey!.currentContext!.findRenderObject() as RenderBox;
+  //   final boundaryGlobalOrigin = boundaryBox.localToGlobal(Offset.zero);
+  //   final boundaryGlobalRect = boundaryGlobalOrigin & boundaryBox.size;
+  //
+  //   final xAdjustment = globalFollowerRect.left < boundaryGlobalRect.left
+  //       ? boundaryGlobalRect.left - globalFollowerRect.left
+  //       : globalFollowerRect.right > boundaryGlobalRect.right
+  //           ? boundaryGlobalRect.right - globalFollowerRect.right
+  //           : 0.0;
+  //   final yAdjustment = globalFollowerRect.top < boundaryGlobalRect.top
+  //       ? boundaryGlobalRect.top - globalFollowerRect.top
+  //       : globalFollowerRect.bottom > boundaryGlobalRect.bottom
+  //           ? boundaryGlobalRect.bottom - globalFollowerRect.bottom
+  //           : 0.0;
+  //
+  //   return Offset(xAdjustment, yAdjustment) / (followerScale / devicePixelRatio);
+  // }
 }
 
 // TODO: decide if this should really be an extension. If so, check for
@@ -1283,8 +1334,8 @@ class FollowerLayer extends ContainerLayer {
 
     _lastTransform = focalPointToScreenTransform;
 
-    // Make sure we don't display the Follower beyond the desired bounds.
-    _constrainFollowerOffsetToBounds(_lastTransform!, followerScale);
+    // // Make sure we don't display the Follower beyond the desired bounds.
+    // _constrainFollowerOffsetToBounds(_lastTransform!, followerScale);
 
     _inverseDirty = true;
 
@@ -1321,18 +1372,18 @@ class FollowerLayer extends ContainerLayer {
     );
   }
 
-  void _constrainFollowerOffsetToBounds(Matrix4 desiredTransform, double followerScale) {
-    if (boundary == null) {
-      return;
-    }
-
-    FtlLogs.follower.finest("Layer asking RenderFollower for global follower rect:");
-    final globalFollowerRect = calculateGlobalFollowerRect!();
-    FtlLogs.follower.finest(" - global rect: $globalFollowerRect");
-
-    final followerAdjustment = boundary!.constrain(context!, globalFollowerRect, followerScale);
-    desiredTransform.translate(followerAdjustment.dx, followerAdjustment.dy);
-  }
+  // void _constrainFollowerOffsetToBounds(Matrix4 desiredTransform, double followerScale) {
+  //   if (boundary == null) {
+  //     return;
+  //   }
+  //
+  //   FtlLogs.follower.finest("Layer asking RenderFollower for global follower rect:");
+  //   final globalFollowerRect = calculateGlobalFollowerRect!();
+  //   FtlLogs.follower.finest(" - global rect: $globalFollowerRect");
+  //
+  //   final followerAdjustment = boundary!.constrain(context!, globalFollowerRect, followerScale);
+  //   desiredTransform.translate(followerAdjustment.dx, followerAdjustment.dy);
+  // }
 
   /// Builds and returns a transform that goes from a layer-space to
   /// screen-space.

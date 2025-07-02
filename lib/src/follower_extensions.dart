@@ -66,6 +66,12 @@ class FollowerFadeOutBeyondBoundary extends StatelessWidget {
       return false;
     }
 
-    return boundary!.containsRect(context, link.offset! & (link.leaderSize! * (link.scale ?? 1.0)));
+    final leaderRect = link.offset! & (link.leaderSize! * (link.scale ?? 1.0));
+    final boundsRect = boundary!.calculateGlobalBounds(context);
+
+    // Returns `true` if there's even a partial overlap.
+    return leaderRect.overlaps(boundsRect);
+
+    // return boundary!.containsRect(context, link.offset! & (link.leaderSize! * (link.scale ?? 1.0)));
   }
 }

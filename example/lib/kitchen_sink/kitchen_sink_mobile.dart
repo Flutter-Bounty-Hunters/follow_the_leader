@@ -290,6 +290,13 @@ Future<void> _showMenuTypeSelectionSheet(BuildContext context, KitchenSinkDemoCo
                 controller.useIOSPopover();
               },
             ),
+            ListTile(
+              title: const Text("Android Spellcheck"),
+              onTap: () {
+                Navigator.of(context).pop();
+                controller.useAndroidSpellcheck();
+              },
+            ),
           ],
         ),
       );

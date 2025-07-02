@@ -167,6 +167,11 @@ class _PinAndFollowerDragArenaState extends State<PinAndFollowerDragArena> {
             ),
           ),
         );
+      case FollowerMenuType.androidSpellcheck:
+        return AndroidSpellingSuggestionToolbar(
+          suggestions: const ["One", "Two", "Three", "Four", "Five"],
+          closeToolbar: () {},
+        );
     }
   }
 }
@@ -277,6 +282,7 @@ enum FollowerMenuType {
   smallPopover,
   iOSToolbar,
   iOSMenu,
+  androidSpellcheck,
 }
 
 enum FollowerDirection {
@@ -437,3 +443,80 @@ final _toolbarMenuItems = [
     },
   ),
 ];
+
+class AndroidSpellingSuggestionToolbar extends StatefulWidget {
+  const AndroidSpellingSuggestionToolbar({
+    super.key,
+    required this.suggestions,
+    required this.closeToolbar,
+  });
+
+  final List<String> suggestions;
+  final VoidCallback closeToolbar;
+
+  @override
+  State<AndroidSpellingSuggestionToolbar> createState() => _AndroidSpellingSuggestionToolbarState();
+}
+
+class _AndroidSpellingSuggestionToolbarState extends State<AndroidSpellingSuggestionToolbar> {
+  Color _getTextColor(Brightness brightness) {
+    switch (brightness) {
+      case Brightness.light:
+        return Colors.black;
+      case Brightness.dark:
+        return Colors.white;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+
+    return Material(
+      elevation: 8,
+      borderRadius: BorderRadius.circular(4),
+      color: brightness == Brightness.light //
+          ? Colors.white
+          : Theme.of(context).canvasColor,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final suggestion in widget.suggestions) ...[
+            _buildButton(
+              title: suggestion,
+              onPressed: () {},
+              brightness: brightness,
+            ),
+          ],
+          _buildButton(
+            title: 'Delete',
+            onPressed: () {},
+            brightness: brightness,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildButton({
+    required String title,
+    required VoidCallback onPressed,
+    required Brightness brightness,
+  }) {
+    return TextButton(
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        minimumSize: const Size(kMinInteractiveDimension, kMinInteractiveDimension),
+        padding: EdgeInsets.zero,
+        foregroundColor: _getTextColor(brightness),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12.0),
+        child: Text(
+          title,
+          style: const TextStyle(fontSize: 14),
+        ),
+      ),
+    );
+  }
+}
