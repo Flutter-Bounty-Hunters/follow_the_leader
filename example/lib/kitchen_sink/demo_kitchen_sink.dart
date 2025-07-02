@@ -20,8 +20,6 @@ class _KitchenSinkDemoState extends State<KitchenSinkDemo> {
 
   @override
   Widget build(BuildContext context) {
-    print("Bottom insets from kitchen sink: ${MediaQuery.viewInsetsOf(context).bottom}");
-
     return Theme(
       data: ThemeData.dark(),
       child: LayoutBuilder(builder: (context, constraints) {
@@ -146,7 +144,7 @@ class KitchenSinkDemoController {
 
   void useGenericMenu() {
     config.value = config.value.copyWith(
-      menuType: FollowerMenuType.smallPopover,
+      followerMenuType: FollowerMenuType.smallPopover,
     );
 
     configureToolbarAligner(config.value.followerDirection);
@@ -154,7 +152,7 @@ class KitchenSinkDemoController {
 
   void useIOSToolbar() {
     config.value = config.value.copyWith(
-      menuType: FollowerMenuType.iOSToolbar,
+      followerMenuType: FollowerMenuType.iOSToolbar,
     );
 
     configureToolbarAligner(config.value.followerDirection);
@@ -162,7 +160,7 @@ class KitchenSinkDemoController {
 
   void useIOSPopover() {
     config.value = config.value.copyWith(
-      menuType: FollowerMenuType.iOSMenu,
+      followerMenuType: FollowerMenuType.iOSMenu,
     );
 
     configureToolbarAligner(config.value.followerDirection);

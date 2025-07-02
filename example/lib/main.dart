@@ -55,8 +55,6 @@ class _ExampleAppState extends State<ExampleApp> {
 
   @override
   Widget build(BuildContext context) {
-    print("Bottom insets from main.dart: ${MediaQuery.viewInsetsOf(context).bottom}");
-
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
@@ -67,7 +65,6 @@ class _ExampleAppState extends State<ExampleApp> {
       body: Builder(builder: (bodyContext) {
         // Use an intermediate Builder so that the BuildContext that we
         // give to the pageBuilder has finite layout bounds.
-        print("Bottom insets from main Builder: ${MediaQuery.viewInsetsOf(bodyContext).bottom}");
         return _selectedMenu.pageBuilder(bodyContext);
       }),
       drawer: _buildDrawer(),
@@ -106,7 +103,6 @@ final _items = [
   _MenuItem(
     title: 'Follow the Leader',
     pageBuilder: (context) {
-      print("Bottom insets from kitchen sink pageBuilder: ${MediaQuery.viewInsetsOf(context).bottom}");
       return const KitchenSinkDemo();
     },
   ),
@@ -160,7 +156,7 @@ class _DrawerButton extends StatelessWidget {
               }
 
               if (states.contains(WidgetState.hovered)) {
-                return Colors.grey.withOpacity(0.1);
+                return Colors.grey.withValues(alpha: 0.1);
               }
 
               return Colors.transparent;

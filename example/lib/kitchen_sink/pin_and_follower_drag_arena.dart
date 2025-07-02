@@ -225,7 +225,7 @@ class FollowerDemoConfiguration {
     FollowerConstraint? followerConstraints,
     FollowerBoundary? followerBoundary,
     GlobalKey? boundaryKey,
-    FollowerMenuType? menuType,
+    FollowerMenuType? followerMenuType,
     FollowerAligner? aligner,
     bool? fadeBeyondBoundary,
   }) {
@@ -234,7 +234,7 @@ class FollowerDemoConfiguration {
       followerConstraints: followerConstraints ?? this.followerConstraints,
       followerBoundary: followerBoundary ?? this.followerBoundary,
       boundaryKey: boundaryKey ?? this.boundaryKey,
-      followerMenuType: menuType ?? this.followerMenuType,
+      followerMenuType: followerMenuType ?? this.followerMenuType,
       aligner: aligner ?? this.aligner,
       fadeBeyondBoundary: fadeBeyondBoundary ?? this.fadeBeyondBoundary,
     );
@@ -378,10 +378,6 @@ class _PinState extends State<_Pin> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    print("From pin perspective...");
-    print(" - bottom insets: ${MediaQuery.viewInsetsOf(context).bottom}");
-    print(" - bottom view padding: ${MediaQuery.viewPaddingOf(context).bottom}");
-    print(" - bottom padding: ${MediaQuery.paddingOf(context).bottom}");
     return RepaintBoundary(
       child: AnimatedBuilder(
         animation: _pulseController,

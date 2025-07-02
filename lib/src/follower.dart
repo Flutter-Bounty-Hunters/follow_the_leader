@@ -254,7 +254,6 @@ class SafeAreaFollowerBoundary implements FollowerBoundary {
   Offset constrain(BuildContext context, Rect globalFollowerRect, double followerScale) {
     final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
     final boundaryGlobalRect = _calculateSafeAreaRect(context);
-    print("Constraining global rect: $globalFollowerRect to safe area: $boundaryGlobalRect");
 
     final xAdjustment = globalFollowerRect.left < boundaryGlobalRect.left
         ? boundaryGlobalRect.left - globalFollowerRect.left
@@ -273,9 +272,6 @@ class SafeAreaFollowerBoundary implements FollowerBoundary {
   Rect _calculateSafeAreaRect(BuildContext context) {
     final safeArea = MediaQuery.paddingOf(context);
     final screenRect = Offset.zero & MediaQuery.sizeOf(context);
-    print("_calculateSafeAreaRect()...");
-    print(" - Bottom safe area: ${safeArea.bottom}");
-    print(" - Bottom insets: ${MediaQuery.viewInsetsOf(context).bottom}");
     final safeRect = safeArea.deflateRect(screenRect);
     return safeRect;
   }
@@ -308,7 +304,6 @@ class KeyboardFollowerBoundary implements FollowerBoundary {
   Offset constrain(BuildContext context, Rect globalFollowerRect, double followerScale) {
     final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
     final boundaryGlobalRect = _calculateBoundaryRect(context);
-    print("Constraining global rect: $globalFollowerRect to safe area: $boundaryGlobalRect");
 
     final xAdjustment = globalFollowerRect.left < boundaryGlobalRect.left
         ? boundaryGlobalRect.left - globalFollowerRect.left
@@ -340,11 +335,6 @@ class KeyboardFollowerBoundary implements FollowerBoundary {
             double.infinity,
             screenRect.height - keyboardHeight,
           );
-
-    print("_calculateBoundaryRect()...");
-    print(" - keepWithinScreen: $keepWithinScreen");
-    print(" - keyboard height: ${SuperKeyboard.instance.mobileGeometry.value.keyboardHeight}");
-    print(" - bound rect: $boundRect");
 
     return boundRect;
   }
