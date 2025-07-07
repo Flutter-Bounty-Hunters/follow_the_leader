@@ -44,11 +44,10 @@ class _PinAndFollowerDragArenaState extends State<PinAndFollowerDragArena> {
 
     return GestureDetector(
       onPanUpdate: _onPanUpdate,
-      child: Container(
+      child: SizedBox(
         key: widget.screenBoundsKey,
         width: double.infinity,
         height: double.infinity,
-        color: const Color(0xFF222222),
         child: Stack(
           children: [
             Positioned.fill(
@@ -74,7 +73,12 @@ class _PinAndFollowerDragArenaState extends State<PinAndFollowerDragArena> {
       child: DecoratedBox(
         key: widget.widgetBoundsKey,
         decoration: BoxDecoration(
-          border: Border.all(width: 2, color: Colors.white.withValues(alpha: 0.05)),
+          border: Border.all(
+            width: 2,
+            color: HSVColor.fromColor(Colors.purpleAccent)
+                .withValue(widget.config.boundaryKey == widget.widgetBoundsKey ? 0.5 : 0.2)
+                .toColor(),
+          ),
         ),
       ),
     );
@@ -270,12 +274,12 @@ class FollowerDemoConfiguration {
 }
 
 enum FollowerConstraint {
-  none,
   screen,
-  safeArea,
-  keyboardOnly,
   keyboardAndScreen,
-  bounds,
+  keyboardOnly,
+  safeArea,
+  widget,
+  none,
 }
 
 enum FollowerMenuType {
@@ -477,7 +481,8 @@ class _AndroidSpellingSuggestionToolbarState extends State<AndroidSpellingSugges
       borderRadius: BorderRadius.circular(4),
       color: brightness == Brightness.light //
           ? Colors.white
-          : Theme.of(context).canvasColor,
+          : Colors.red,
+      // : Theme.of(context).canvasColor,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

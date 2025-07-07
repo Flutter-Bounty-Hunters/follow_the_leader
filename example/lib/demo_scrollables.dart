@@ -221,7 +221,7 @@ class _LeaderAndFollowerListItemState extends State<_LeaderAndFollowerListItem> 
   void initState() {
     super.initState();
 
-    _aligner = CupertinoPopoverToolbarAligner(widget.boundsKey);
+    _aligner = CupertinoPopoverToolbarAligner();
   }
 
   @override
@@ -237,7 +237,7 @@ class _LeaderAndFollowerListItemState extends State<_LeaderAndFollowerListItem> 
 
     if (widget.boundsKey != oldWidget.boundsKey) {
       _viewportBoundary = WidgetFollowerBoundary(boundaryKey: widget.boundsKey);
-      _aligner = CupertinoPopoverToolbarAligner(widget.boundsKey);
+      _aligner = CupertinoPopoverToolbarAligner();
     }
   }
 

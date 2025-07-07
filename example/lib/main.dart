@@ -1,20 +1,20 @@
+import 'package:example/basics/static_positioning.dart';
 import 'package:example/demo_hover.dart';
 import 'package:example/demo_interactive_viewer.dart';
-import 'package:example/kitchen_sink/demo_kitchen_sink.dart';
 import 'package:example/demo_page_list_viewport.dart';
 import 'package:example/demo_scaling.dart';
 import 'package:example/demo_scrollables.dart';
+import 'package:example/kitchen_sink/demo_kitchen_sink.dart';
 import 'package:flutter/material.dart';
 import 'package:follow_the_leader/follow_the_leader.dart';
-import 'package:logging/logging.dart';
 
 import 'demo_orbiting_circles.dart';
 
 void main() {
-  FtlLogs.initLoggers(Level.FINEST, {
-    // FtlLogs.leader,
-    // FtlLogs.follower,
-    // FtlLogs.link,
+  FtlLogs.initLoggers({
+    FtlLogs.leader,
+    FtlLogs.follower,
+    FtlLogs.link,
     // FtlLogs.boundary,
     // appLog,
   });
@@ -100,6 +100,12 @@ class _ExampleAppState extends State<ExampleApp> {
 }
 
 final _items = [
+  _MenuItem(
+    title: 'Static Positioning',
+    pageBuilder: (context) {
+      return const StaticPositioningDemo();
+    },
+  ),
   _MenuItem(
     title: 'Follow the Leader',
     pageBuilder: (context) {

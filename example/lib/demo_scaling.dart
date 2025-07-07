@@ -93,7 +93,7 @@ class _ScaleLeaderAndFollowerState extends State<_ScaleLeaderAndFollower> {
   final _boundsKey = GlobalKey();
 
   late WidgetFollowerBoundary _viewportBoundary;
-  late final _aligner = CupertinoPopoverToolbarAligner(_boundsKey);
+  late final _aligner = CupertinoPopoverToolbarAligner();
   late final _focalPoint = LeaderMenuFocalPoint(link: _anchor);
 
   @override
@@ -182,7 +182,7 @@ class _ScaleLeaderButNotFollowerState extends State<_ScaleLeaderButNotFollower> 
   final _boundsKey = GlobalKey();
 
   late WidgetFollowerBoundary _viewportBoundary;
-  late final _aligner = CupertinoPopoverToolbarAligner(_boundsKey);
+  late final _aligner = CupertinoPopoverToolbarAligner();
   late final _focalPoint = LeaderMenuFocalPoint(link: _anchor);
 
   @override

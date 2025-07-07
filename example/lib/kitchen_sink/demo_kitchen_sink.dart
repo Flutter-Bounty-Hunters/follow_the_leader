@@ -3,7 +3,6 @@ import 'package:example/kitchen_sink/kitchen_sink_mobile.dart';
 import 'package:example/kitchen_sink/pin_and_follower_drag_arena.dart';
 import 'package:flutter/material.dart';
 import 'package:follow_the_leader/follow_the_leader.dart';
-import 'package:overlord/follow_the_leader.dart';
 
 class KitchenSinkDemo extends StatefulWidget {
   const KitchenSinkDemo({Key? key}) : super(key: key);
@@ -22,18 +21,23 @@ class _KitchenSinkDemoState extends State<KitchenSinkDemo> {
   Widget build(BuildContext context) {
     return Theme(
       data: ThemeData.dark(),
-      child: LayoutBuilder(builder: (context, constraints) {
-        final isMobile = constraints.maxWidth < 600;
+      child: Builder(builder: (context) {
+        return Material(
+          color: HSVColor.fromColor(Theme.of(context).cardColor).withValue(0.08).toColor(),
+          child: LayoutBuilder(builder: (context, constraints) {
+            final isMobile = constraints.maxWidth < 600;
 
-        return isMobile //
-            ? KitchenSinkMobileScaffold(
-                controller: _controller,
-                child: _buildPinArena(isMobile: true),
-              )
-            : KitchenSinkDesktopScaffold(
-                controller: _controller,
-                child: _buildPinArena(isMobile: false),
-              );
+            return isMobile //
+                ? KitchenSinkMobileScaffold(
+                    controller: _controller,
+                    child: _buildPinArena(isMobile: true),
+                  )
+                : KitchenSinkDesktopScaffold(
+                    controller: _controller,
+                    child: _buildPinArena(isMobile: false),
+                  );
+          }),
+        );
       }),
     );
   }
@@ -67,7 +71,7 @@ class KitchenSinkDemoController {
 
   final config = ValueNotifier(const FollowerDemoConfiguration(
     followerDirection: FollowerDirection.up,
-    followerConstraints: FollowerConstraint.none,
+    followerConstraints: FollowerConstraint.keyboardAndScreen,
     followerMenuType: FollowerMenuType.smallPopover,
     fadeBeyondBoundary: false,
   ));
@@ -128,7 +132,7 @@ class KitchenSinkDemoController {
 
   void onWidgetBoundsTap() {
     config.value = config.value.copyWith(
-      followerConstraints: FollowerConstraint.bounds,
+      followerConstraints: FollowerConstraint.widget,
       followerBoundary: WidgetFollowerBoundary(boundaryKey: widgetBoundsKey),
       boundaryKey: widgetBoundsKey,
     );
@@ -180,20 +184,20 @@ class KitchenSinkDemoController {
         case FollowerMenuType.iOSToolbar:
           config.value = config.value.copyWith(
             followerDirection: direction,
-            aligner: CupertinoPopoverToolbarAligner(config.value.boundaryKey),
+            aligner: PreferredPositionAligner.top(),
           );
           break;
         case FollowerMenuType.smallPopover:
         case FollowerMenuType.iOSMenu:
           config.value = config.value.copyWith(
             followerDirection: direction,
-            aligner: CupertinoPopoverMenuAligner(config.value.boundaryKey),
+            aligner: PreferredPositionAligner.left(),
           );
           break;
         case FollowerMenuType.androidSpellcheck:
           config.value = config.value.copyWith(
             followerDirection: direction,
-            aligner: AndroidSpellcheckPopoverMenuAligner(),
+            aligner: PreferredPositionAligner.bottom(),
           );
           break;
       }
@@ -202,49 +206,5 @@ class KitchenSinkDemoController {
         followerDirection: direction,
       )..clearAligner();
     }
-  }
-}
-
-class AndroidSpellcheckPopoverMenuAligner implements FollowerAligner {
-  AndroidSpellcheckPopoverMenuAligner();
-
-  @override
-  FollowerAlignment align(Rect globalLeaderRect, Size followerSize, [Rect? globalBounds]) {
-    print(
-        "Android toolbar alignment - follower bottom: ${globalLeaderRect.bottom + followerSize.height + 20}, bounds bottom: ${globalBounds?.bottom}");
-
-    late FollowerAlignment alignment;
-    // if (globalLeaderRect.right + followerSize.width + _popoverMenuMinimumDistanceFromEdge >= bounds.right) {
-    //   // The follower hit the minimum distance. Invert the follower position.
-    //   alignment = const FollowerAlignment(
-    //     leaderAnchor: Alignment.centerLeft,
-    //     followerAnchor: Alignment.centerRight,
-    //     followerOffset: Offset(-20, 0),
-    //   );
-    // } else if (globalLeaderRect.left - followerSize.width - _popoverMenuMinimumDistanceFromEdge < bounds.left) {
-    //   // The follower hit the minimum distance. Invert the follower position.
-    //   alignment = const FollowerAlignment(
-    //     leaderAnchor: Alignment.centerRight,
-    //     followerAnchor: Alignment.centerLeft,
-    //     followerOffset: Offset(20, 0),
-    //   );
-    // } else {
-    if (globalBounds != null && globalLeaderRect.bottom + followerSize.height + 20 >= globalBounds.bottom) {
-      // The follower hit the minimum distance. Invert the follower position.
-      alignment = const FollowerAlignment(
-        leaderAnchor: Alignment.topCenter,
-        followerAnchor: Alignment.bottomCenter,
-        followerOffset: Offset(0, -20),
-      );
-    } else {
-      // The follower can fit below. Use the standard orientation.
-      alignment = const FollowerAlignment(
-        leaderAnchor: Alignment.bottomCenter,
-        followerAnchor: Alignment.topCenter,
-        followerOffset: Offset(0, 20),
-      );
-    }
-
-    return alignment;
   }
 }

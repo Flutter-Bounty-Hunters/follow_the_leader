@@ -121,6 +121,7 @@ class _IconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       borderRadius: BorderRadius.circular(8),
+      color: Theme.of(context).cardColor.withValues(alpha: 0.3),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
         onTap: onPressed,
@@ -155,53 +156,89 @@ Future<void> _showBoundarySelectionSheet(BuildContext context, KitchenSinkDemoCo
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              title: const Text("No Boundary"),
-              onTap: () {
-                Navigator.of(context).pop();
-                controller.onNoLimitsTap();
-              },
-            ),
-            ListTile(
-              title: const Text("Screen Boundary"),
-              onTap: () {
+            _BottomSheetRadioTile(
+              label: "Screen Boundary",
+              isActive: controller.config.value.followerConstraints == FollowerConstraint.screen,
+              onPressed: () {
                 Navigator.of(context).pop();
                 controller.onScreenBoundsTap();
               },
             ),
-            ListTile(
-              title: const Text("Safe Area Boundary"),
-              onTap: () {
-                Navigator.of(context).pop();
-                controller.onSafeAreaBoundsTap();
-              },
-            ),
-            ListTile(
-              title: const Text("Keyboard Only"),
-              onTap: () {
-                Navigator.of(context).pop();
-                controller.onKeyboardOnlyBoundsTap();
-              },
-            ),
-            ListTile(
-              title: const Text("Keyboard & Screen"),
-              onTap: () {
+            _BottomSheetRadioTile(
+              label: "Keyboard & Screen",
+              isActive: controller.config.value.followerConstraints == FollowerConstraint.keyboardAndScreen,
+              onPressed: () {
                 Navigator.of(context).pop();
                 controller.onKeyboardAndScreenBoundsTap();
               },
             ),
-            ListTile(
-              title: const Text("Widget Boundary"),
-              onTap: () {
+            _BottomSheetRadioTile(
+              label: "Keyboard Only",
+              isActive: controller.config.value.followerConstraints == FollowerConstraint.keyboardOnly,
+              onPressed: () {
+                Navigator.of(context).pop();
+                controller.onKeyboardOnlyBoundsTap();
+              },
+            ),
+            _BottomSheetRadioTile(
+              label: "Safe Area Boundary",
+              isActive: controller.config.value.followerConstraints == FollowerConstraint.safeArea,
+              onPressed: () {
+                Navigator.of(context).pop();
+                controller.onSafeAreaBoundsTap();
+              },
+            ),
+            _BottomSheetRadioTile(
+              label: "Widget Boundary",
+              isActive: controller.config.value.followerConstraints == FollowerConstraint.widget,
+              onPressed: () {
                 Navigator.of(context).pop();
                 controller.onWidgetBoundsTap();
               },
             ),
+            _BottomSheetRadioTile(
+              label: "No Boundary",
+              isActive: controller.config.value.followerConstraints == FollowerConstraint.none,
+              onPressed: () {
+                Navigator.of(context).pop();
+                controller.onNoLimitsTap();
+              },
+            ),
+            const SizedBox(height: 48),
           ],
         ),
       );
     },
   );
+}
+
+class _BottomSheetRadioTile extends StatelessWidget {
+  const _BottomSheetRadioTile({
+    required this.label,
+    this.isActive = false,
+    required this.onPressed,
+  });
+
+  final String label;
+  final bool isActive;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text(label),
+      leading: isActive
+          ? const Icon(
+              Icons.check_circle,
+              color: Colors.green,
+            )
+          : const Icon(
+              Icons.circle_outlined,
+              color: Colors.grey,
+            ),
+      onTap: onPressed,
+    );
+  }
 }
 
 Future<void> _showAlignmentSelectionSheet(BuildContext context, KitchenSinkDemoController controller) async {

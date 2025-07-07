@@ -81,7 +81,7 @@ class KitchenSinkDesktopScaffold extends StatelessWidget {
           ),
           const Spacer(),
           _CircleRadioButton(
-            isActive: controller.config.value.followerConstraints != FollowerConstraint.bounds,
+            isActive: controller.config.value.followerConstraints != FollowerConstraint.widget,
             icon: Icons.picture_in_picture,
             tooltip: "Restrict to Bounds",
             onPressed: controller.onWidgetBoundsTap,

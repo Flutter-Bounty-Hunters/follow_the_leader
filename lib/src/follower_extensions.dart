@@ -44,6 +44,13 @@ class FollowerFadeOutBeyondBoundary extends StatelessWidget {
     return AnimatedBuilder(
       animation: link,
       builder: (context, value) {
+        if (!_isConnectedToLeader || !_hasBoundary) {
+          // Either we have no leader, or we have no boundary. If we have no
+          // leader, we're not sure what to do. Let the follower figure it out.
+          // If we have no boundary, then we should never fade.
+          return child;
+        }
+
         return AnimatedOpacity(
           opacity: _isContentVisible(context) || !enabled ? 1.0 : 0.0,
           duration: duration,
@@ -54,24 +61,17 @@ class FollowerFadeOutBeyondBoundary extends StatelessWidget {
     );
   }
 
-  bool _isContentVisible(BuildContext context) {
-    if (boundary == null) {
-      return true;
-    }
+  bool get _isConnectedToLeader => link.offset != null && link.leaderSize != null;
 
-    if (link.offset == null) {
-      return false;
-    }
-    if (link.leaderSize == null) {
-      return false;
-    }
+  bool get _hasBoundary => boundary != null;
+
+  bool _isContentVisible(BuildContext context) {
+    assert(_isConnectedToLeader && _hasBoundary);
 
     final leaderRect = link.offset! & (link.leaderSize! * (link.scale ?? 1.0));
     final boundsRect = boundary!.calculateGlobalBounds(context);
 
     // Returns `true` if there's even a partial overlap.
     return leaderRect.overlaps(boundsRect);
-
-    // return boundary!.containsRect(context, link.offset! & (link.leaderSize! * (link.scale ?? 1.0)));
   }
 }

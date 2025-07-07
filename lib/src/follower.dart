@@ -1,15 +1,14 @@
-import 'dart:ui' as ui;
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' hide LeaderLayer;
+import 'package:follow_the_leader/src/leader.dart';
+import 'package:follow_the_leader/src/leader_link.dart';
 import 'package:follow_the_leader/src/logging.dart';
 import 'package:super_keyboard/super_keyboard.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
-
-import 'leader.dart';
-import 'leader_link.dart';
 
 /// A widget that follows a [Leader].
 class Follower extends SingleChildRenderObjectWidget {
@@ -105,7 +104,7 @@ class Follower extends SingleChildRenderObjectWidget {
 }
 
 abstract class FollowerAligner {
-  FollowerAlignment align(Rect globalLeaderRect, Size followerSize, [Rect? globalBounds]);
+  FollowerAlignment align(RectDip globalLeaderRect, SizeDip followerSize, [RectDip? globalBounds]);
 }
 
 class StaticOffsetAligner implements FollowerAligner {
@@ -155,7 +154,7 @@ class FollowerAlignment {
 
   final Alignment leaderAnchor;
   final Alignment followerAnchor;
-  final Offset followerOffset;
+  final OffsetDip followerOffset;
 
   @override
   bool operator ==(Object other) =>
@@ -171,20 +170,9 @@ class FollowerAlignment {
 
 /// A boundary that determines where a [Follower] is allowed to appear.
 abstract class FollowerBoundary {
+  /// Calculates a rectangle, in global screen space, that represents where a
+  /// [Follower] is allowed to be.
   Rect calculateGlobalBounds(BuildContext context);
-
-  // /// Returns `true` if the given [offset] sits within this boundary,
-  // /// or `false` if it sits outside.
-  // bool containsOffset(BuildContext context, Offset offset);
-  //
-  // /// Returns `true` if the given [rect] sits entirely within this boundary,
-  // /// or `false` if it sits partially, or entirely outside.
-  // bool containsRect(BuildContext context, Rect rect,
-  //     [FollowerBoundaryOverlapMode overlapMode = FollowerBoundaryOverlapMode.partial]);
-  //
-  // /// Constrains the given [desiredOffset] to a legal [Offset] for this
-  // /// boundary.
-  // Offset constrain(BuildContext context, Rect globalFollowerRect, double followerScale);
 }
 
 enum FollowerBoundaryOverlapMode {
@@ -204,40 +192,9 @@ class ScreenFollowerBoundary implements FollowerBoundary {
   @override
   Rect calculateGlobalBounds(BuildContext context) {
     final screenSize = MediaQuery.sizeOf(context);
+    FtlLogs.boundary.info("ScreenFollowerBoundary - calculating global bounds: $screenSize");
     return Offset.zero & screenSize;
   }
-
-  // @override
-  // bool containsOffset(BuildContext context, Offset offset) => MediaQuery.sizeOf(context).contains(offset);
-  //
-  // @override
-  // bool containsRect(BuildContext context, Rect rect,
-  //     [FollowerBoundaryOverlapMode overlapMode = FollowerBoundaryOverlapMode.partial]) {
-  //   final screenSize = MediaQuery.sizeOf(context);
-  //
-  //   return overlapMode == FollowerBoundaryOverlapMode.full
-  //       ? rect.intersect(Offset.zero & screenSize) == rect
-  //       : rect.overlaps(Offset.zero & screenSize);
-  // }
-  //
-  // @override
-  // Offset constrain(BuildContext context, Rect globalFollowerRect, double followerScale) {
-  //   final screenSize = MediaQuery.sizeOf(context);
-  //   final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
-  //
-  //   final xAdjustment = globalFollowerRect.left < 0
-  //       ? -globalFollowerRect.left
-  //       : globalFollowerRect.right > screenSize.width
-  //           ? screenSize.width - globalFollowerRect.right
-  //           : 0.0;
-  //   final yAdjustment = globalFollowerRect.top < 0
-  //       ? -globalFollowerRect.top
-  //       : globalFollowerRect.bottom > screenSize.height
-  //           ? screenSize.height - globalFollowerRect.bottom
-  //           : 0.0;
-  //
-  //   return Offset(xAdjustment, yAdjustment) / (followerScale / devicePixelRatio);
-  // }
 }
 
 /// A [FollowerBoundary] that keeps the follower within the bounds of the safe area, as described
@@ -250,47 +207,9 @@ class SafeAreaFollowerBoundary implements FollowerBoundary {
     final safeArea = MediaQuery.paddingOf(context);
     final screenRect = Offset.zero & MediaQuery.sizeOf(context);
     final safeRect = safeArea.deflateRect(screenRect);
+    FtlLogs.boundary.info("SafeAreaFollowerBoundary - calculating global bounds: $safeRect");
     return safeRect;
   }
-
-  // @override
-  // bool containsOffset(BuildContext context, Offset offset) => _calculateSafeAreaRect(context).contains(offset);
-  //
-  // @override
-  // bool containsRect(
-  //   BuildContext context,
-  //   Rect rect, [
-  //   FollowerBoundaryOverlapMode overlapMode = FollowerBoundaryOverlapMode.partial,
-  // ]) =>
-  //     overlapMode == FollowerBoundaryOverlapMode.full
-  //         ? rect.intersect(_calculateSafeAreaRect(context)) == rect
-  //         : rect.overlaps(_calculateSafeAreaRect(context));
-  //
-  // @override
-  // Offset constrain(BuildContext context, Rect globalFollowerRect, double followerScale) {
-  //   final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
-  //   final boundaryGlobalRect = _calculateSafeAreaRect(context);
-  //
-  //   final xAdjustment = globalFollowerRect.left < boundaryGlobalRect.left
-  //       ? boundaryGlobalRect.left - globalFollowerRect.left
-  //       : globalFollowerRect.right > boundaryGlobalRect.right
-  //           ? boundaryGlobalRect.right - globalFollowerRect.right
-  //           : 0.0;
-  //   final yAdjustment = globalFollowerRect.top < boundaryGlobalRect.top
-  //       ? boundaryGlobalRect.top - globalFollowerRect.top
-  //       : globalFollowerRect.bottom > boundaryGlobalRect.bottom
-  //           ? boundaryGlobalRect.bottom - globalFollowerRect.bottom
-  //           : 0.0;
-  //
-  //   return Offset(xAdjustment, yAdjustment) / (followerScale / devicePixelRatio);
-  // }
-  //
-  // Rect _calculateSafeAreaRect(BuildContext context) {
-  //   final safeArea = MediaQuery.paddingOf(context);
-  //   final screenRect = Offset.zero & MediaQuery.sizeOf(context);
-  //   final safeRect = safeArea.deflateRect(screenRect);
-  //   return safeRect;
-  // }
 }
 
 /// A [FollowerBoundary] that keeps the follower above the software keyboard.
@@ -307,6 +226,9 @@ class KeyboardFollowerBoundary implements FollowerBoundary {
   Rect calculateGlobalBounds(BuildContext context) {
     final screenRect = Offset.zero & MediaQuery.sizeOf(context);
     final keyboardHeight = SuperKeyboard.instance.mobileGeometry.value.keyboardHeight ?? 0;
+    FtlLogs.boundary.info(
+      "KeyboardFollowerBoundary - screen rect: $screenRect, keyboard height: $keyboardHeight, available height: ${screenRect.height - keyboardHeight}",
+    );
     final boundRect = keepWithinScreen //
         ? Rect.fromLTWH(
             screenRect.left,
@@ -323,58 +245,6 @@ class KeyboardFollowerBoundary implements FollowerBoundary {
 
     return boundRect;
   }
-
-  // @override
-  // bool containsOffset(BuildContext context, Offset offset) => _calculateBoundaryRect(context).contains(offset);
-  //
-  // @override
-  // bool containsRect(
-  //   BuildContext context,
-  //   Rect rect, [
-  //   FollowerBoundaryOverlapMode overlapMode = FollowerBoundaryOverlapMode.partial,
-  // ]) =>
-  //     overlapMode == FollowerBoundaryOverlapMode.full
-  //         ? rect.intersect(_calculateBoundaryRect(context)) == rect
-  //         : rect.overlaps(_calculateBoundaryRect(context));
-  //
-  // @override
-  // Offset constrain(BuildContext context, Rect globalFollowerRect, double followerScale) {
-  //   final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
-  //   final boundaryGlobalRect = _calculateBoundaryRect(context);
-  //
-  //   final xAdjustment = globalFollowerRect.left < boundaryGlobalRect.left
-  //       ? boundaryGlobalRect.left - globalFollowerRect.left
-  //       : globalFollowerRect.right > boundaryGlobalRect.right
-  //           ? boundaryGlobalRect.right - globalFollowerRect.right
-  //           : 0.0;
-  //   final yAdjustment = globalFollowerRect.top < boundaryGlobalRect.top
-  //       ? boundaryGlobalRect.top - globalFollowerRect.top
-  //       : globalFollowerRect.bottom > boundaryGlobalRect.bottom
-  //           ? boundaryGlobalRect.bottom - globalFollowerRect.bottom
-  //           : 0.0;
-  //
-  //   return Offset(xAdjustment, yAdjustment) / (followerScale / devicePixelRatio);
-  // }
-  //
-  // Rect _calculateBoundaryRect(BuildContext context) {
-  //   final screenRect = Offset.zero & MediaQuery.sizeOf(context);
-  //   final keyboardHeight = SuperKeyboard.instance.mobileGeometry.value.keyboardHeight ?? 0;
-  //   final boundRect = keepWithinScreen //
-  //       ? Rect.fromLTWH(
-  //           screenRect.left,
-  //           screenRect.top,
-  //           screenRect.width,
-  //           screenRect.height - keyboardHeight,
-  //         )
-  //       : Rect.fromLTRB(
-  //           double.negativeInfinity,
-  //           double.negativeInfinity,
-  //           double.infinity,
-  //           screenRect.height - keyboardHeight,
-  //         );
-  //
-  //   return boundRect;
-  // }
 }
 
 /// A [FollowerBoundary] that keeps the follower within the bounds of the widget
@@ -397,56 +267,12 @@ class WidgetFollowerBoundary implements FollowerBoundary {
       boundaryBox.localToGlobal(Offset.zero),
       boundaryBox.localToGlobal(boundaryBox.size.bottomRight(Offset.zero)),
     );
+    FtlLogs.widgetBoundary.info(
+      "Calculating bounds - key: $boundaryKey, content: ${boundaryKey!.currentContext}, boundary rect: $boundaryRect",
+    );
+
     return boundaryRect;
   }
-
-  // @override
-  // bool containsOffset(BuildContext context, Offset offset) => _calculateBoundaryRect()?.contains(offset) ?? false;
-  //
-  // @override
-  // bool containsRect(BuildContext context, Rect rect,
-  //         [FollowerBoundaryOverlapMode overlapMode = FollowerBoundaryOverlapMode.partial]) =>
-  //     overlapMode == FollowerBoundaryOverlapMode.full
-  //         ? rect.intersect(_calculateBoundaryRect() ?? Rect.zero) == rect
-  //         : rect.overlaps(_calculateBoundaryRect() ?? Rect.zero);
-  //
-  // Rect? _calculateBoundaryRect() {
-  //   if (boundaryKey == null || boundaryKey!.currentContext == null) {
-  //     return null;
-  //   }
-  //
-  //   final boundaryBox = boundaryKey!.currentContext!.findRenderObject() as RenderBox;
-  //   final boundaryRect = Rect.fromPoints(
-  //     boundaryBox.localToGlobal(Offset.zero),
-  //     boundaryBox.localToGlobal(boundaryBox.size.bottomRight(Offset.zero)),
-  //   );
-  //   return boundaryRect;
-  // }
-  //
-  // @override
-  // Offset constrain(BuildContext context, Rect globalFollowerRect, double followerScale) {
-  //   if (boundaryKey == null) {
-  //     return Offset.zero;
-  //   }
-  //
-  //   final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
-  //   final boundaryBox = boundaryKey!.currentContext!.findRenderObject() as RenderBox;
-  //   final boundaryGlobalOrigin = boundaryBox.localToGlobal(Offset.zero);
-  //   final boundaryGlobalRect = boundaryGlobalOrigin & boundaryBox.size;
-  //
-  //   final xAdjustment = globalFollowerRect.left < boundaryGlobalRect.left
-  //       ? boundaryGlobalRect.left - globalFollowerRect.left
-  //       : globalFollowerRect.right > boundaryGlobalRect.right
-  //           ? boundaryGlobalRect.right - globalFollowerRect.right
-  //           : 0.0;
-  //   final yAdjustment = globalFollowerRect.top < boundaryGlobalRect.top
-  //       ? boundaryGlobalRect.top - globalFollowerRect.top
-  //       : globalFollowerRect.bottom > boundaryGlobalRect.bottom
-  //           ? boundaryGlobalRect.bottom - globalFollowerRect.bottom
-  //           : 0.0;
-  //
-  //   return Offset(xAdjustment, yAdjustment) / (followerScale / devicePixelRatio);
-  // }
 }
 
 // TODO: decide if this should really be an extension. If so, check for
@@ -725,14 +551,16 @@ class RenderFollower extends RenderProxyBox {
 
     if (layer == null) {
       FtlLogs.follower.finer("Creating new FollowerLayer");
-      layer = FollowerLayer()
+      layer = FollowerLayer(
+        devicePixelRatio: View.of(_context).devicePixelRatio,
+      )
         ..context = _context
         ..link = link
         ..showWhenUnlinked = showWhenUnlinked
         ..followerOffsetFromScreenOrigin = offset
         ..calculateGlobalFollowerRect = _calculateGlobalFollowerContentRect
         ..aligner = _aligner
-        ..boundary = _boundary
+        ..globalBounds = _boundary?.calculateGlobalBounds(_context)
         ..linkedOffset = _followerOffsetFromLeader
         ..unlinkedOffset = _followerOffsetFromLeader
         ..followerSize = child!.size;
@@ -740,11 +568,12 @@ class RenderFollower extends RenderProxyBox {
       FtlLogs.follower.finer("Updating existing FollowerLayer");
       layer!
         ..context = _context
+        ..devicePixelRatio = View.of(_context).devicePixelRatio
         ..link = link
         ..showWhenUnlinked = showWhenUnlinked
         ..followerOffsetFromScreenOrigin = offset
         ..aligner = _aligner
-        ..boundary = _boundary
+        ..globalBounds = _boundary?.calculateGlobalBounds(_context)
         ..linkedOffset = _followerOffsetFromLeader
         ..unlinkedOffset = _followerOffsetFromLeader
         ..followerSize = child!.size;
@@ -931,6 +760,7 @@ class RenderFollower extends RenderProxyBox {
     final followerSize = child!.size * followerScale;
     FtlLogs.follower.finer(() => " - Follower size: $followerSize ($followerScale scale)");
 
+    // TODO: followerOffset is in DIP - check whether we want that or PX for this calculation
     final followerOffsetRelativeToLeader = (leaderSize == null
             ? Offset.zero
             : leaderAnchor.alongSize(leaderSize) - followerAnchor.alongSize(followerSize)) +
@@ -992,6 +822,7 @@ class RenderFollower extends RenderProxyBox {
 class FollowerLayer extends ContainerLayer {
   FollowerLayer({
     this.context,
+    required this.devicePixelRatio,
     LeaderLink? link,
     this.showWhenUnlinked = true,
     // TODO: find out if we really need this passed to us. Is this same
@@ -1002,13 +833,19 @@ class FollowerLayer extends ContainerLayer {
     this.followerGap = Offset.zero,
     this.calculateGlobalFollowerRect,
     this.aligner,
-    this.boundary,
+    this.globalBounds,
+    // this.boundary,
     this.unlinkedOffset = Offset.zero,
     this.linkedOffset = Offset.zero,
     this.followerSize,
   }) : _link = link;
 
+  // TODO: This was added when we changed boundaries to look up their own dependencies.
+  //       In later adjustments, I think we made this unnecessary here, but calculating global
+  //       bounds in the render object. If that's correct, remove this.
   BuildContext? context;
+
+  double devicePixelRatio;
 
   /// The link to the [LeaderLayer].
   ///
@@ -1038,8 +875,9 @@ class FollowerLayer extends ContainerLayer {
   Rect Function()? calculateGlobalFollowerRect;
 
   FollowerAligner? aligner;
+  Rect? globalBounds;
 
-  FollowerBoundary? boundary;
+  // FollowerBoundary? boundary;
 
   /// Whether to show the layer's contents when the [link] does not point to a
   /// [LeaderLayer].
@@ -1303,8 +1141,10 @@ class FollowerLayer extends ContainerLayer {
     final leaderSize = _link!.leaderSize! * leaderScale;
     FtlLogs.follower.finest(() => " - leader size: $leaderSize");
 
+    final leaderSizeDip = leaderSize / MediaQuery.devicePixelRatioOf(context!);
     final anchorMetrics = _calculateAlignerAnchorMetrics(
-      leaderSize: leaderSize,
+      leaderSize: leaderSizeDip,
+      leaderScale: leaderScale,
       followerSize: followerSize!,
       followerScale: followerScale,
     );
@@ -1334,8 +1174,10 @@ class FollowerLayer extends ContainerLayer {
 
     _lastTransform = focalPointToScreenTransform;
 
-    // // Make sure we don't display the Follower beyond the desired bounds.
-    // _constrainFollowerOffsetToBounds(_lastTransform!, followerScale);
+    // Make sure we don't display the Follower beyond the desired bounds.
+    if (globalBounds != null) {
+      _constrainFollowerOffsetToBounds(globalBounds!, _lastTransform!, followerScale);
+    }
 
     _inverseDirty = true;
 
@@ -1355,35 +1197,55 @@ class FollowerLayer extends ContainerLayer {
   }
 
   _AnchorMetrics _calculateAlignerAnchorMetrics({
-    required Size leaderSize,
-    required Size followerSize,
+    required SizeDip leaderSize,
+    required double leaderScale,
+    required SizeDip followerSize,
     required double followerScale,
   }) {
     final leaderOriginOnScreenVec = _link!.leaderToScreen!.transform3(Vector3.zero());
-    final leaderOriginOnScreen = Offset(leaderOriginOnScreenVec.x, leaderOriginOnScreenVec.y);
-    final leaderGlobalRect = leaderOriginOnScreen & leaderSize;
+    final OffsetDip leaderOriginOnScreen = Offset(leaderOriginOnScreenVec.x, leaderOriginOnScreenVec.y);
+    final RectDip leaderGlobalRect = leaderOriginOnScreen & leaderSize;
 
-    final alignment = aligner!.align(leaderGlobalRect, followerSize);
+    final alignment = aligner!.align(leaderGlobalRect, followerSize, globalBounds);
 
     return _AnchorMetrics(
-      leaderAnchorInScreenSpace: alignment.leaderAnchor.alongSize(leaderSize),
-      followerGapInScreenSpace: alignment.followerOffset,
+      leaderAnchorInScreenSpace: alignment.leaderAnchor.alongSize(leaderSize * leaderScale),
+      followerGapInScreenSpace: alignment.followerOffset.toPixels(leaderScale),
       followerAnchorInFollowerSpace: -alignment.followerAnchor.alongSize(followerSize * followerScale),
     );
   }
 
-  // void _constrainFollowerOffsetToBounds(Matrix4 desiredTransform, double followerScale) {
-  //   if (boundary == null) {
-  //     return;
-  //   }
-  //
-  //   FtlLogs.follower.finest("Layer asking RenderFollower for global follower rect:");
-  //   final globalFollowerRect = calculateGlobalFollowerRect!();
-  //   FtlLogs.follower.finest(" - global rect: $globalFollowerRect");
-  //
-  //   final followerAdjustment = boundary!.constrain(context!, globalFollowerRect, followerScale);
-  //   desiredTransform.translate(followerAdjustment.dx, followerAdjustment.dy);
-  // }
+  void _constrainFollowerOffsetToBounds(Rect globalBounds, Matrix4 desiredTransform, double followerScale) {
+    FtlLogs.follower.finest("Layer asking RenderFollower to constrain offset to global bounds: $globalBounds");
+    final globalFollowerRect = calculateGlobalFollowerRect!();
+    FtlLogs.follower.finest("Global follower rect: $globalFollowerRect");
+
+    final isTooFarLeft = globalFollowerRect.left < globalBounds.left;
+    final isTooFarRight = globalFollowerRect.right > globalBounds.right;
+    FtlLogs.follower.finest("Is follower too far left? $isTooFarLeft, is too far right? $isTooFarRight");
+    final xAdjustment = isTooFarLeft && !isTooFarRight //
+        ? globalBounds.left - globalFollowerRect.left
+        : isTooFarRight && !isTooFarLeft //
+            ? globalBounds.right - globalFollowerRect.right
+            : 0.0;
+
+    final isTooFarUp = globalFollowerRect.top < globalBounds.top;
+    final isTooFarDown = globalFollowerRect.bottom > globalBounds.bottom;
+    FtlLogs.follower.finest("Is follower too far up? $isTooFarUp, is too far down? $isTooFarDown");
+    final yAdjustment = isTooFarUp && !isTooFarDown //
+        ? globalBounds.top - globalFollowerRect.top
+        : isTooFarDown && !isTooFarUp //
+            ? globalBounds.bottom - globalFollowerRect.bottom
+            : 0.0;
+
+    final followerAdjustment = Offset(xAdjustment, yAdjustment) / (followerScale / devicePixelRatio);
+    FtlLogs.follower.finest("Follower adjustment: $followerAdjustment");
+    if (followerAdjustment == Offset.zero) {
+      return;
+    }
+
+    desiredTransform.translate(followerAdjustment.dx, followerAdjustment.dy);
+  }
 
   /// Builds and returns a transform that goes from a layer-space to
   /// screen-space.
@@ -1474,6 +1336,7 @@ class FollowerLayer extends ContainerLayer {
   //   return _pathsToCommonAncestor(a.parent, b.parent, ancestorsA, ancestorsB);
   // }
 
+  // Note (July 5, 2025) - This doesn't seem to ever be called? At least not with static offset and no boundary...
   // Note: applyTransform() is called indirectly by establishTransform()
   //       when calculating the follower-to-screen transform.
   @override
@@ -1517,4 +1380,64 @@ class _AnchorMetrics {
   /// Delta offset from the Follower's origin to the Follower's anchor
   /// point, measured in follower-space distance.
   final Offset followerAnchorInFollowerSpace;
+}
+
+//---- Density independent pixel (Dip) type definitions -----
+typedef Dip = double;
+
+extension DipToPx on Dip {
+  Px toPixels(double devicePixelRatio) => this * devicePixelRatio;
+}
+
+typedef OffsetDip = Offset;
+
+extension OffsetDipToPx on OffsetDip {
+  OffsetPx toPixels(double devicePixelRatio) => this * devicePixelRatio;
+}
+
+typedef SizeDip = Size;
+
+extension SizeDipToPx on SizeDip {
+  SizePx toPixels(double devicePixelRatio) => this * devicePixelRatio;
+}
+
+typedef RectDip = Rect;
+
+extension RectDipToPx on RectDip {
+  RectPx toPixels(double devicePixelRatio) => Rect.fromLTWH(
+        left * devicePixelRatio,
+        top * devicePixelRatio,
+        width * devicePixelRatio,
+        height * devicePixelRatio,
+      );
+}
+
+//---- Absolute pixel (Px) type definitions -----
+typedef Px = double;
+
+extension PxToDip on Px {
+  Dip toDip(double devicePixelRatio) => this / devicePixelRatio;
+}
+
+typedef OffsetPx = Offset;
+
+extension OffsetPxToDip on OffsetPx {
+  OffsetDip toDip(double devicePixelRatio) => this / devicePixelRatio;
+}
+
+typedef SizePx = Size;
+
+extension SizePxToDip on SizePx {
+  SizeDip toDip(double devicePixelRatio) => this / devicePixelRatio;
+}
+
+typedef RectPx = Rect;
+
+extension RectPxToDip on RectPx {
+  RectDip toDip(double devicePixelRatio) => Rect.fromLTWH(
+        left / devicePixelRatio,
+        top / devicePixelRatio,
+        width / devicePixelRatio,
+        height / devicePixelRatio,
+      );
 }
