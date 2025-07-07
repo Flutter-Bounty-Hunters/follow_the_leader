@@ -41,3 +41,10 @@ jobs:
 
       # Run all tests
       - run: flutter test test_goldens
+
+      # Archive golden failures
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: golden-failures
+          path: "**/failures/**/*.png"
