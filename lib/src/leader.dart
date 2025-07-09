@@ -4,28 +4,26 @@ import 'package:flutter/rendering.dart' hide FollowerLayer;
 import 'package:flutter/widgets.dart';
 import 'package:follow_the_leader/follow_the_leader.dart';
 
-/// A widget that can be targeted by a [CompositedTransformFollower].
+/// A widget that can be followed by a [Follower].
 ///
 /// When this widget is composited during the compositing phase (which comes
 /// after the paint phase, as described in [WidgetsBinding.drawFrame]), it
-/// updates the [link] object so that any [CompositedTransformFollower] widgets
+/// updates the [link] object so that any [Follower] widgets
 /// that are subsequently composited in the same frame and were given the same
-/// [LayerLink] can position themselves at the same screen location.
+/// [LeaderLink] can position themselves at the same screen location.
 ///
-/// A single [Leader] can be followed by multiple
-/// [CompositedTransformFollower] widgets.
+/// A single [Leader] can be followed by multiple [Follower] widgets.
 ///
-/// The [Leader] must come earlier in the paint order than
-/// any linked [CompositedTransformFollower]s.
+/// The [Leader] must come earlier in the paint order than any linked [Follower]s.
 ///
 /// See also:
 ///
-///  * [CompositedTransformFollower], the widget that can target this one.
+///  * [Follower], the widget that can target this one.
 ///  * [LeaderLayer], the layer that implements this widget's logic.
 class Leader extends SingleChildRenderObjectWidget {
-  /// Creates a composited transform target widget.
+  /// Creates a leader widget.
   ///
-  /// The [link] property must not be null, and must not be currently being used
+  /// The [link] property must not be null, and must not currently be used
   /// by any other [Leader] object that is in the tree.
   const Leader({
     Key? key,
@@ -35,7 +33,7 @@ class Leader extends SingleChildRenderObjectWidget {
   }) : super(key: key, child: child);
 
   /// The link object that connects this [Leader] with one or
-  /// more [CompositedTransformFollower]s.
+  /// more [Follower]s.
   ///
   /// This property must not be null. The object must not be associated with
   /// another [Leader] that is also being painted.

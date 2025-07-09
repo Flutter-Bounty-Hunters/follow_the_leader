@@ -93,16 +93,13 @@ class _ScaleLeaderAndFollowerState extends State<_ScaleLeaderAndFollower> {
   final _boundsKey = GlobalKey();
 
   late WidgetFollowerBoundary _viewportBoundary;
-  late final _aligner = CupertinoPopoverToolbarAligner(_boundsKey);
+  late final _aligner = CupertinoPopoverToolbarAligner();
   late final _focalPoint = LeaderMenuFocalPoint(link: _anchor);
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _viewportBoundary = WidgetFollowerBoundary(
-      devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
-      boundaryKey: _boundsKey,
-    );
+    _viewportBoundary = WidgetFollowerBoundary(boundaryKey: _boundsKey);
   }
 
   @override
@@ -158,7 +155,7 @@ class _ScaleLeaderAndFollowerState extends State<_ScaleLeaderAndFollower> {
           child: Text(
             "^ Scale Leader AND Follower ^",
             style: TextStyle(
-              color: Colors.white.withOpacity(0.25),
+              color: Colors.white.withValues(alpha: 0.25),
               fontSize: 10,
             ),
           ),
@@ -185,16 +182,13 @@ class _ScaleLeaderButNotFollowerState extends State<_ScaleLeaderButNotFollower> 
   final _boundsKey = GlobalKey();
 
   late WidgetFollowerBoundary _viewportBoundary;
-  late final _aligner = CupertinoPopoverToolbarAligner(_boundsKey);
+  late final _aligner = CupertinoPopoverToolbarAligner();
   late final _focalPoint = LeaderMenuFocalPoint(link: _anchor);
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _viewportBoundary = WidgetFollowerBoundary(
-      devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
-      boundaryKey: _boundsKey,
-    );
+    _viewportBoundary = WidgetFollowerBoundary(boundaryKey: _boundsKey);
   }
 
   @override
@@ -217,7 +211,7 @@ class _ScaleLeaderButNotFollowerState extends State<_ScaleLeaderButNotFollower> 
           child: Text(
             "^ Scale Leader but NOT Follower ^",
             style: TextStyle(
-              color: Colors.white.withOpacity(0.25),
+              color: Colors.white.withValues(alpha: 0.25),
               fontSize: 10,
             ),
           ),
@@ -275,10 +269,7 @@ class _ScaleFollowerButNotLeaderState extends State<_ScaleFollowerButNotLeader> 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _viewportBoundary = WidgetFollowerBoundary(
-      devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
-      boundaryKey: _boundsKey,
-    );
+    _viewportBoundary = WidgetFollowerBoundary(boundaryKey: _boundsKey);
   }
 
   @override
@@ -298,7 +289,7 @@ class _ScaleFollowerButNotLeaderState extends State<_ScaleFollowerButNotLeader> 
           child: Text(
             "^ Scale Follower but NOT Leader ^",
             style: TextStyle(
-              color: Colors.white.withOpacity(0.25),
+              color: Colors.white.withValues(alpha: 0.25),
               fontSize: 10,
             ),
           ),

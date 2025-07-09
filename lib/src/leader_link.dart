@@ -1,9 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
+import 'package:follow_the_leader/src/leader.dart';
 import 'package:vector_math/vector_math_64.dart';
-
-import 'leader.dart';
 
 /// Links one or more [Follower] positions to a [Leader].
 class LeaderLink with ChangeNotifier {
