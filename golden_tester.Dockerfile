@@ -13,7 +13,7 @@ RUN apt install -y git curl unzip
 RUN cat /etc/lsb-release
 
 # Invalidate the cache when flutter pushes a new commit.
-ADD https://api.github.com/repos/flutter/flutter/git/refs/heads/master ./flutter-latest-master
+ADD https://api.github.com/repos/flutter/flutter/git/refs/heads/stable ./flutter-latest-stable
 
 RUN git clone https://github.com/flutter/flutter.git ${FLUTTER_HOME}
 
