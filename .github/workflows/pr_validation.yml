@@ -36,7 +36,7 @@ jobs:
       - run: flutter test
 
   test_goldens:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       # Checkout the PR branch
       - uses: actions/checkout@v3
