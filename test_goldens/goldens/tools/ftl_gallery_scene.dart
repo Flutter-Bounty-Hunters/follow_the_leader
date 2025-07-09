@@ -14,28 +14,30 @@ Widget _itemDecorator(
 ) {
   return ColoredBox(
     color: const Color(0xff020817),
-    child: PixelSnapColumn(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        PixelSnapAlign(
-          alignment: Alignment.topLeft,
-          child: content,
-        ),
-        Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(
-            metadata.description,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Color(0xff1e293b),
-              fontFamily: TestFonts.openSans,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
+    child: IntrinsicWidth(
+      child: PixelSnapColumn(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          PixelSnapAlign(
+            alignment: Alignment.topLeft,
+            child: content,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              metadata.description,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Color(0xff1e293b),
+                fontFamily: TestFonts.openSans,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     ),
   );
 }
