@@ -3,23 +3,23 @@
 import 'package:logging/logging.dart';
 
 /// Follow the Leader logger names.
-class LogNames {
-  static const leader = 'flt.leader';
-  static const follower = 'flt.follower';
-  static const link = 'flt.link';
-  static const boundary = 'flt.boundary';
-  static const widgetBoundary = 'flt.boundary.widget';
-  static const _root = 'flt';
+abstract class FtlLogNames {
+  static const leader = 'ftl.leader';
+  static const follower = 'ftl.follower';
+  static const link = 'ftl.link';
+  static const boundary = 'ftl.boundary';
+  static const widgetBoundary = 'ftl.boundary.widget';
+  static const _root = 'ftl';
 }
 
 /// Follow the Leader logging.
-class FtlLogs {
-  static final leader = Logger(LogNames.leader);
-  static final follower = Logger(LogNames.follower);
-  static final link = Logger(LogNames.link);
-  static final boundary = Logger(LogNames.boundary);
-  static final widgetBoundary = Logger(LogNames.widgetBoundary);
-  static final _root = Logger(LogNames._root);
+abstract class FtlLogs {
+  static final leader = Logger(FtlLogNames.leader);
+  static final follower = Logger(FtlLogNames.follower);
+  static final link = Logger(FtlLogNames.link);
+  static final boundary = Logger(FtlLogNames.boundary);
+  static final widgetBoundary = Logger(FtlLogNames.widgetBoundary);
+  static final _root = Logger(FtlLogNames._root);
 
   static final _activeLoggers = <Logger>{};
 
