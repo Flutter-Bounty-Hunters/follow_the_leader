@@ -1,7 +1,7 @@
 name: Run analysis and tests for pull requests
 on: [pull_request]
 jobs:
-  test:
+  analyze:
     runs-on: ubuntu-latest
     steps:
       # Checkout the PR branch
@@ -18,6 +18,20 @@ jobs:
       # Static analysis
       - run: flutter analyze
 
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the PR branch
+      - uses: actions/checkout@v3
+
+      # Setup Flutter environment
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+
+      # Download all the packages that the app uses
+      - run: flutter pub get
+
       # Run all tests
       - run: flutter test
 
@@ -31,13 +45,9 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: "stable"
-          architecture: x64
 
       # Download all the packages that the app uses
       - run: flutter pub get
-
-      # Static analysis
-      - run: flutter analyze
 
       # Run all tests
       - run: flutter test test_goldens
