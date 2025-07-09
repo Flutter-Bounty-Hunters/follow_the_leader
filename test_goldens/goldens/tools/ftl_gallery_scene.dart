@@ -14,11 +14,11 @@ Widget _itemDecorator(
 ) {
   return ColoredBox(
     color: const Color(0xff020817),
-    child: Column(
+    child: PixelSnapColumn(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Align(
+        PixelSnapAlign(
           alignment: Alignment.topLeft,
           child: content,
         ),
