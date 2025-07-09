@@ -68,14 +68,13 @@ void main() {
               tester: tester,
               initialKeyboardState: KeyboardState.open,
               renderSimulatedKeyboard: true,
-              child: const ColoredBox(color: Color(0xff020817)),
-              // child: _buildLeaderAndFollower(
-              //   Alignment.center,
-              //   followerAlignBottom,
-              //   leaderSize: const Size(25, 25),
-              //   followerSize: const Size(50, 50),
-              //   boundary: const KeyboardFollowerBoundary(),
-              // ),
+              child: _buildLeaderAndFollower(
+                Alignment.center,
+                followerAlignBottom,
+                leaderSize: const Size(25, 25),
+                followerSize: const Size(50, 50),
+                boundary: const KeyboardFollowerBoundary(),
+              ),
             ),
           )
           .itemFromWidget(
@@ -84,14 +83,13 @@ void main() {
               tester: tester,
               initialKeyboardState: KeyboardState.open,
               renderSimulatedKeyboard: true,
-              child: const ColoredBox(color: Color(0xff020817)),
-              // child: _buildLeaderAndFollower(
-              //   const Alignment(0, 0.15),
-              //   followerAlignBottom,
-              //   leaderSize: const Size(25, 25),
-              //   followerSize: const Size(50, 50),
-              //   boundary: const KeyboardFollowerBoundary(),
-              // ),
+              child: _buildLeaderAndFollower(
+                const Alignment(0, 0.15),
+                followerAlignBottom,
+                leaderSize: const Size(25, 25),
+                followerSize: const Size(50, 50),
+                boundary: const KeyboardFollowerBoundary(),
+              ),
             ),
           )
           .itemFromWidget(
@@ -100,14 +98,13 @@ void main() {
               tester: tester,
               initialKeyboardState: KeyboardState.open,
               renderSimulatedKeyboard: true,
-              child: const ColoredBox(color: Color(0xff020817)),
-              // child: _buildLeaderAndFollower(
-              //   const Alignment(0, 0.5),
-              //   followerAlignBottom,
-              //   leaderSize: const Size(25, 25),
-              //   followerSize: const Size(50, 50),
-              //   boundary: const KeyboardFollowerBoundary(),
-              // ),
+              child: _buildLeaderAndFollower(
+                const Alignment(0, 0.5),
+                followerAlignBottom,
+                leaderSize: const Size(25, 25),
+                followerSize: const Size(50, 50),
+                boundary: const KeyboardFollowerBoundary(),
+              ),
             ),
           )
           .run(tester);
