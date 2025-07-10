@@ -1,3 +1,9 @@
+# 0.5.0
+### July 10, 2025
+This release is the same as `0.0.5` - we're pushing up the version number to
+opt-in to `0.` semver Pub upgrade rules. This will hopefully avoid unexpected
+dependency upgrades for our users in the future.
+
 # 0.0.5
 ### July 9, 2025
 FEATURE: Created `KeyboardFollowerBoundary` based on the height reported by `super_keyboard`.
