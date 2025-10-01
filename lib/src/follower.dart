@@ -1210,7 +1210,7 @@ class FollowerLayer extends ContainerLayer {
 
     return _AnchorMetrics(
       leaderAnchorInScreenSpace: alignment.leaderAnchor.alongSize(leaderSize * leaderScale),
-      followerGapInScreenSpace: alignment.followerOffset.toPixels(leaderScale),
+      followerGapInScreenSpace: alignment.followerOffset,
       followerAnchorInFollowerSpace: -alignment.followerAnchor.alongSize(followerSize * followerScale),
     );
   }
