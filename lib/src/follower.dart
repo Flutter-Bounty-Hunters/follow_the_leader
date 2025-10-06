@@ -471,7 +471,7 @@ class RenderFollower extends RenderProxyBox {
   @override
   bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
     final followerOffset = _followerOffsetFromLeader ?? Offset.zero;
-    final transform = layer?.getLastTransform()?..translateByDouble(followerOffset.dx, followerOffset.dy, 0, 0);
+    final transform = layer?.getLastTransform()?..translateByDouble(followerOffset.dx, followerOffset.dy, 0, 1.0);
 
     return result.addWithPaintTransform(
       transform: transform,
@@ -794,7 +794,7 @@ class RenderFollower extends RenderProxyBox {
     final transform = layer?.getLastTransform() ?? Matrix4.identity();
 
     if (_followerOffsetFromLeader != null) {
-      transform.translateByDouble(_followerOffsetFromLeader!.dx, _followerOffsetFromLeader!.dy, 0, 0);
+      transform.translateByDouble(_followerOffsetFromLeader!.dx, _followerOffsetFromLeader!.dy, 0, 1.0);
     }
 
     return transform;
@@ -1155,23 +1155,25 @@ class FollowerLayer extends ContainerLayer {
     final focalPointToScreenTransform = screenToLeaderTransform
       // Scale from leader-space to screen-space. After the scale, the
       // origin will sit at the top-left corner of the leader, in screen-space.
-      ..scaleByDouble(1 / leaderScale, 0, 0, 0) // <- inverted because we want to undo the Leader scale
+      ..scaleByDouble(1 / leaderScale, 1 / leaderScale, 1 / leaderScale,
+          1.0) // <- inverted because we want to undo the Leader scale
       // Move the origin to the point on the Leader where we want to anchor
       // the Follower. This offset is in screen-space.
-      ..translateByDouble(anchorMetrics.leaderAnchorInScreenSpace.dx, anchorMetrics.leaderAnchorInScreenSpace.dy, 0, 0)
+      ..translateByDouble(
+          anchorMetrics.leaderAnchorInScreenSpace.dx, anchorMetrics.leaderAnchorInScreenSpace.dy, 0, 1.0)
       // Move the origin away from the Leader in the direction of the desired gap, which
       // adds space between the Leader and the Follower.
-      ..translateByDouble(anchorMetrics.followerGapInScreenSpace.dx, anchorMetrics.followerGapInScreenSpace.dy, 0, 0)
+      ..translateByDouble(anchorMetrics.followerGapInScreenSpace.dx, anchorMetrics.followerGapInScreenSpace.dy, 0, 1.0)
       // Move the origin such that when the Follower is painted, the
       // Follower's desired anchor point (bottom-center, top-center, etc)
       // sits at the gap point that we moved to above.
       ..translateByDouble(
-          anchorMetrics.followerAnchorInFollowerSpace.dx, anchorMetrics.followerAnchorInFollowerSpace.dy, 0, 0)
+          anchorMetrics.followerAnchorInFollowerSpace.dx, anchorMetrics.followerAnchorInFollowerSpace.dy, 0, 1.0)
       // Scale from screen-space to follower-space. After this scale, the
       // origin remains in the same place, sitting a gap distance from the
       // Leader, but all further translations will be scaled based on the
       // the Follower's scale.
-      ..scaleByDouble(followerScale, 0, 0, 0);
+      ..scaleByDouble(followerScale, followerScale, followerScale, 1.0);
 
     _lastTransform = focalPointToScreenTransform;
 
@@ -1245,7 +1247,7 @@ class FollowerLayer extends ContainerLayer {
       return;
     }
 
-    desiredTransform.translateByDouble(followerAdjustment.dx, followerAdjustment.dy, 0, 0);
+    desiredTransform.translateByDouble(followerAdjustment.dx, followerAdjustment.dy, 0, 1.0);
   }
 
   /// Builds and returns a transform that goes from a layer-space to
