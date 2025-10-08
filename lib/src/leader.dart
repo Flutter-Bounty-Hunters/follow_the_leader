@@ -310,7 +310,7 @@ class LeaderLayer extends ContainerLayer {
   void applyTransform(Layer? child, Matrix4 transform) {
     assert(_lastOffset != null);
     if (_lastOffset != Offset.zero) {
-      transform.translate(_lastOffset!.dx, _lastOffset!.dy);
+      transform.translateByDouble(_lastOffset!.dx, _lastOffset!.dy, 0, 1.0);
     }
   }
 
