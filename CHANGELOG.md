@@ -1,3 +1,7 @@
+# 0.5.1
+### Oct 7, 2025
+ * Follower gap is now measured in DIP instead of PX.
+
 # 0.5.0
 ### July 10, 2025
 This release is the same as `0.0.5` - we're pushing up the version number to
