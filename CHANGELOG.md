@@ -1,3 +1,7 @@
+# 0.5.2
+### Nov 4, 2025
+ * Upgrade `super_keyboard` to `v0.3.0`.
+
 # 0.5.1
 ### Oct 7, 2025
  * Follower gap is now measured in DIP instead of PX.
