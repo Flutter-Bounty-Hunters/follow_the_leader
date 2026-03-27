@@ -1,3 +1,7 @@
+# 0.5.3
+### Mar 27, 2026
+* Upgrade `super_keyboard` to `v0.4.0`.
+
 # 0.5.2
 ### Nov 4, 2025
  * Upgrade `super_keyboard` to `v0.3.0`.
