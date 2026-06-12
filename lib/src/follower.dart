@@ -948,7 +948,7 @@ class FollowerLayer extends ContainerLayer {
 
   @override
   bool findAnnotations<S extends Object>(AnnotationResult<S> result, Offset localPosition, {required bool onlyFirst}) {
-    if (_leaderHandle!.leader == null) {
+    if (_link?.leader == null) {
       if (showWhenUnlinked!) {
         return super.findAnnotations(result, localPosition - unlinkedOffset!, onlyFirst: onlyFirst);
       }
@@ -1028,7 +1028,9 @@ class FollowerLayer extends ContainerLayer {
   void addToScene(ui.SceneBuilder builder) {
     FtlLogs.follower.finer("Adding FollowerLayer to scene");
     assert(showWhenUnlinked != null);
-    if (_leaderHandle!.leader == null && !showWhenUnlinked!) {
+    // _leaderHandle is null while this layer is detached, and SnapshotWidget
+    // composites detached layers, so read the leader from the link instead.
+    if (_link?.leader == null && !showWhenUnlinked!) {
       _lastTransform = null;
       _inverseDirty = true;
       engineLayer = null;
